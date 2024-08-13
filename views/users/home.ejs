@@ -1,0 +1,407 @@
+<%- include("../partials/user/header") %>
+<%- include("../partials/user/right") %>
+
+
+<style>
+    .view-all-button {
+        display: block;
+        width: 200px;
+        margin: 20px auto;
+        padding: 10px;
+        text-align: center;
+        background-color: #fff;
+        color: #ff0000;
+        border: 2px solid #ff0000;
+        text-decoration: none;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+
+    .view-all-button:hover {
+        background-color: #ff0000;
+        color: #fff;
+    }
+
+    .product-default-single-item {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 15px 15px 45px;
+        margin-bottom: 20px;
+        position: relative;
+        transition: box-shadow 0.2s ease;
+        height: 480px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .product-default-single-item:hover {
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .product-default-single-item .image-box {
+        height: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .product-default-single-item .image-box img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    .product-default-single-item .review-star {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 5px 0;
+        display: flex;
+    }
+
+    .product-default-single-item .review-star li {
+        color: #ffd700;
+        font-size: 12px;
+    }
+
+    .product-default-single-item .title {
+        font-size: 16px;
+        margin-bottom: 10px;
+        text-align: center;
+        max-height: 40px;
+        overflow: hidden;
+    }
+
+    .product-default-single-item .content {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .product-default-single-item .laptop-specs {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 10px;
+        max-height: 36px;
+        overflow: hidden;
+    }
+
+    .product-default-single-item .price {
+        font-size: 14px;
+        margin-top: auto;
+        margin-bottom: 12px;
+    }
+
+    .product-default-single-item .price .sale-price {
+        color: #ff0000;
+        font-weight: bold;
+        margin-right: 5px;
+    }
+
+    .product-default-single-item .price del {
+        color: #999;
+    }
+
+    .product-default-single-item .action-link {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 15px;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        transform: translateY(100%);
+    }
+
+    .product-default-single-item:hover .action-link {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .product-default-single-item .action-link a {
+        text-decoration: none;
+        color: #fff;
+        transition: color 0.2s ease;
+    }
+
+    .product-default-single-item .action-link a:hover {
+        color: #ff0000;
+    }
+
+    /* Modal styles for Add to Cart and Wishlist */
+    .modal-content {
+        background-color: #000;
+        color: #fff;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #333;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #333;
+    }
+
+    .modal-close {
+        color: #fff;
+    }
+
+    .modal-close:hover {
+        color: #ff0000;
+    }
+    .unavailable-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.unavailable-text {
+    color: #ff0000;
+    font-weight: bold;
+}
+
+    .unavailable-price {
+        color: #999;
+    }
+    .product-default-single-item .action-link-left a.disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+</style>
+    <!-- Start Header Area -->
+
+
+    <!-- Start Hero Slider Section-->
+    <div class="hero-slider-section">
+        <!-- Slider main container -->
+        <div class="hero-slider-active swiper-container">
+            <!-- Additional required wrapper -->
+            <div class="swiper-wrapper">
+                <!-- Start Hero Single Slider Item -->
+                <div class="hero-single-slider-item swiper-slide">
+                    <!-- Hero Slider Image -->
+                    <div class="hero-slider-bg">
+                        <img src="assets/images/remake/asus_upscayl_.webp" alt="">
+                    </div>
+                    <!-- Hero Slider Content -->
+                    <div class="hero-slider-wrapper">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-auto">
+                                    <div class="hero-slider-content">
+                                        <h4 class="subtitle">New collection</h4>
+                                        <h2 class="title">Best Of Asus <br>   </h2>
+                                        <a href="product-details-default.html"
+                                            class="btn btn-lg btn-outline-golden">shop now </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- End Hero Single Slider Item -->
+                <!-- Start Hero Single Slider Item -->
+                <div class="hero-single-slider-item swiper-slide">
+                    <!-- Hero Slider Image -->
+                    <div class="hero-slider-bg">
+                        <img src="" alt="">
+                    </div>
+                    <!-- Hero Slider Content -->
+                    <div class="hero-slider-wrapper">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-auto">
+                                    <div class="hero-slider-content">
+                                        <h4 class="subtitle">New collection</h4>
+                                        <h2 class="title">Luxy Chairs <br> Design Award </h2>
+                                        <a href="product-details-default.html"
+                                            class="btn btn-lg btn-outline-golden">shop now </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- End Hero Single Slider Item -->
+            </div>
+
+            <!-- If we need pagination -->
+            <div class="swiper-pagination active-color-golden"></div>
+
+            <!-- If we need navigation buttons -->
+            <div class="swiper-button-prev d-none d-lg-block"></div>
+            <div class="swiper-button-next d-none d-lg-block"></div>
+        </div>
+    </div>
+    <!-- End Hero Slider Section-->
+
+
+ <a href="productListing" class="view-all-button">VIEW ALL LAPTOPS</a>
+
+ <div class="product-default-slider-section section-top-gap-100 section-fluid">
+    <div class="section-title-wrapper" data-aos="fade-up" data-aos-delay="0">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="section-content-gap">
+                        <div class="secton-content">
+                            <h3 class="section-title">Featured Laptops</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="product-wrapper" data-aos="fade-up" data-aos-delay="200">
+        <div class="container">
+            <div class="row">
+                <% if (products && products.length > 0) { %>
+                    <% products.forEach(product => { %>
+                        <div class="col-md-3">
+                            <div class="product-default-single-item product-color--golden">
+                                <div class="image-box">
+                                    <a href="/productDetails/<%= product._id %>" class="image-link">
+                                        <% if (product.images && product.images.highResolutionPhotos && product.images.highResolutionPhotos.length > 0) { %>
+                                            <img src="<%= product.images.highResolutionPhotos[0] %>" alt="<%= product.basicInformation.name %>" class="primary-image">
+                                        <% } else { %>
+                                            <img src="/path/to/placeholder-image.jpg" alt="Placeholder Image" class="primary-image">
+                                        <% } %>
+                                        <% if (!product.status) { %>
+                                            <div class="unavailable-overlay">
+                                                <span class="unavailable-text">Unavailable</span>
+                                            </div>
+                                        <% } %>
+                                    </a>
+                                </div>
+                                <ul class="review-star">
+                                    <li class="fill"><i class="ion-android-star"></i></li>
+                                    <li class="fill"><i class="ion-android-star"></i></li>
+                                    <li class="fill"><i class="ion-android-star"></i></li>
+                                    <li class="fill"><i class="ion-android-star"></i></li>
+                                    <li class="empty"><i class="ion-android-star"></i></li>
+                                </ul>
+                                <h6 class="title"><a href="/productDetails/<%= product._id %>"><%= product.basicInformation.name %></a></h6>
+                                <div class="content">
+                                    <p class="laptop-specs">
+                                        <%= product.technicalSpecification.processor %> | 
+                                        <%= product.technicalSpecification.ram %> RAM | 
+                                        <%= product.technicalSpecification.storage %> | 
+                                        <%= product.technicalSpecification.graphicsCard %>
+                                    </p>
+                                    <div class="price">
+                                        <% if (product.status) { %>
+                                            <span class="sale-price">₹<%= product.pricingAndAvailability.salesPrice %></span>
+                                            <del>₹<%= product.pricingAndAvailability.regularPrice %></del>
+                                        <% } else { %>
+                                            <span class="unavailable-price">Unavailable</span>
+                                        <% } %>
+                                    </div>
+                                </div>
+                                <div class="action-link">
+                                    <div class="action-link-left">
+                                        <% if (product.status) { %>
+                                            <a href="#" data-bs-toggle="modal" data-bs-target="#modalAddcart" id="quantity" onclick="addToCart('<%= product._id %>')">Add to Cart</a>
+                                        <% } else { %>
+                                            <a href="#" class="disabled">Unavailable</a>
+                                        <% } %>
+                                    </div>
+                                    <div class="action-link-right">
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalAddwishlist"><i class="icon-heart"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <p>No products available.</p>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    <!-- Start Service Section -->
+    <div class="service-promo-section section-top-gap-100">
+        <div class="service-wrapper">
+            <div class="container">
+                <div class="row">
+                    <!-- Start Service Promo Single Item -->
+                    <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="service-promo-single-item" data-aos="fade-up" data-aos-delay="0">
+                            <div class="image">
+                                <img src="assets/images/icons/service-promo-1.png" alt="">
+                            </div>
+                            <div class="content">
+                                <h6 class="title">FREE SHIPPING</h6>
+                                <p>Get 10% cash back, free shipping, free returns, and more at 1000+ top retailers!</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End Service Promo Single Item -->
+                    <!-- Start Service Promo Single Item -->
+                    <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="service-promo-single-item" data-aos="fade-up" data-aos-delay="200">
+                            <div class="image">
+                                <img src="assets/images/icons/service-promo-2.png" alt="">
+                            </div>
+                            <div class="content">
+                                <h6 class="title">30 DAYS MONEY BACK</h6>
+                                <p>100% satisfaction guaranteed, or get your money back within 30 days!</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End Service Promo Single Item -->
+                    <!-- Start Service Promo Single Item -->
+                    <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="service-promo-single-item" data-aos="fade-up" data-aos-delay="400">
+                            <div class="image">
+                                <img src="assets/images/icons/service-promo-3.png" alt="">
+                            </div>
+                            <div class="content">
+                                <h6 class="title">SAFE PAYMENT</h6>
+                                <p>Pay with the world’s most popular and secure payment methods.</p>
+                            </div>
+                        </div>
+                    </div>              
+                    <!-- End Service Promo Single Item -->
+                    <!-- Start Service Promo Single Item -->
+                    <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="service-promo-single-item" data-aos="fade-up" data-aos-delay="600">
+                            <div class="image">
+                                  <img src="assets/images/icons/service-promo-4.png" alt="">
+                            </div>
+                            <div class="content">
+                                <h6 class="title">LOYALTY CUSTOMER</h6>
+                                <p>Card for the other 30% of their purchases at a rate of 1% cash back.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End Service Promo Single Item -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Service Section -->
+
+    <!-- Start Footer Section -->
+    <%- include("../partials/user/footer") %>
+    <script src="/javascript/addToCart.js"></script>
+    

@@ -1,0 +1,269 @@
+<%- include("../partials/admin/header") %>
+<%- include("../partials/admin/search") %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Categories</h2>
+            <p>Add, edit, or delete a category</p>
+        </div>
+        <div>
+            <input type="text" placeholder="Search Categories" class="form-control bg-white" id="searchCategories">
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <form id="formDataCreateCategory">
+                        <div class="mb-4">
+                            <label for="categoryName" class="form-label">Name</label>
+                            <input type="text" name="cName" placeholder="Type here" class="form-control" id="categoryName">
+                            <span id="categoryNameError" class="error"></span>
+                        </div>
+                        <div class="mb-4">
+                            <label for="categoryDescription" class="form-label">Description</label>
+                            <textarea name="cDescription" id="categoryDescription" placeholder="Type here" class="form-control"></textarea>
+                            <span id="categoryDescriptionError" class="error"></span>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" id="createCategoryFormButton" class="btn btn-primary">Create category</button>
+                            <button type="button" id="saveChangesCategoryFormButton" class="btn btn-primary" style="display: none;">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-9">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">No</th>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoriesTbody">
+                                <!-- Category rows will be dynamically inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div> <!-- .col// -->
+            </div> <!-- .row // -->
+        </div> <!-- card body .// -->
+    </div> <!-- card .// -->
+</section> <!-- content-main end// -->
+
+<%- include("../partials/admin/footer") %>
+
+<script>
+    // Fetch and display categories
+    const loadCategories = () => {
+        fetch("/admin/categories")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Categories data:', data);
+                const categoriesTbody = document.getElementById("categoriesTbody");
+                categoriesTbody.innerHTML = ""; // Clear existing data
+                data.forEach((category, index) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td class="text-center">${index + 1}</td>
+                        <td>${category._id}</td>
+                        <td>${category.name}</td>
+                        <td>${category.description}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="editCategory('${category._id}')">Edit</button>
+                            <button id="softDeleteButton${category._id}" class="btn btn-sm ${category.isBlocked ? 'btn-success' : 'btn-danger'}" onclick="softDeleteCategory('${category._id}')">
+                                ${category.isBlocked ? 'List' : 'Unlist'}
+                            </button>
+                        </td>
+                    `;
+                    categoriesTbody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error("Error fetching categories:", error);
+                Swal.fire({
+                    title: "Error!",
+                    text: "Failed to load categories. Please try again.",
+                    icon: "error",
+                });
+            });
+    };
+    
+    // Load categories on page load
+    document.addEventListener("DOMContentLoaded", () => {
+        loadCategories();
+    });
+    
+    // Handle form submission for adding a category
+    const createCategoryForm = document.getElementById("formDataCreateCategory");
+    createCategoryForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const formData = {
+            name: document.getElementById("categoryName").value.trim(),
+            description: document.getElementById("categoryDescription").value.trim(),
+        };
+    
+        fetch("/admin/categories", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            Swal.fire({
+                title: "Success!",
+                text: "Category created successfully.",
+                icon: "success",
+            });
+            loadCategories();
+            createCategoryForm.reset();
+        })
+        .catch(error => {
+            console.error(`There is a problem with the fetch operation: ${error.message}`);
+            Swal.fire({
+                title: "Error!",
+                text: "There was a problem creating the category.",
+                icon: "error",
+            });
+        });
+    });
+    
+    // Edit category
+    const editCategory = (categoryId) => {
+        fetch(`/admin/categories/${categoryId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(category => {
+                document.getElementById("categoryName").value = category.name;
+                document.getElementById("categoryDescription").value = category.description;
+                document.getElementById("createCategoryFormButton").style.display = "none";
+                document.getElementById("saveChangesCategoryFormButton").style.display = "block";
+                document.getElementById("saveChangesCategoryFormButton").onclick = () => updateCategory(categoryId);
+            })
+            .catch(error => {
+                console.error("Error fetching category details:", error);
+                Swal.fire({
+                    title: "Error!",
+                    text: "Failed to load category details. Please try again.",
+                    icon: "error",
+                });
+            });
+    };
+    
+    // Update category
+    const updateCategory = (categoryId) => {
+        const formData = {
+            name: document.getElementById("categoryName").value.trim(),
+            description: document.getElementById("categoryDescription").value.trim(),
+        };
+    
+        fetch(`/admin/categories/${categoryId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            Swal.fire({
+                title: "Success!",
+                text: "Category updated successfully.",
+                icon: "success",
+            });
+            loadCategories();
+            document.getElementById("formDataCreateCategory").reset();
+            document.getElementById("createCategoryFormButton").style.display = "block";
+            document.getElementById("saveChangesCategoryFormButton").style.display = "none";
+        })
+        .catch(error => {
+            console.error(`There is a problem with the fetch operation: ${error.message}`);
+            Swal.fire({
+                title: "Error!",
+                text: "There was a problem updating the category.",
+                icon: "error",
+            });
+        });
+    };
+    
+    // Handle soft deleting a category
+    const softDeleteCategory = (categoryId) => {
+        const deleteButton = document.getElementById(`softDeleteButton${categoryId}`);
+        const isDeleting = deleteButton.classList.contains("btn-danger");
+    
+        Swal.fire({
+            title: isDeleting ? "Are you sure you want to unlist this category?" : "Are you sure you want to list this category?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: isDeleting ? "Yes, Unlist it!" : "Yes, List it!",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/admin/categories?categoryId=${categoryId}`, {
+                    method: "PATCH",
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.isBlocked) {
+                        deleteButton.classList.remove("btn-danger");
+                        deleteButton.classList.add("btn-success");
+                        deleteButton.textContent = "List";
+                        Swal.fire({
+                            title: "Unlisted!",
+                            text: "Successfully unlisted category.",
+                            icon: "success",
+                        });
+                    } else {
+                        deleteButton.classList.remove("btn-success");
+                        deleteButton.classList.add("btn-danger");
+                        deleteButton.textContent = "Unlist";
+                        Swal.fire({
+                            title: "Listed!",
+                            text: "Category has been listed.",
+                            icon: "success",
+                        });
+                    }
+                    loadCategories();
+                })
+                .catch(error => {
+                    console.error(`There is a problem with the fetch operation: ${error.message}`);
+                    Swal.fire({
+                        title: "Error!",
+                        text: "There was a problem updating the category.",
+                        icon: "error",
+                    });
+                });
+            }
+        });
+    };
+    </script>

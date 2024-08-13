@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Registration</title>
+  <style>
+    body {
+      background-color: #f9f9f9;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .account_form {
+      width: 100%;
+      max-width: 600px;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      position: relative; /* To control positioning of error messages */
+    }
+
+    .account_form h3 {
+      margin-bottom: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .welcome-message {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 16px;
+      color: #555;
+    }
+
+    .form-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      position: relative;
+    }
+
+    .default-form-box {
+      margin-bottom: 15px;
+      position: relative;
+    }
+
+    .default-form-box label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: normal;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .default-form-box input {
+      width: 100%;
+      padding: 10px 8px;
+      border: none;
+      border-bottom: 1px solid #ddd;
+      font-size: 14px;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+
+    .default-form-box input:focus {
+      border-bottom: 1px solid #007bff;
+      outline: none;
+    }
+
+    .error-message {
+      color: red;
+      font-size: 0.8em;
+      margin-top: 5px;
+      height: 20px; /* Space for error message without shifting layout */
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+    }
+
+    .server-error-message {
+      color: red;
+      font-size: 0.8em;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .google-login {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .google-login button {
+      background-color: #4285f4;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      transition: background-color 0.3s ease;
+    }
+
+    .google-login button img {
+      margin-right: 10px;
+    }
+
+    .google-login button:hover {
+      background-color: #357ae8;
+    }
+
+    .login_submit {
+      text-align: center;
+      margin-top: 0; /* Remove extra margin */
+      position: relative; /* Ensure positioning for error message */
+    }
+
+    .login_submit button {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+      margin-bottom: 30px; /* Space for error message below button */
+    }
+
+    .login_submit button:hover {
+      background-color: #0056b3;
+    }
+
+    .login-link {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .login-link a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="account_form">
+      <h3>Sign Up Now</h3>
+      <div class="welcome-message">Create your account by filling out the form below.</div>
+      <div class="google-login">
+        <a href="/auth/google">
+          <button>
+            <img src="https://img.icons8.com/color/16/000000/google-logo.png" alt="Google Logo" />
+            Sign up with Google
+          </button>
+        </a>
+      </div>
+      <% if (error) { %>
+      <div class="server-error-message"><%= error %></div>
+      <% } %>
+      <form action="/signup" method="post" id="registerForm">
+        <div class="form-container">
+          <div class="default-form-box">
+            <input type="text" id="firstName" name="firstName" placeholder="Enter your first name" />
+            <div id="firstNameError" class="error-message"></div>
+          </div>
+          <div class="default-form-box">
+            <input type="text" id="lastName" name="lastName" placeholder="Enter your last name" />
+            <div id="lastNameError" class="error-message"></div>
+          </div>
+          <div class="default-form-box">
+            <input type="email" id="email" name="email" placeholder="Enter your email" />
+            <div id="emailError" class="error-message"></div>
+          </div>
+          <div class="default-form-box">
+            <input type="tel" id="mobile" name="mobile" placeholder="Enter your mobile number" />
+            <div id="mobileError" class="error-message"></div>
+          </div>
+          <div class="default-form-box">
+            <input type="password" id="password" name="password" placeholder="Enter your password" />
+            <div id="passwordError" class="error-message"></div>
+          </div>
+          <div class="default-form-box">
+            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" />
+            <div id="confirmPasswordError" class="error-message"></div>
+          </div>
+        </div>
+        <br>
+        <div class="login_submit">
+          <button type="submit">Register</button>
+        </div>
+      </form>
+      <div class="login-link">
+        <p>Already have an account? <a href="/login">Log in here</a></p>
+      </div>
+    </div>
+  </div>
+  <script src="/javascript/validation.js"></script>
+</body>
+</html>

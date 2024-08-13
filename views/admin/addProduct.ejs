@@ -1,0 +1,516 @@
+<%- include('../partials/admin/header') %>
+<%- include('../partials/admin/search') %>  
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
+<section class="content-main">
+    <div class="row">
+        <div class="col-12">
+            <div class="content-header">
+                <h2 class="content-title">Add New Product</h2>
+                <div class="text-end">
+                    <button class="btn btn-md rounded font-sm hover-up" id="publish">Publish</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <!-- Basic Information -->
+                    <div class="mb-4">
+                        <label for="product_name" class="form-label">Product Name</label>
+                        <input type="text" placeholder="Type here" class="form-control" id="product_name">
+                        <div class="error-message-container"><div id="name-error" class="form-error text-danger"></div></div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="product_brand" class="form-label">Brand</label>
+                        <select class="form-select" id="product_brand">
+                            <option value="" disabled selected>Select Brand</option>
+                            <option value="Apple">Apple</option>
+                            <option value="Dell">Dell</option>
+                            <option value="HP">HP</option>
+                            <option value="Lenovo">Lenovo</option>
+                            <option value="Asus">Asus</option>
+                            <option value="Acer">Acer</option>
+                            <option value="MSI">MSI</option>
+                            <option value="Samsung">Samsung</option>
+                        </select>
+                        <div class="error-message-container"><div id="brand-error" class="form-error text-danger"></div></div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="product_description" class="form-label">Description</label>
+                        <textarea placeholder="Type here" class="form-control" id="product_description" rows="4"></textarea>
+                        <div class="error-message-container"><div id="description-error" class="form-error text-danger"></div></div>
+                    </div>
+                    
+                    <!-- Technical Specifications -->
+                    <div class="mb-4">
+                        <label for="product_processor" class="form-label">Processor</label>
+                        <select class="form-select" id="product_processor">
+                            <option value="" disabled selected>Select Processor</option>
+                            <option value="AMD Ryzen 3">AMD Ryzen 3</option>
+                            <option value="AMD Ryzen 5">AMD Ryzen 5</option>
+                            <option value="AMD Ryzen 7">AMD Ryzen 7</option>
+                            <option value="AMD Ryzen 9">AMD Ryzen 9</option>
+                            <option value="Apple M1">Apple M1</option>
+                            <option value="Apple M1 Max">Apple M1 Max</option>
+                            <option value="Apple M1 Pro">Apple M1 Pro</option>
+                            <option value="Apple M1 Ultra">Apple M1 Ultra</option>
+                            <option value="Apple M2">Apple M2</option>
+                            <option value="Apple M2 Max">Apple M2 Max</option>
+                            <option value="Apple M2 Pro">Apple M2 Pro</option>
+                            <option value="Apple M2 Ultra">Apple M2 Ultra</option>
+                            <option value="Apple M3">Apple M3</option>
+                            <option value="Apple M3 Max">Apple M3 Max</option>
+                            <option value="Apple M3 Pro">Apple M3 Pro</option>
+                            <option value="Intel Core i3">Intel Core i3</option>
+                            <option value="Intel Core i5">Intel Core i5</option>
+                            <option value="Intel Core i7">Intel Core i7</option>
+                            <option value="Intel Core i9">Intel Core i9</option>
+                        </select>
+                        <div class="error-message-container"><div id="processor-error" class="form-error text-danger"></div></div>
+                    </div>
+                    <div class="row gx-3">
+                        <div class="col-md-4 mb-3">
+                            <label for="product_ram" class="form-label">RAM</label>
+                            <select class="form-select" id="product_ram">
+                                <option value="" disabled selected>Select RAM</option>
+                                <option value="8GB">8GB</option>
+                                <option value="16GB">16GB</option>
+                                <option value="32GB">32GB</option>
+                            </select>
+                            <div class="error-message-container"><div id="ram-error" class="form-error text-danger"></div></div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="product_storage" class="form-label">Storage</label>
+                            <select class="form-select" id="product_storage">
+                                <option value="" disabled selected>Select Storage</option>
+                                <option value="256GB">256GB</option>
+                                <option value="512GB">512GB</option>
+                                <option value="1TB SSD">1TB SSD</option>
+                                <option value="2TB SSD">2TB SSD</option>
+                            </select>
+                            <div class="error-message-container"><div id="storage-error" class="form-error text-danger"></div></div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="product_graphicsCard" class="form-label">Graphics Card</label>
+                            <input type="text" placeholder="Type here" class="form-control" id="product_graphicsCard">
+                            <div class="error-message-container"><div id="graphicsCard-error" class="form-error text-danger"></div></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Design and Build -->
+                    <div class="mb-4">
+                        <label for="product_color" class="form-label">Color</label>
+                        <input type="text" placeholder="Type here" class="form-control" id="product_color">
+                        <div class="error-message-container"><div id="color-error" class="form-error text-danger"></div></div>
+                    </div>
+                    
+                    <!-- Images -->
+                    <div class="mb-4">
+                        <label for="product_images" class="form-label">Images</label>
+                        <input class="form-control" type="file" id="product_images" name="images" multiple>
+                        <div id="image-preview" class="mt-3"></div>
+                        <div class="error-message-container">
+                            <div id="images-error" class="form-error text-danger"></div>
+                        </div>
+                    </div>                    
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <!-- Pricing and Availability -->
+                    <div class="mb-4">
+                        <label for="product_regularPrice" class="form-label">Regular Price</label>
+                        <input type="number" placeholder="Type here" class="form-control" id="product_regularPrice">
+                        <div class="error-message-container"><div id="regularPrice-error" class="form-error text-danger"></div></div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="product_salesPrice" class="form-label">Sales Price</label>
+                        <input type="number" placeholder="Type here" class="form-control" id="product_salesPrice">
+                    </div>
+                    <div class="mb-4">
+                        <label for="product_stockAvailability" class="form-label">Stock Availability</label>
+                        <input type="number" placeholder="Type here" class="form-control" id="product_stockAvailability">
+                        <div class="error-message-container"><div id="stockAvailability-error" class="form-error text-danger"></div></div>
+                    </div>
+                    
+                    <!-- Status -->
+                    <div class="mb-4">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="product_status">
+                            <option value="Published">Published</option>
+                            <option value="Draft">Draft</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Categories -->
+                    <hr>
+                    <h5 class="mb-3">Categories</h5>
+                    <div id="category-list">
+                        <% categories.filter(category => !category.isBlocked).forEach(category => { %>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="<%= category._id %>" name="category" id="category-<%= category._id %>">
+                                <label class="form-check-label" for="category-<%= category._id %>"> <%= category.name %> </label>
+                            </div>
+                        <% }); %>
+                        <div class="error-message-container"><div id="categories-error" class="form-error text-danger"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<%- include("../partials/admin/footer") %>
+
+<style>
+    .img-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+        background-color: #fff !important;
+        padding: 10px;
+        border-radius: 8px;
+        position: relative;
+        width: 200px !important;
+        height: 200px !important;
+        overflow: hidden;
+    }
+
+    .img-thumbnail {
+        max-height: 100% !important;
+        max-width: 100% !important;
+        object-fit: contain;
+        border: none;
+        padding: 0;
+    }
+
+    .btn-danger.btn-sm {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 4px 8px;
+        font-size: 0.75rem;
+        border-radius: 4px;
+        white-space: nowrap;
+    }
+
+    .error-message-container {
+        height: 20px; 
+        margin-top: 5px;
+    }
+
+    .modal-dialog {
+        max-width: 90%;
+        margin: 1.75rem auto;
+        max-width: 60vw !important;
+    }
+
+    .modal-content {
+        border-radius: 0.5rem;
+    }
+    .cropper-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 60vh !important;
+        width: 100% !important;
+    }
+
+    .modal-content {
+        border-radius: 0.5rem;
+    }
+
+    .modal-body img {
+        max-width: 100%;
+        max-height: 60vh !important; 
+        object-fit: contain;
+    }
+</style>
+
+<!-- Image Cropper Modal -->
+<div class="modal fade" id="image-cropper-modal" tabindex="-1" aria-labelledby="image-cropper-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="image-cropper-modal-label">Crop Image</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="cropper-container">
+                    <img id="image-to-crop" src="" alt="Image to crop" style="width: 100%; max-height: 70vh; object-fit: contain;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="crop-save">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/javascript/imageCropper.js"></script>
+<script>
+    
+    const imageCropperModal = new bootstrap.Modal(document.getElementById('image-cropper-modal'), {});
+
+    async function handleProductImages(event) {
+    const formData = new FormData();
+    const files = [...event.target.files];
+
+    if (!files || files.length === 0) {
+        console.error('No files selected.');
+        return;
+    }
+
+    files.forEach((file, index) => {
+        if (typeof cropper !== 'undefined' && cropper) {
+            const canvas = cropper.getCroppedCanvas();
+            if (canvas) {
+                canvas.toBlob(async (blob) => {
+                    formData.append(`images`, blob, `image_${index}.jpg`);
+                }, 'image/jpeg');
+            } else {
+                formData.append('images', file);
+            }
+        } else {
+            formData.append('images', file);
+        }
+    });
+
+    return formData;
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const imageInput = document.getElementById('product_images');
+    const imagePreviewContainer = document.getElementById('image-preview');
+    const imageToCrop = document.getElementById('image-to-crop');
+    const cropSaveButton = document.getElementById('crop-save');
+
+    if (imageCropperModal && imageCropperModal._element) {
+        const { cropper, handleImageClick, handleCropSave } = initImageCropper(imageCropperModal);
+        handleCropSave(cropSaveButton);
+        imagePreviewContainer.addEventListener('click', (event) => {
+            if (event.target.matches('img')) {
+                handleImageClick(event.target);
+            }
+        });
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.classList.add('img-thumbnail');
+        img.style.cursor = 'pointer';
+
+        const imageContainer = document.createElement('div');
+        imageContainer.classList.add('img-container');
+        imageContainer.appendChild(img);
+
+        const deleteButton = createDeleteButton(imageContainer);
+        imageContainer.appendChild(deleteButton);
+
+        imagePreviewContainer.appendChild(imageContainer);
+    };
+
+    imageInput.addEventListener('change', (event) => {
+        handleProductImages(event)
+        .then(() => {
+            console.log('All images have been uploaded.');
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            Swal.fire({
+                title: "Error!",
+                text: "There was an error uploading the images.",
+                icon: "error"
+            });
+        }); 
+        const files = [...event.target.files];
+        handleFiles(files);
+    });
+
+    const handleFiles = async (files) => {
+        files.forEach(file => reader.readAsDataURL(file));
+    }
+
+
+    const createDeleteButton = (imageContainer) => {
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.classList.add('btn', 'btn-danger', 'btn-sm');
+        deleteButton.style.position = 'absolute';
+        deleteButton.style.top = '10px';
+        deleteButton.style.right = '10px';
+        deleteButton.style.zIndex = '1000';
+
+        deleteButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            imageContainer.remove();
+        });
+
+        return deleteButton;
+    };
+});
+
+
+const validateForm = () => {
+    let isValid = true;
+    let errors = {};
+
+    const name = document.getElementById('product_name').value.trim();
+    const brand = document.getElementById('product_brand').value.trim();
+    const description = document.getElementById('product_description').value.trim();
+    const processor = document.getElementById('product_processor').value.trim();
+    const ram = document.getElementById('product_ram').value.trim();
+    const storage = document.getElementById('product_storage').value.trim();
+    const graphicsCard = document.getElementById('product_graphicsCard').value.trim();
+    const color = document.getElementById('product_color').value.trim();
+    const regularPrice = document.getElementById('product_regularPrice').value.trim();
+    const stockAvailability = document.getElementById('product_stockAvailability').value.trim();
+    const images = document.querySelector('#product_images').files.length;
+    const categories = Array.from(document.querySelectorAll('input[name="category"]:checked')).map(cb => cb.value);
+
+    // Check required fields
+    if (!name) {
+        errors.name = 'Product name is required.';
+        isValid = false;
+    }
+    if (!brand) {
+        errors.brand = 'Brand is required.';
+        isValid = false;
+    }
+    if (!description) {
+        errors.description = 'Description is required.';
+        isValid = false;
+    }
+    if (!processor) {
+        errors.processor = 'Processor is required.';
+        isValid = false;
+    }
+    if (!ram) {
+        errors.ram = 'RAM is required.';
+        isValid = false;
+    }
+    if (!storage) {
+        errors.storage = 'Storage is required.';
+        isValid = false;
+    }
+    if (!color) {
+        errors.color = 'Color is required.';
+        isValid = false;
+    }
+    if (!regularPrice || isNaN(regularPrice) || regularPrice <= 0) {
+        errors.regularPrice = 'Regular Price is required.';
+        isValid = false;
+    }
+    if (!stockAvailability || isNaN(stockAvailability) || stockAvailability < 0) {
+        errors.stockAvailability = 'Stock Availability is required.';
+        isValid = false;
+    }
+    if (images === 0) {
+        errors.images = 'At least one image is required.';
+        isValid = false;
+    }
+    if (categories.length === 0) {
+        errors.categories = 'At least one category is required.';
+        isValid = false;
+    }
+
+    // Display errors
+    document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
+    Object.keys(errors).forEach(key => {
+        document.getElementById(`${key}-error`).textContent = errors[key];
+    });
+
+    return isValid;
+};
+
+const form = document.getElementById('product-form');
+
+const resetForm = () => {
+    if (form) {
+        form.reset();
+
+    if (imagePreviewContainer) imagePreviewContainer.innerHTML = '';
+
+    const selects = document.querySelectorAll('select');
+    selects.forEach(select => select.value = '');
+
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(checkbox => checkbox.checked = false);
+
+    const errorMessages = document.querySelectorAll('.form-error');
+    errorMessages.forEach(errorMessage => errorMessage.textContent = '');
+    console.log('form reset successfully');
+} else {
+    console.error('Form not found');
+}
+};
+
+document.getElementById('publish').addEventListener('click', async () => {
+    if (!validateForm()) return;
+
+    const formData = new FormData();
+
+    formData.append('name', document.getElementById('product_name').value);
+    formData.append('brand', document.getElementById('product_brand').value);
+    formData.append('description', document.getElementById('product_description').value);
+    formData.append('processor', document.getElementById('product_processor').value);
+    formData.append('ram', document.getElementById('product_ram').value);
+    formData.append('storage', document.getElementById('product_storage').value);
+    formData.append('graphicsCard', document.getElementById('product_graphicsCard').value);
+    formData.append('color', document.getElementById('product_color').value);
+    formData.append('regularPrice', document.getElementById('product_regularPrice').value);
+    formData.append('salesPrice', document.getElementById('product_salesPrice').value);
+    formData.append('stockAvailability', document.getElementById('product_stockAvailability').value);
+    formData.append('status', document.getElementById('product_status').value);
+
+    const categories = Array.from(document.querySelectorAll('input[name="category"]:checked'))
+        .map(checkbox => checkbox.value);
+    formData.append('categories', JSON.stringify(categories));
+
+     const files = document.querySelector('#product_images').files;
+    for (let i = 0; i < files.length; i++) {
+        formData.append('images', files[i]);
+    }
+
+
+    try {
+        const response = await axios.post('/admin/products/add', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+
+        if (response.data.success) {
+            Swal.fire({
+                title: "Success!",
+                text: "Product saved successfully.",
+                icon: "success"
+            });  
+            resetForm();   
+        } else {
+            Swal.fire({
+                title: "Error!",
+                text: data.message || "There was an error saving the product.",
+                icon: "error"
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            title: "Error!",
+            text: "There was an error saving the product.",
+            icon: "error"
+        });
+    }
+});
+
+</script>

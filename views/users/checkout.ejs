@@ -1,0 +1,224 @@
+<%- include("../partials/user/header") %>
+<%- include("../partials/user/right") %>
+<!-- ...:::: Start Breadcrumb Section:::... -->
+<div class="breadcrumb-section breadcrumb-bg-color--golden">
+  <div class="breadcrumb-wrapper">
+      <div class="container">
+          <div class="row">
+              <div class="col-12">
+                  <h3 class="breadcrumb-title">Checkout</h3>
+                  <div class="breadcrumb-nav breadcrumb-nav-color--black breadcrumb-nav-hover-color--golden">
+                      <nav aria-label="breadcrumb">
+                          <ul>
+                              <li><a href="index.html">Home</a></li>
+                              <li><a href="shop-grid-sidebar-left.html">Shop</a></li>
+                              <li class="active" aria-current="page">Checkout</li>
+                          </ul>
+                      </nav>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</div> <!-- ...:::: End Breadcrumb Section:::... -->
+
+  <!-- ...:::: Start Checkout Section:::... -->
+  <div class="checkout-section">
+    <div class="container">
+        <div class="row">
+            <!-- User Quick Action Form -->
+            <div class="col-12">
+                <div class="user-actions accordion" data-aos="fade-up" data-aos-delay="0">
+                    <h3>
+                        <i class="fa fa-file-o" aria-hidden="true"></i>
+                        Returning customer?
+                        <a class="Returning" href="#" data-bs-toggle="collapse" data-bs-target="#checkout_login"
+                            aria-expanded="true">Click here to login</a>
+                    </h3>
+                    <div id="checkout_login" class="collapse" data-parent="#checkout_login">
+                        <div class="checkout_info">
+                            <p>If you have shopped with us before, please enter your details in the boxes below. If
+                                you are a new customer please proceed to the Billing &amp; Shipping section.</p>
+                            <form action="#">
+                                <div class="form_group default-form-box">
+                                    <label>Username or email <span>*</span></label>
+                                    <input type="text">
+                                </div>
+                                <div class="form_group default-form-box">
+                                    <label>Password <span>*</span></label>
+                                    <input type="password">
+                                </div>
+                                <div class="form_group group_3 default-form-box">
+                                    <button class="btn btn-md btn-black-default-hover" type="submit">Login</button>
+                                    <label class="checkbox-default">
+                                        <input type="checkbox">
+                                        <span>Remember me</span>
+                                    </label>
+                                </div>
+                                <a href="#">Lost your password?</a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="user-actions accordion" data-aos="fade-up" data-aos-delay="200">
+                    <h3>
+                        <i class="fa fa-file-o" aria-hidden="true"></i>
+                        Returning customer?
+                        <a class="Returning" href="#" data-bs-toggle="collapse" data-bs-target="#checkout_coupon"
+                            aria-expanded="true">Click here to enter your code</a>
+
+                    </h3>
+                    <div id="checkout_coupon" class="collapse checkout_coupon" data-parent="#checkout_coupon">
+                        <div class="checkout_info">
+                            <form action="#">
+                                <input placeholder="Coupon code" type="text">
+                                <button class="btn btn-md btn-black-default-hover" type="submit">Apply
+                                    coupon</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- User Quick Action Form -->
+        </div>
+                <!-- Start User Details Checkout Form -->
+                <div class="checkout_form" data-aos="fade-up" data-aos-delay="400">
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6">
+                            <h3>Billing Details</h3>
+                            <div id="addressList">
+                                <!-- Address list will be dynamically populated here -->
+                            </div>
+                            <button id="showButton" class="btn btn-md btn-black-default-hover mt-4">Add New Address</button>
+                            
+                            <!-- Add Address Form -->
+                            <form id="addressForm" style="display: none;">
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="default-form-box">
+                                            <label>Name <span>*</span></label>
+                                            <input type="text" name="name" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="default-form-box">
+                                            <label>Mobile <span>*</span></label>
+                                            <input type="tel" name="mobile" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="default-form-box">
+                                            <label>Address <span>*</span></label>
+                                            <input type="text" name="address" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="default-form-box">
+                                            <label>City <span>*</span></label>
+                                            <input type="text" name="city" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="default-form-box">
+                                            <label>State <span>*</span></label>
+                                            <input type="text" name="state" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="default-form-box">
+                                            <label>Pin Code <span>*</span></label>
+                                            <input type="text" name="pinCode" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="default-form-box">
+                                            <label>Landmark</label>
+                                            <input type="text" name="landMark">
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="default-form-box">
+                                            <label>Address Type <span>*</span></label>
+                                            <select name="addressType" required>
+                                                <option value="home">Home</option>
+                                                <option value="work">Work</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 mt-3">
+                                        <button type="submit" class="btn btn-md btn-black-default-hover">Add Address</button>
+                                    </div>
+                                </div>
+                            </form>
+        
+                            <!-- Edit Address Form (initially hidden) -->
+                            <form id="editAddressForm" style="display: none;">
+                                <input type="hidden" id="addressId" name="addressId">
+                                <!-- Same fields as Add Address Form -->
+                                <!-- ... -->
+                            </form>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            <form action="/place-order" method="POST">
+                                <h3>Your order</h3>
+                                <div class="order_table table-responsive">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th>Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% items.forEach(item => { %>
+                                            <tr>
+                                                <td><%= item.basicInformation.name %> <strong> × <%= item.quantity %></strong></td>
+                                                <td>$<%= item.total.toFixed(2) %></td>
+                                            </tr>
+                                            <% }); %>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th>Cart Subtotal</th>
+                                                <td>$<%= items.reduce((sum, item) => sum + item.total, 0).toFixed(2) %></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Shipping</th>
+                                                <td><strong>$25.00</strong></td>
+                                            </tr>
+                                            <tr class="order_total">
+                                                <th>Order Total</th>
+                                                <td><strong>$<%= (items.reduce((sum, item) => sum + item.total, 0) + 25).toFixed(2) %></strong></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                                <div class="payment_method">
+                                    <div class="panel-default">
+                                        <label class="checkbox-default" for="currencyCod" data-bs-toggle="collapse"
+                                            data-bs-target="#methodCod">
+                                            <input type="checkbox" id="currencyCod" name="paymentMethod" value="cod">
+                                            <span>Cash on Delivery</span>
+                                        </label>
+                                        <div id="methodCod" class="collapse" data-parent="#methodCod">
+                                            <div class="card-body1">
+                                                <p>Please pay in cash upon delivery.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="order_button pt-3">
+                                        <button id="placeOrder" class="btn btn-md btn-black-default-hover" type="submit">Place Order</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- End User Details Checkout Form -->
+        </div>
+        
+
+
+<%- include("../partials/user/footer") %>
+<script src="/javascript/checkout.js"></script>

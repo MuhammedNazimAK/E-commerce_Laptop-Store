@@ -1,0 +1,154 @@
+<%- include("../partials/admin/header") %>
+<!-- Include SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<%- include("../partials/admin/search") %>  
+<section class="content-main">
+  <div class="content-header">
+      <h2 class="content-title">Customer list</h2>
+      <p>Dashboard > customerslist</p>
+  </div>
+  <div class="card mb-4">
+      <header class="card-header">
+          <div class="row gx-3">
+              <div class="col-lg-4 col-md-6 me-auto">
+                  <input type="text" placeholder="Search..." class="form-control">
+              </div>
+              <div class="col-lg-2 col-md-3 col-6">
+                  <select class="form-select">
+                      <option>Status</option>
+                      <option>Active</option>
+                      <option>Disabled</option>
+                      <option>Show all</option>
+                  </select>
+              </div>
+              <div class="col-lg-2 col-md-3 col-6">
+                  <select class="form-select">
+                      <option>Show 20</option>
+                      <option>Show 30</option>
+                      <option>Show 40</option>
+                  </select>
+              </div>
+          </div>
+      </header>
+      <div class="card-body">
+          <div class="table-responsive">
+              <table class="table table-hover">
+                  <thead>
+                      <tr>
+                          <th>Sl.No.</th>
+                          <th>Name</th>
+                          <th>Email</th>
+                          <th>Phone</th>
+                          <th>Reg.Date</th>
+                          <th class="text-center">Action</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <% if(userData.length > 0) { %>
+                          <% userData.forEach((user, index) => { %>
+                              <tr>
+                                  <td><%= index + 1 %></td>
+                                  <td><%= user.firstName + " " + user.lastName %></td>
+                                  <td><%= user.email %></td>
+                                  <td><%= user.mobile %></td>
+                                  <td><%= new Date(user.createdAt).toLocaleString() %></td>
+                                  <td class="text-end">
+                                      <div class="d-flex justify-content-end">
+                                          <% if(user.isBlocked) { %>
+                                              <button onclick="softDeleteUser('<%= user._id %>')" id="softDeleteButton<%= user._id %>" class="btn btn-success rounded btn-sm font-sm flex-fill mx-1">Unblock</button>
+                                          <% } else { %>
+                                              <button onclick="softDeleteUser('<%= user._id %>')" id="softDeleteButton<%= user._id %>" class="btn btn-danger rounded btn-sm font-sm flex-fill mx-1">Block</button>
+                                          <% } %>
+                                      </div>
+                                  </td>
+                              </tr>
+                          <% }) %>
+                      <% } else { %>
+                          <tr>
+                              <td colspan="6" class="text-center">No Users Found Yet</td>
+                          </tr>
+                      <% } %>
+                  </tbody>
+              </table>
+          </div>
+      </div>
+  </div>
+  <div class="pagination-area mt-15 mb-50">
+      <nav aria-label="Page navigation example">
+          <ul class="pagination justify-content-start">
+              <% for (let i = 1; i <= totalPages; i++) { %>
+                  <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                      <a class="page-link" href="/admin/customerlist?page=<%= i %>"><%= i %></a>
+                  </li>
+              <% } %>
+              <% if (currentPage < totalPages) { %>
+                  <li class="page-item">
+                      <a class="page-link" href="/admin/customerlist?page=<%= currentPage + 1 %>">
+                          <i class="material-icons md-chevron_right"></i>
+                      </a>
+                  </li>
+              <% } %>
+          </ul>
+      </nav>
+  </div>
+</section>
+
+<%- include("../partials/admin/footer") %>
+
+<script>
+    const softDeleteUser = (userId) => {
+        const deleteButton = document.getElementById(`softDeleteButton${userId}`);
+        const isBlocking = deleteButton.classList.contains('btn-danger');
+
+        Swal.fire({
+            title: `Are you sure you want to ${isBlocking ? 'block' : 'unblock'} this person?`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: `Yes, ${isBlocking ? 'block' : 'unblock'}`
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/admin/customers/?userId=${userId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                }).then(response => {
+                    if (response.status !== 200) {
+                        throw new Error(`Network response was not ok, status code: ${response.status}`);
+                    }
+                    return response.json();
+                }).then(data => {
+                    if (data.user.isBlocked) {
+                        deleteButton.classList.remove('btn-danger');
+                        deleteButton.classList.add('btn-success');
+                        deleteButton.textContent = 'Unblock';
+                        Swal.fire({
+                            title: "Blocked!",
+                            text: "This person has no longer access",
+                            icon: "success"
+                        });
+                    } else {
+                        deleteButton.classList.remove('btn-success');
+                        deleteButton.classList.add('btn-danger');
+                        deleteButton.textContent = 'Block';
+                        Swal.fire({
+                            title: "Unblocked!",
+                            text: "This person has now access",
+                            icon: "success"
+                        });
+                    }
+                }).catch(error => {
+                    console.error("Error during fetch operation:", error);
+                    Swal.fire({
+                        title: "Error!",
+                        text: "There was a problem blocking/unblocking the person.",
+                        icon: "error"
+                    });
+                });
+            }
+        });
+    }
+</script>

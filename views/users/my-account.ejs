@@ -1,0 +1,563 @@
+<%- include("../partials/user/header") %>
+<%- include("../partials/user/right") %>
+
+
+    <!-- Start Mobile Header -->
+    <div class="mobile-header mobile-header-bg-color--golden section-fluid d-lg-block d-xl-none">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 d-flex align-items-center justify-content-between">
+                    <!-- Start Mobile Left Side -->
+                    <div class="mobile-header-left">
+                        <ul class="mobile-menu-logo">
+                            <li>
+                                <a href="users/home">
+                                    <div class="logo">
+                                        <img src="assets/images/logo/logo_black.png" alt="">
+                                    </div>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- End Mobile Left Side -->
+
+                    <!-- Start Mobile Right Side -->
+                    <div class="mobile-right-side">
+                        <ul class="header-action-link action-color--black action-hover-color--golden">
+                            <li>
+                                <a href="#search">
+                                    <i class="icon-magnifier"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#offcanvas-wishlish" class="offcanvas-toggle">
+                                    <i class="icon-heart"></i>
+                                    <span class="item-count">3</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#offcanvas-add-cart" class="offcanvas-toggle">
+                                    <i class="icon-bag"></i>
+                                    <span class="item-count">3</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#mobile-menu-offcanvas" class="offcanvas-toggle offside-menu">
+                                    <i class="icon-menu"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- End Mobile Right Side -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Mobile Header -->
+
+
+    <!-- ...:::: Start Breadcrumb Section:::... -->
+    <div class="breadcrumb-section breadcrumb-bg-color--golden">
+        <div class="breadcrumb-wrapper">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <h3 class="breadcrumb-title">My Account</h3>
+                        <div class="breadcrumb-nav breadcrumb-nav-color--black breadcrumb-nav-hover-color--golden">
+                            <nav aria-label="breadcrumb">
+                                <ul>
+                                    <li><a href="/home">Home</a></li>
+                                    <li><a href="shop-grid-sidebar-left.html">Shop</a></li>
+                                    <li class="active" aria-current="page">My Account</li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- ...:::: End Breadcrumb Section:::... -->
+
+    <!-- Start Account Dashboard Section -->
+<div class="account-dashboard">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 col-md-3 col-lg-3">
+                <!-- Nav tabs -->
+                <div class="dashboard_tab_button" data-aos="fade-up" data-aos-delay="0">
+                    <ul role="tablist" class="nav flex-column dashboard-list">
+                        <li><a href="#dashboard" data-bs-toggle="tab" class="nav-link btn btn-block btn-md btn-black-default-hover active">Dashboard</a></li>
+                        <li><a href="#orders" data-bs-toggle="tab" class="nav-link btn btn-block btn-md btn-black-default-hover">Orders</a></li>
+                        <li><a href="#downloads" data-bs-toggle="tab" class="nav-link btn btn-block btn-md btn-black-default-hover">Downloads</a></li>
+                        <li><a href="#address" data-bs-toggle="tab" class="nav-link btn btn-block btn-md btn-black-default-hover">Addresses</a></li>
+                        <li><a href="#account-details" data-bs-toggle="tab" class="nav-link btn btn-block btn-md btn-black-default-hover">Account details</a></li>
+                        
+                        <% if (userLoggedIn) { %>
+                            <li>
+                                <form action="/logout" method="post">
+                                    <button type="submit" class="nav-link btn btn-block btn-md btn-black-default-hover">Logout</button>
+                                </form>
+                            </li>
+                        <% } %>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-9 col-lg-9">
+                <!-- Tab panes -->
+                <div class="tab-content dashboard_content" data-aos="fade-up" data-aos-delay="200">
+                    <div class="tab-pane fade show active" id="dashboard">
+                        <h4>Dashboard</h4>
+                        <p>From your account dashboard, you can easily check &amp; view your <a href="#">recent orders</a>, manage your <a href="#">shipping and billing addresses</a> and <a href="#">edit your password and account details.</a></p>
+                    </div>
+                    <div class="tab-pane fade" id="orders">
+                        <h4>Orders</h4>
+                        <div class="table_page table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Order</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Total</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% orders.forEach(order => { %>
+                                    <tr>
+                                        <td><%= order._id %></td>
+                                        <td><%= order.createdAt.toDateString() %></td>
+                                        <td><%= order.status %></td>
+                                        <td>$<%= order.total.toFixed(2) %></td>
+                                        <td>
+                                          <% if(order.status !== 'Cancelled') { %>
+                                            <form action="/cancel-order/<%= order._id %>" method="POST">
+                                              <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
+                                            </form>
+                                          <% } %>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="downloads">
+                        <h4>Downloads</h4>
+                        <div class="table_page table-responsive">   
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Downloads</th>
+                                        <th>Expires</th>
+                                        <th>Download</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Downloads data should be dynamically inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="address">
+                        <h4>Addresses</h4>
+                        <div id="address-list">
+                        <% if (addresses.length > 0) { %>
+                            <div class="row">
+                                <% addresses.forEach(user => { %>
+                                    <% user.address.forEach(address => { %>
+                                        <div class="col-md-6 mb-4">
+                                            <div class="address-card p-3 border rounded">
+                                                <h5><%= address.name %></h5>
+                                                <p><strong>Type:</strong> <%= address.addressType %></p>
+                                                <p><strong>City:</strong> <%= address.city %></p>
+                                                <p><strong>Landmark:</strong> <%= address.landMark %></p>
+                                                <p><strong>State:</strong> <%= address.state %></p>
+                                                <p><strong>Pin Code:</strong> <%= address.pinCode %></p>
+                                                <p><strong>Mobile:</strong> <%= address.mobile %></p>
+                                                <button class="btn btn-md btn-black-default-hover edit-address" data-id="<%= address._id %>" data-bs-toggle="modal" data-bs-target="#editAddressModal">Edit</button>
+                                                <button class="btn btn-md btn-black-default-hover delete-address" data-id="<%= address._id %>">Delete</button>
+                                            </div>
+                                        </div>
+                                    <% }); %>
+                                <% }); %>
+                            </div>
+                        <% } else { %>
+                            <p>No addresses found.</p>
+                        <% } %>
+                        </div>
+                        <a href="#" class="view mt-3" data-bs-toggle="modal" data-bs-target="#addAddressModal">Add Address</a>
+                    </div>            
+                    <!-- Flash Message Container -->
+                    <div id="flashMessageContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 11"></div>
+                    <div class="tab-pane fade" id="account-details">
+                        <h3>Account details</h3>
+                        <% if (userLoggedIn) { %>
+                            <div class="login">
+                                <div class="login_form_container">
+                                    <div class="account_login_form">
+                                        <form id="updateProfileForm" action="/update-profile" method="post">
+                                            <div class="default-form-box mb-20">
+                                                <label>First Name</label>
+                                                <input type="text" name="firstName" value="<%= user ? user.firstName : '' %>">
+                                            </div>
+                                            <div class="default-form-box mb-20">
+                                                <label>Last Name</label>
+                                                <input type="text" name="lastName" value="<%= user ? user.lastName : '' %>">
+                                            </div>
+                                            <div class="default-form-box mb-20">
+                                                <label>Email</label>
+                                                <input type="email" name="email" value="<%= user ? user.email : '' %>" readonly>
+                                            </div>
+                                            <div class="default-form-box mb-20">
+                                                <label>Mobile</label>
+                                                <input type="tel" name="mobile" value="<%= user ? user.mobile : '' %>">
+                                            </div>
+                                            <div class="save_button mt-3">
+                                                <button class="btn btn-md btn-black-default-hover" type="submit">Save Changes</button>
+                                            </div>
+                                        </form>
+                                        <a href="#" class="view" data-bs-toggle="modal" data-bs-target="#changePasswordModal">Change Password</a>
+                                    </div>
+                                </div>
+                            </div>
+                        <% } else { %>
+                            <p>Already have an account? <a href="/login">Log in instead!</a></p>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> <!-- End Account Dashboard Section -->
+
+    
+    <!-- Add Address Modal -->
+    <div class="modal fade" id="addAddressModal" tabindex="-1" role="dialog" aria-labelledby="addAddressModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col text-right">
+                                <button type="button" class="close modal-close" data-bs-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true"><i class="fa fa-times"></i></span>
+                                </button>
+                            </div>
+                        </div>
+                        <form action="/my-account/add-address" method="post">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="default-form-box mb-20">
+                                        <label>Name</label>
+                                        <input type="text" name="name" class="form-control" required>
+                                    </div>
+                                    <div class="default-form-box mb-20">
+                                        <label>Address Type</label>
+                                        <input type="text" name="addressType" class="form-control" required>
+                                    </div>
+                                    <div class="default-form-box mb-20">
+                                        <label>City</label>
+                                        <input type="text" name="city" class="form-control" required>
+                                    </div>
+                                    <div class="default-form-box mb-20">
+                                        <label>Landmark</label>
+                                        <input type="text" name="landMark" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="default-form-box mb-20">
+                                        <label>State</label>
+                                        <input type="text" name="state" class="form-control" required>
+                                    </div>
+                                    <div class="default-form-box mb-20">
+                                        <label>Pin Code</label>
+                                        <input type="text" name="pinCode" class="form-control" required>
+                                    </div>
+                                    <div class="default-form-box mb-20">
+                                        <label>Mobile</label>
+                                        <input type="text" name="mobile" class="form-control" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right mt-3">
+                                <button type="submit" class="btn btn-md btn-black-default-hover">Save Address</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Edit Address Modal -->
+<div class="modal fade" id="editAddressModal" tabindex="-1" role="dialog" aria-labelledby="editAddressModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col text-right">
+                            <button type="button" class="close modal-close" data-bs-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true"><i class="fa fa-times"></i></span>
+                            </button>
+                        </div>
+                    </div>
+                    <form id="editAddressForm">
+                        <input type="hidden" id="editAddressId" name="addressId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="default-form-box mb-20">
+                                    <label>Name</label>
+                                    <input type="text" id="editAddressName" name="name" class="form-control" required>
+                                </div>
+                                <div class="default-form-box mb-20">
+                                    <label>Address Type</label>
+                                    <input type="text" id="editAddressType" name="addressType" class="form-control" required>
+                                </div>
+                                <div class="default-form-box mb-20">
+                                    <label>City</label>
+                                    <input type="text" id="editCity" name="city" class="form-control" required>
+                                </div>
+                                <div class="default-form-box mb-20">
+                                    <label>Landmark</label>
+                                    <input type="text" id="editLandMark" name="landMark" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="default-form-box mb-20">
+                                    <label>State</label>
+                                    <input type="text" id="editState" name="state" class="form-control" required>
+                                </div>
+                                <div class="default-form-box mb-20">
+                                    <label>Pin Code</label>
+                                    <input type="text" id="editPinCode" name="pinCode" class="form-control" required>
+                                </div>
+                                <div class="default-form-box mb-20">
+                                    <label>Mobile</label>
+                                    <input type="text" id="editMobile" name="mobile" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right mt-3">
+                            <button type="submit" class="btn btn-md btn-black-default-hover">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    
+    <!-- Change Password Modal -->
+    <% if (success) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <% if (!messages) { %>
+                <p>Password changed successfully</p>
+            <% } else { %>
+                <%= messages.success %>
+            <% } %>
+          <%= messages.success %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <% } %>
+    
+    <% if (error) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <%= message.error %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <% } %>    
+<div class="modal fade" id="changePasswordModal" tabindex="-1" role="dialog" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col text-right">
+                            <button type="button" class="close modal-close" data-bs-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true"><i class="fa fa-times"></i></span>
+                            </button>
+                        </div>
+                    </div>
+                    <h3 class="text-center mb-4">Change Password</h3>
+                    <form id="changePasswordForm">
+                        <div class="default-form-box mb-3">
+                            <label for="current-password">Current Password</label>
+                            <input type="password" id="current-password" name="current-password" class="form-control">
+                            <div id="currentPasswordError" class="error-message"></div>
+                        </div>
+                        <div class="default-form-box mb-3">
+                            <label for="new-password">New Password</label>
+                            <input type="password" id="new-password" name="new-password" class="form-control">
+                            <div id="newPasswordError" class="error-message"></div>
+                        </div>
+                        <div class="default-form-box mb-4">
+                            <label for="confirm-new-password">Confirm New Password</label>
+                            <input type="password" id="confirm-new-password" name="confirm-new-password" class="form-control">
+                            <div id="confirmNewPasswordError" class="error-message"></div>
+                        </div>
+                        <div class="text-center mb-3">
+                            <button type="submit" class="btn btn-md btn-black-default-hover">Change Password</button>
+                        </div>
+                    </form>                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    
+
+<%- include("../partials/user/footer") %>
+
+<script>
+    //for update profile
+    document.addEventListener('DOMContentLoaded', function() {
+    const updateProfileForm = document.getElementById('updateProfileForm');
+    if (updateProfileForm) {
+        updateProfileForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const submitButton = this.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Saving...';
+
+            try {
+                const response = await axios.post('/update-profile', Object.fromEntries(formData), {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = response.data;
+
+                if (result.success) {
+                    showFlashMessage('success', 'Profile updated successfully');
+                    updateFormValues(result.user);
+                } else {
+                    showFlashMessage('error', result.message || 'Failed to update profile');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showFlashMessage('error', 'An error occurred while updating the profile');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Save Changes';
+            }
+        });
+    }
+
+    function showFlashMessage(type, message) {
+        const flashContainer = document.getElementById('flashMessageContainer');
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show`;
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        flashContainer.appendChild(alertDiv);
+
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+
+    function updateFormValues(user) {
+        document.querySelector('input[name="firstName"]').value = user.firstName;
+        document.querySelector('input[name="lastName"]').value = user.lastName;
+        document.querySelector('input[name="email"]').value = user.email;
+        document.querySelector('input[name="mobile"]').value = user.mobile;
+    }
+});
+
+
+
+    //for change password
+   document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const currentPassword = document.getElementById('current-password').value;
+    const newPassword = document.getElementById('new-password').value;
+    const confirmNewPassword = document.getElementById('confirm-new-password').value;
+
+    // Client-side validation
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+        displayFlashMessage('error', 'All fields are required');
+        return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+        displayFlashMessage('error', 'New passwords do not match');
+        return;
+    }
+
+    // Disable submit button and show loading state
+    const submitButton = this.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.innerHTML = 'Changing Password...';
+
+    try {
+        const response = await axios.post('/change-password', {
+            currentPassword,
+            newPassword,
+            confirmNewPassword
+        });
+
+        if (response.data.success) {
+            // Clear the form
+            this.reset();
+            
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
+            modal.hide();
+
+            // Display success message
+            displayFlashMessage('success', 'Password changed successfully');
+        } else {
+            // If the server sends an error message, display it
+            const errorMessage = response.data.message || 'Failed to change password';
+            displayFlashMessage('error', errorMessage);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        displayFlashMessage('error', 'An error occurred while changing the password');
+    } finally {
+        // Re-enable submit button and restore original text
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Change Password';
+    }
+});
+
+function displayFlashMessage(type, message) {
+    const flashContainer = document.createElement('div');
+    flashContainer.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show`;
+    flashContainer.role = 'alert';
+    flashContainer.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+
+    // Insert the flash message at the top of the modal body
+    const modalBody = document.querySelector('#changePasswordModal .modal-body');
+    modalBody.insertBefore(flashContainer, modalBody.firstChild);
+
+    // Automatically remove the flash message after 5 seconds
+    setTimeout(() => {
+        flashContainer.remove();
+    }, 5000);
+}
+
+
+
+</script>
+
+<script src="/javascript/address.js"></script>
+
