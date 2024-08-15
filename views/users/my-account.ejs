@@ -2,6 +2,20 @@
 <%- include("../partials/user/right") %>
 
 
+    <style>
+        .error-message {
+            color: black;
+            font-size: 12px;
+            position: absolute;
+            left: 0;
+            bottom: -20px;
+        }
+        .default-form-box {
+            position: relative;
+        }
+
+    </style>
+
     <!-- Start Mobile Header -->
     <div class="mobile-header mobile-header-bg-color--golden section-fluid d-lg-block d-xl-none">
         <div class="container">
@@ -131,7 +145,7 @@
                                         <td>$<%= order.total.toFixed(2) %></td>
                                         <td>
                                           <% if(order.status !== 'Cancelled') { %>
-                                            <form action="/cancel-order/<%= order._id %>" method="POST">
+                                            <form action="/cancel-order/<%= order._id %>" method="put">
                                               <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
                                             </form>
                                           <% } %>
@@ -233,63 +247,71 @@
 </div> <!-- End Account Dashboard Section -->
 
     
-    <!-- Add Address Modal -->
-    <div class="modal fade" id="addAddressModal" tabindex="-1" role="dialog" aria-labelledby="addAddressModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <div class="container-fluid">
-                        <div class="row">
-                            <div class="col text-right">
-                                <button type="button" class="close modal-close" data-bs-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true"><i class="fa fa-times"></i></span>
-                                </button>
-                            </div>
-                        </div>
-                        <form action="/my-account/add-address" method="post">
+        <!-- Add Address Modal -->
+        <div class="modal fade" id="addAddressModal" tabindex="-1" role="dialog" aria-labelledby="addAddressModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="container-fluid">
                             <div class="row">
-                                <div class="col-md-6">
-                                    <div class="default-form-box mb-20">
-                                        <label>Name</label>
-                                        <input type="text" name="name" class="form-control" required>
-                                    </div>
-                                    <div class="default-form-box mb-20">
-                                        <label>Address Type</label>
-                                        <input type="text" name="addressType" class="form-control" required>
-                                    </div>
-                                    <div class="default-form-box mb-20">
-                                        <label>City</label>
-                                        <input type="text" name="city" class="form-control" required>
-                                    </div>
-                                    <div class="default-form-box mb-20">
-                                        <label>Landmark</label>
-                                        <input type="text" name="landMark" class="form-control" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="default-form-box mb-20">
-                                        <label>State</label>
-                                        <input type="text" name="state" class="form-control" required>
-                                    </div>
-                                    <div class="default-form-box mb-20">
-                                        <label>Pin Code</label>
-                                        <input type="text" name="pinCode" class="form-control" required>
-                                    </div>
-                                    <div class="default-form-box mb-20">
-                                        <label>Mobile</label>
-                                        <input type="text" name="mobile" class="form-control" required>
-                                    </div>
+                                <div class="col text-right">
+                                    <button type="button" class="close modal-close" data-bs-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true"><i class="fa fa-times"></i></span>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="text-right mt-3">
-                                <button type="submit" class="btn btn-md btn-black-default-hover">Save Address</button>
-                            </div>
-                        </form>
+                            <form id="addAddressForm">
+                                <input type="hidden" id="addressId" name="addressId">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="default-form-box mb-20">
+                                            <label>Name</label>
+                                            <input type="text" id="addressName" name="name" class="form-control">
+                                            <div id="addressNameError" class="error-message"></div>
+                                        </div>
+                                        <div class="default-form-box mb-20">
+                                            <label>Address Type</label>
+                                            <input type="text" id="addressType" name="addressType" class="form-control">
+                                            <div id="addressTypeError" class="error-message"></div>
+                                        </div>
+                                        <div class="default-form-box mb-20">
+                                            <label>City</label>
+                                            <input type="text" id="city" name="city" class="form-control">
+                                            <div id="cityError" class="error-message"></div>
+                                        </div>
+                                        <div class="default-form-box mb-20">
+                                            <label>Landmark</label>
+                                            <input type="text" id="landMark" name="landMark" class="form-control">
+                                            <div id="landMarkError" class="error-message"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="default-form-box mb-20">
+                                            <label>State</label>
+                                            <input type="text" id="state" name="state" class="form-control">
+                                            <div id="stateError" class="error-message"></div>
+                                        </div>
+                                        <div class="default-form-box mb-20">
+                                            <label>Pin Code</label>
+                                            <input type="text" id="pinCode" name="pinCode" class="form-control">
+                                            <div id="pinCodeError" class="error-message"></div>
+                                        </div>
+                                        <div class="default-form-box mb-20">
+                                            <label>Mobile</label>
+                                            <input type="text" id="mobile" name="mobile" class="form-control">
+                                            <div id="mobileError" class="error-message"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right mt-3">
+                                    <button type="submit" class="btn btn-md btn-black-default-hover">Save Address</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
 
     <!-- Edit Address Modal -->
@@ -309,35 +331,42 @@
                         <input type="hidden" id="editAddressId" name="addressId">
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="default-form-box mb-20">
+                                <div class="default-form-box mb-20 position-relative">
                                     <label>Name</label>
-                                    <input type="text" id="editAddressName" name="name" class="form-control" required>
+                                    <input type="text" id="editAddressName" name="name" class="form-control">
+                                    <div id="editAddressNameError" class="error-message"></div>
                                 </div>
                                 <div class="default-form-box mb-20">
                                     <label>Address Type</label>
-                                    <input type="text" id="editAddressType" name="addressType" class="form-control" required>
+                                    <input type="text" id="editAddressType" name="addressType" class="form-control">
+                                    <div id="editAddressTypeError" class="error-message"></div>
                                 </div>
                                 <div class="default-form-box mb-20">
                                     <label>City</label>
-                                    <input type="text" id="editCity" name="city" class="form-control" required>
+                                    <input type="text" id="editCity" name="city" class="form-control">
+                                    <div id="editCityError" class="error-message"></div>
                                 </div>
                                 <div class="default-form-box mb-20">
                                     <label>Landmark</label>
-                                    <input type="text" id="editLandMark" name="landMark" class="form-control" required>
+                                    <input type="text" id="editLandMark" name="landMark" class="form-control">
+                                    <div id="editLandMarkError" class="error-message"></div>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="default-form-box mb-20">
+                                <div class="default-form-box mb-20" position="relative">
                                     <label>State</label>
-                                    <input type="text" id="editState" name="state" class="form-control" required>
+                                    <input type="text" id="editState" name="state" class="form-control">
+                                    <div id="editStateError" class="error-message"></div>
                                 </div>
                                 <div class="default-form-box mb-20">
                                     <label>Pin Code</label>
-                                    <input type="text" id="editPinCode" name="pinCode" class="form-control" required>
+                                    <input type="text" id="editPinCode" name="pinCode" class="form-control">
+                                    <div id="editPinCodeError" class="error-message"></div>
                                 </div>
                                 <div class="default-form-box mb-20">
                                     <label>Mobile</label>
-                                    <input type="text" id="editMobile" name="mobile" class="form-control" required>
+                                    <input type="text" id="editMobile" name="mobile" class="form-control">
+                                    <div id="editMobileError" class="error-message"></div>
                                 </div>
                             </div>
                         </div>
