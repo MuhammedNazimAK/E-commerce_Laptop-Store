@@ -214,11 +214,13 @@
                                         <form id="updateProfileForm" action="/update-profile" method="post">
                                             <div class="default-form-box mb-20">
                                                 <label>First Name</label>
-                                                <input type="text" name="firstName" value="<%= user ? user.firstName : '' %>">
+                                                <input type="text" id="firstName" name="firstName" value="<%= user ? user.firstName : '' %>">
+                                                <div id="firstNameError" class="error-message"></div>
                                             </div>
                                             <div class="default-form-box mb-20">
                                                 <label>Last Name</label>
-                                                <input type="text" name="lastName" value="<%= user ? user.lastName : '' %>">
+                                                <input type="text" id="lastName" name="lastName" value="<%= user ? user.lastName : '' %>">
+                                                <div id="lastNameError" class="error-message"></div>
                                             </div>
                                             <div class="default-form-box mb-20">
                                                 <label>Email</label>
@@ -226,7 +228,8 @@
                                             </div>
                                             <div class="default-form-box mb-20">
                                                 <label>Mobile</label>
-                                                <input type="tel" name="mobile" value="<%= user ? user.mobile : '' %>">
+                                                <input type="tel" id="mobileForProfile" name="mobile" value="<%= user ? user.mobile : '' %>">
+                                                <div id="mobileError" class="error-message"></div>
                                             </div>
                                             <div class="save_button mt-3">
                                                 <button class="btn btn-md btn-black-default-hover" type="submit">Save Changes</button>
@@ -404,6 +407,7 @@
 <div class="modal fade" id="changePasswordModal" tabindex="-1" role="dialog" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
         <div class="modal-content">
+            <div class="flash-message-container"></div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <div class="row">

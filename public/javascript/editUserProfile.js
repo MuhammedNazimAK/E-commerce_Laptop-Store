@@ -51,6 +51,8 @@ document.addEventListener('DOMContentLoaded', function() {
     async function handleUpdateProfile(e) {
         e.preventDefault();
 
+        if (validateProfileInputs()) {
+
         const formData = new FormData(this);
         const submitButton = this.querySelector('button[type="submit"]');
         submitButton.disabled = true;
@@ -67,19 +69,22 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = response.data;
 
             if (result.success) {
-                showFlashMessage('success', 'Profile updated successfully');
+                swal.fire('Success', result.message, 'success');
                 updateFormValues(result.user);
             } else {
-                showFlashMessage('error', result.message || 'Failed to update profile');
+                swal.fire('Error', result.message, 'error');
             }
         } catch (error) {
             console.error('Error:', error);
-            showFlashMessage('error', 'An error occurred while updating the profile');
+            swal.fire('Error', 'An error occurred while updating the profile', 'error');
         } finally {
             submitButton.disabled = false;
             submitButton.textContent = 'Save Changes';
         }
+    } else {
+        console.log('validateProfileInputs returned false');
     }
+}
 
     async function handleChangePassword(e) {
         e.preventDefault();
@@ -166,19 +171,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showFlashMessage(type, message) {
-        const flashContainer = document.getElementById('flashMessageContainer');
+        const flashContainer = document.querySelector('#changePasswordModal .flash-message-container');
         const alertDiv = document.createElement('div');
         alertDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show`;
         alertDiv.role = 'alert';
         alertDiv.innerHTML = `
             ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         `;
+        flashContainer.innerHTML = '';
         flashContainer.appendChild(alertDiv);
 
         setTimeout(() => {
             alertDiv.remove();
         }, 5000);
+    }
+
+    function validateProfileInputs() {
+        const isFirstNameValid = validateNameInput('firstName', 'firstNameError');
+        console.log('isFirstNameValid:', isFirstNameValid);
+        const isLastNameValid = validateNameInput('lastName', 'lastNameError');
+        const isMobileValid = validateMobileInput('mobileForProfile', 'mobileError');
+        return isFirstNameValid && isLastNameValid && isMobileValid;
     }
 
     function updateFormValues(user) {

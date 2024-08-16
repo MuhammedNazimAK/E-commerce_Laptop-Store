@@ -179,10 +179,7 @@ function validateNameInput(inputId, errrorDivId) {
     if (input.value.trim() == '') {
         errorDiv.textContent = 'Please enter a name';
         return false;
-    } else if (!/[a-zA-Z]/.test(input.value)) {
-        errorDiv.textContent = 'Please enter a valid name';
-        return false;
-    } else if (input.value.length < 3) {
+    } else if (!/^[a-zA-Z\s']+$/.test(input.value)) {
         errorDiv.textContent = 'Please enter a valid name';
         return false;
     } else {
