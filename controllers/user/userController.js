@@ -304,43 +304,70 @@ const getChangePasswordPage = (req, res) => {
 
 
 const changePassword = async (req, res) => {
-  try {
-    const userId = req.session.user._id;
-    
-    const { currentPassword, newPassword, confirmNewPassword } = req.body;    
-    
-    // Verify current password
-    const user = await User.findById(userId);
-    console.log('user', user);
-    console.log('password', currentPassword);
-    console.log('new password', newPassword);
-    console.log('confirm new password', confirmNewPassword);
-    
-    
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    console.log('Change password request received');
+    try {
+        const userId = req.session.user._id;
+        const { currentPassword, newPassword, confirmNewPassword } = req.body;
+        console.log('User ID:', userId);
+        console.log('Current Password:', currentPassword);
+        console.log('New Password:', newPassword);
+        console.log('Confirm New Password:', confirmNewPassword);
 
-    if (!isMatch) {
-      return res.status(400).json({ msg: 'Current password is incorrect' });
+        // Input validation
+        if (!currentPassword || !newPassword || !confirmNewPassword) {
+            console.log('Validation failed: All fields are required');
+            return res.status(400).json({ success: false, msg: 'All fields are required' });
+        }
+
+        // Password complexity check
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/;
+        if (!passwordRegex.test(newPassword)) {
+            console.log('Validation failed: Password complexity requirements not met');
+            return res.status(400).json({
+                success: false,
+                msg: 'New password must be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, and one number'
+            });
+        }
+
+        // Check if new password matches confirm password
+        if (newPassword !== confirmNewPassword) {
+            console.log('Validation failed: New passwords do not match');
+            return res.status(400).json({ success: false, msg: 'New passwords do not match' });
+        }
+
+        // Verify current password
+        const user = await User.findById(userId);
+        if (!user) {
+            console.log('User not found');
+            return res.status(404).json({ success: false, msg: 'User not found' });
+        }
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            console.log('Validation failed: Current password is incorrect');
+            return res.status(400).json({ success: false, msg: 'Current password is incorrect' });
+        }
+
+        // Check if new password is different from the current password
+        const isSamePassword = await bcrypt.compare(newPassword, user.password);
+        if (isSamePassword) {
+            console.log('Validation failed: New password must be different from the current password');
+            return res.status(400).json({ success: false, msg: 'New password must be different from the current password' });
+        }
+
+        // Hash and save new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        await user.save();
+
+        console.log('Password changed successfully');
+        res.status(200).json({ success: true, msg: 'Password changed successfully' });
+    } catch (error) {
+        console.error('Error in changePassword:', error);
+        res.status(500).json({ success: false, msg: 'Server error while changing password' });
     }
-    
-    if (newPassword !== confirmNewPassword) {
-      return res.status(400).json({ msg: 'New passwords do not match' });
-    }
-    
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    
-    user.password = hashedPassword;
-    await user.save();
-
-    req.flash('success', 'Password changed successfully');
-
-    res.status(200).json({ success: true });
-  } catch (error) {
-    console.error(error);
-    req.flash('error', 'Server error while changing password');
-    res.status(500).json({ success: false });
-  }
 };
+
 
 
 
