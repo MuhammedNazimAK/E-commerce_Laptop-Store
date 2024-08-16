@@ -332,6 +332,7 @@ const getRelatedProducts = async (product) => {
   const searchAndSortProducts = async (req, res) => {
     try {
       const { filters, sort, page, itemsPerPage, searchQuery } = req.body;
+      console.log('received sort option:', req.body.sort);
       
       const aggregationPipeline = [];
   
@@ -423,6 +424,7 @@ const getRelatedProducts = async (product) => {
   
       // Execute the aggregation
       const products = await Product.aggregate(aggregationPipeline);
+      console.log('first few sorted  products:', products.slice(0, 3));
   
       res.json({
         products,

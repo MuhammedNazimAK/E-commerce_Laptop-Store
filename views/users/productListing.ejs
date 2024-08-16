@@ -3,6 +3,47 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.css">
 
 
+<style>
+  #product-container {
+  padding-left: 20px; /* Moves the entire container to the right */
+}
+
+.product-unavailable {
+  color: red;
+  font-weight: bold;
+  display: block;
+  margin: 10px 0;
+}
+
+.product-list-single {
+  display: flex;
+  margin-bottom: 30px;
+  align-items: flex-start;
+}
+
+.product-list-img-link {
+  flex: 0 0 300px;
+  margin-right: 30px;
+}
+
+.product-list-content {
+  flex: 1;
+  padding-top: 40px;
+}
+
+.product-action-icon-link-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-lg {
+  padding: 10px 15px;
+  font-size: 14px;
+}
+</style>
+
     <!-- ...:::: Start Breadcrumb Section:::... -->
     <div class="breadcrumb-section breadcrumb-bg-color--golden">
         <div class="breadcrumb-wrapper">
@@ -176,7 +217,7 @@
                 </div>
               </div>
               <!-- Start Tab Wrapper -->
-              <div class="sort-product-tab-wrapper">
+              <div class="sort-product-tab-wrapper" data-aos="fade-up" data-aos-delay="0">
                 <div class="container">
                   <div class="row">
                     <div class="col-12">

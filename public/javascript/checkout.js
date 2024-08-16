@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .then((response) => response.json())
       .then((data) => {
         console.log("data", data);
-        const addresses = data.addresses.address; // Access the address array correctly
+        const addresses = data.addresses.address;
         if (addresses && addresses.length > 0) {
           addressListContainer.innerHTML = addresses
             .map(
@@ -28,11 +28,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 <input class="form-check-input" type="radio" name="addressSelection" value="${address._id}" data-address-id="${address._id}">
                 <label class="form-check-label" for="address_${address._id}">
                   ${address.name}<br>
-                  ${address.address}<br>
+                  ${address.addressType}<br>
                   ${address.city}, ${address.state} - ${address.pinCode}<br>
                   Phone: ${address.mobile}
                 </label>
-              </div>
+              </div>  
               <div class="dropdown dropdown-menu-end">
                 <a href="#" data-bs-toggle="dropdown">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

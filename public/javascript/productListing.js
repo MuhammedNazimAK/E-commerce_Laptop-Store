@@ -22,15 +22,28 @@ class ProductData {
   }
 
   initEventListeners() {
+    const searchForm = document.getElementById('search-form');
     const searchInput = document.getElementById('search-input');
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
+    const searchButton = document.querySelector('#search-form button[type="submit"]');
+
+    if (searchForm && searchInput && searchButton) {
+      searchForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handleSearch(searchInput.value);
+      }); 
+
+      searchButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.handleSearch(searchInput.value);
+      });
     }
 
     const sortSelect = document.getElementById('sort-select');
     if (sortSelect) {
       sortSelect.addEventListener('change', (e) => {
+        console.log('sortSelect.value:', e.target.value);
         this.sortOption = e.target.value;
+        this.currentPage = 1;
         this.fetchProducts();
       });
     }
@@ -102,6 +115,7 @@ class ProductData {
     this.filters.rams = [...document.querySelectorAll('.ram-filter:checked')].map(el => el.value);
     this.filters.processors = [...document.querySelectorAll('.processor-filter:checked')].map(el => el.value);
     this.filters.graphicsCards = [...document.querySelectorAll('.graphics-card-filter:checked')].map(el => el.value);
+    this.currentPage = 1;
     this.fetchProducts();
   }
 
@@ -156,9 +170,21 @@ class ProductData {
     this.searchQuery = query;
     this.currentPage = 1;
     this.fetchProducts();
+
+    const searchModal = document.getElementById('search');
+    if (searchModal) {
+      searchModal.classList.remove('open');
+    }
+
+    //clear the search input
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      searchInput.value = '';
+    }
   }
 
   async fetchProducts() {
+    console.log('Fetching products with sort option:', this.sortOption);
     try {
       const response = await fetch('/productListing/search-and-sort', {
         method: 'POST',
@@ -183,99 +209,93 @@ class ProductData {
       this.updatePagination(data.totalProducts);
       this.currentPage = data.currentPage;
 
+      this.updateURL();
+
       const productCountElement = document.getElementById('product-count');
       if (productCountElement) {
         const startIndex = (this.currentPage - 1) * this.itemsPerPage + 1;
         const endIndex = Math.min(this.currentPage * this.itemsPerPage, data.totalProducts);
-        // productCountElement.textContent = `Showing ${startIndex}-${endIndex} of ${data.totalProducts} results`;
+        productCountElement.textContent = `Showing ${startIndex}-${endIndex} of ${data.totalProducts} results`;
       }
     } catch (error) {
       console.error('Error fetching products:', error);
     }
   }
 
-  updateProductContainer(products) {
-    const container = document.getElementById('product-container');
-    if (!container) return;
-  
-    // Clear existing content
-    container.innerHTML = '';
-  
-    // Generate HTML for each product card
-    products.forEach(product => {
-      const productCard = document.createElement('div');
-      productCard.classList.add('product-list-single', 'product-color--golden');
-  
-      productCard.innerHTML = `
-        <a href="product-details-default.html" class="product-list-img-link">
-          <img class="img-fluid" src="${product.imageUrl}" alt="${product.name}">
-          <img class="img-fluid" src="${product.imageUrl}" alt="${product.name}">
-        </a>
-        <div class="product-list-content">
-          <h5 class="product-list-link"><a href="product-details-default.html">${product.name}</a></h5>
-          <ul class="review-star">
-            ${generateStarRating(product.rating)}
-          </ul>
-          <span class="product-list-price"><del>${product.regularPrice}</del> ${product.salesPrice}
-          <p>${product.description}</p>
-          <div class="product-action-icon-link-list">
-            <a href="#" data-bs-toggle="modal" data-bs-target="#modalAddcart" class="btn btn-lg btn-black-default-hover">Add to cart</a>
-            <a href="#" data-bs-toggle="modal" data-bs-target="#modalQuickview" class="btn btn-lg btn-black-default-hover"><i class="icon-magnifier"></i></a>
-            <a href="wishlist.html" class="btn btn-lg btn-black-default-hover"><i class="icon-heart"></i></a>
-            <a href="compare.html" class="btn btn-lg btn-black-default-hover"><i class="icon-refresh"></i></a>
-          </div>
-        </div>
-      `;
-  
-      container.appendChild(productCard);
+    updateURL() {
+    const searchParams = new URLSearchParams();
+    searchParams.set('page', this.currentPage);
+    searchParams.set('sort', this.sortOption);
+    if (this.searchQuery) searchParams.set('searchQuery', this.searchQuery);
+
+    Object.entries(this.filters).forEach(([key, value]) => {
+      if (Array.isArray(value) && value.length > 0) {
+        searchParams.set(key, value.join(','));
+      } else if (typeof value === 'boolean' && value) {
+        searchParams.set(key, 'true');
+      } else if (typeof value === 'number' && value > 0) {
+        searchParams.set(key, value.toString());
+      }
     });
-  
-    const event = new CustomEvent('productsUpdated', { detail: products });
-    document.dispatchEvent(event);
+
+    window.history.pushState({}, '', `${window.location.pathname}?${searchParams.toString()}`); 
   }
-  updateProductContainer(products) {
+
+   updateProductContainer(products) {
     const container = document.getElementById('product-container');
     if (!container) return;
-  
-    // Clear existing content
     container.innerHTML = '';
-  
-    // Generate HTML for each product card
+    
     products.forEach(product => {
-      const productCard = document.createElement('div');
-      productCard.classList.add('product-list-single', 'product-color--golden');
-  
-      const truncatedDescription = truncateString(product.basicInformation.description, 100);
-  
-      productCard.innerHTML = `
-        <a href="product-details-default.html" class="product-list-img-link">
-          <img class="img-fluid" src="${product.images.highResolutionPhotos[0]}" alt="${product.basicInformation.name}">
-          <img class="img-fluid" src="${product.images.highResolutionPhotos[0]}" alt="${product.basicInformation.name}">
+      const productElement = document.createElement('div');
+      productElement.classList.add('product-list-single', 'product-color--golden', 'fade-in-element');
+      const truncatedDescription = truncateString(product.basicInformation.description, 150);
+      const isUnavailable = product.status === false;
+      
+      productElement.innerHTML = `
+        <a href="/productDetails/${product._id}" class="product-list-img-link">
+          <img class="img-fluid" src="${product.images.highResolutionPhotos[0]}" alt="${product.basicInformation.name}" style="width: 350px; height: 350px; object-fit: contain;">
+          <img class="img-fluid" src="${product.images.highResolutionPhotos[1] || product.images.highResolutionPhotos[0]}" alt="${product.basicInformation.name}" style="width: 350px; height: 350px; object-fit: contain;">
         </a>
         <div class="product-list-content">
-          <h5 class="product-list-link"><a href="product-details-default.html">${product.basicInformation.name}</a></h5>
+          <h5 class="product-list-link"><a href="/productDetails/${product._id}">${product.basicInformation.name}</a></h5>
           <ul class="review-star">
+            ${generateRatingStars()}
           </ul>
-          <span class="product-list-price">
-            ${product.pricingAndAvailability.salesPrice ? `<del>${product.pricingAndAvailability.regularPrice}</del> ${product.pricingAndAvailability.salesPrice}` : `${product.pricingAndAvailability.regularPrice}`}
-          
+          ${isUnavailable ?
+            '<span class="product-unavailable">Currently Unavailable</span>' :
+            `<span class="product-list-price">
+              ${product.pricingAndAvailability.salesPrice ?
+                `<del>₹${product.pricingAndAvailability.regularPrice}</del> ₹${product.pricingAndAvailability.salesPrice}` :
+                `₹${product.pricingAndAvailability.regularPrice}`}
+             </span>`
+          }
           <p>${truncatedDescription}</p>
           <div class="product-action-icon-link-list">
-            <a href="#" data-bs-toggle="modal" data-bs-target="#modalAddcart" class="btn btn-lg btn-black-default-hover">Add to cart</a>
-            <a href="#" data-bs-toggle="modal" data-bs-target="#modalQuickview" class="btn btn-lg btn-black-default-hover"><i class="icon-magnifier"></i></a>
-            <a href="wishlist.html" class="btn btn-lg btn-black-default-hover"><i class="icon-heart"></i></a>
-            <a href="compare.html" class="btn btn-lg btn-black-default-hover"><i class="icon-refresh"></i></a>
+            ${isUnavailable ? '' : `
+              <a href="/addToCart/${product._id}" data-bs-toggle="modal" data-bs-target="#modalAddcart" class="btn btn-lg btn-black-default-hover">Add to cart</a>
+              <a href="wishlist.html" class="btn btn-lg btn-black-default-hover"><i class="icon-heart"></i></a>
+            `}
           </div>
         </div>
       `;
-  
-      container.appendChild(productCard);
+      container.appendChild(productElement);
     });
+  
   
     const event = new CustomEvent('productsUpdated', { detail: products });
     document.dispatchEvent(event);
   }
 }
+  function generateRatingStars() {
+    return `
+      <li class="fill"><i class="ion-android-star"></i></li>
+      <li class="fill"><i class="ion-android-star"></i></li>
+      <li class="fill"><i class="ion-android-star"></i></li>
+      <li class="fill"><i class="ion-android-star"></i></li>
+      <li class="empty"><i class="ion-android-star"></i></li>
+    `;
+  }
   
   function truncateString(str, maxLength) {
     if (str.length > maxLength) {
@@ -287,4 +307,4 @@ class ProductData {
 document.addEventListener('DOMContentLoaded', () => {
   new ProductData();
 });
-})();
+})(); 
