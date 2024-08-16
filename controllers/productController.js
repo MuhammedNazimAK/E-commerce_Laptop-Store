@@ -37,8 +37,8 @@
       console.log('req.files:', req.files);
 
       let imageUrls = [];
-      if (req.files) {
-        let imagesToUpload = Array.isArray(req.files) ? req.files : req.files.images;
+      if (req.files && req.files.images) {
+        let imagesToUpload = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
         if (imagesToUpload) { 
           try {
             const uploadedImages = await uploadImages(imagesToUpload);

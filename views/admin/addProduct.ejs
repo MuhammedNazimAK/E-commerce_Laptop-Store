@@ -5,28 +5,31 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 
 <style>
+    /* Container for images with remove button */
     .img-container {
         display: flex;
         align-items: center;
-        justify-content: center;
         margin-bottom: 15px;
-        background-color: #fff !important;
+        background-color: #f8f9fa;
         padding: 10px;
         border-radius: 8px;
         position: relative;
-        width: 200px !important;
-        height: 200px !important;
-        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
     }
 
+    /* Thumbnail images */
     .img-thumbnail {
-        max-height: 100% !important;
+        max-height: 180px !important;
+        border: 1px solid #ddd;
+        padding: 4px;
+        border-radius: 4px;
+        display: block;
+        width: auto;
         max-width: 100% !important;
-        object-fit: contain;
-        border: none;
-        padding: 0;
+        margin-right: 10px;
     }
 
+    /* Remove button for images */
     .btn-danger.btn-sm {
         position: absolute;
         top: 10px;
@@ -37,36 +40,39 @@
         white-space: nowrap;
     }
 
+    /* Error message container */
     .error-message-container {
         height: 20px; 
         margin-top: 5px;
     }
 
+    /* Modal dialog settings */
     .modal-dialog {
-        max-width: 90%;
+        max-width: 60vw; /* Adjust width as needed */
         margin: 1.75rem auto;
-        max-width: 60vw !important;
     }
 
+    /* Modal content styling */
     .modal-content {
         border-radius: 0.5rem;
     }
+
+    /* Container for the cropper image */
     .cropper-container {
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 60vh !important;
-        width: 100% !important;
+        height: 60vh; /* Adjust height as needed */
+        width: 100%;
     }
 
-    .modal-content {
-        border-radius: 0.5rem;
-    }
-
+    /* Modal image settings */
     .modal-body img {
         max-width: 100%;
-        max-height: 60vh !important; 
+        max-height: 60vh; /* Ensures image does not exceed 60% of viewport height */
         object-fit: contain;
+        display: block; /* Centers the image horizontally */
+        margin: auto; /* Centers the image horizontally */
     }
 </style>
 
@@ -257,7 +263,14 @@
     
     const imageCropperModal = new bootstrap.Modal(document.getElementById('image-cropper-modal'), {});
 
-    async function handleProductImages(event) {
+let cropper;
+    let orginalImages = new Map();
+
+function isImageFile(file) {
+    return file && file['type'].startsWith('image/');
+}
+
+async function handleProductImages(event) {
     const formData = new FormData();
     const files = [...event.target.files];
 
@@ -266,8 +279,19 @@
         return;
     }
 
+    for (let i = 0; i < files.length; i++) {
+        if (!isImageFile(files[i])) {
+            Swal.fire({
+                title: "Error!",
+                text: "Only image files are allowed.",
+                icon: "error"
+            });
+            return;
+        }
+    }
+
     files.forEach((file, index) => {
-        if (typeof cropper !== 'undefined' && cropper) {
+        if (cropper) {
             const canvas = cropper.getCroppedCanvas();
             if (canvas) {
                 canvas.toBlob(async (blob) => {
@@ -284,15 +308,54 @@
     return formData;
 }
 
-
 document.addEventListener('DOMContentLoaded', () => {
     const imageInput = document.getElementById('product_images');
     const imagePreviewContainer = document.getElementById('image-preview');
     const imageToCrop = document.getElementById('image-to-crop');
     const cropSaveButton = document.getElementById('crop-save');
 
+    function initImageCropper(modal) {
+        let currentImage;
+
+        const handleImageClick = (img) => {
+            currentImage = img;
+            imageToCrop.src = orginalImages.get(img) || img.src;
+            modal.show();
+        };
+
+        const handleCropSave = (button) => {
+            button.addEventListener('click', () => {
+                if (cropper) {
+                    const canvas = cropper.getCroppedCanvas();
+                    if (canvas) {
+                        canvas.toBlob((blob) => {
+                            const url = URL.createObjectURL(blob);
+                            currentImage.src = url;
+                            modal.hide();
+                        }, 'image/jpeg');
+                    }
+                }
+            });
+        };
+
+        modal._element.addEventListener('shown.bs.modal', () => {
+            cropper = new Cropper(imageToCrop, {
+                aspectRatio: 4 / 3,
+                viewMode: 2,
+                autoCropArea: 1,
+            });
+        });
+
+        modal._element.addEventListener('hidden.bs.modal', () => {
+            cropper.destroy();
+            cropper = null;
+        });
+
+        return { handleImageClick, handleCropSave };
+    }
+
     if (imageCropperModal && imageCropperModal._element) {
-        const { cropper, handleImageClick, handleCropSave } = initImageCropper(imageCropperModal);
+        const { handleImageClick, handleCropSave } = initImageCropper(imageCropperModal);
         handleCropSave(cropSaveButton);
         imagePreviewContainer.addEventListener('click', (event) => {
             if (event.target.matches('img')) {
@@ -307,6 +370,8 @@ document.addEventListener('DOMContentLoaded', () => {
         img.src = e.target.result;
         img.classList.add('img-thumbnail');
         img.style.cursor = 'pointer';
+
+        orginalImages.set(img, e.target.result);
 
         const imageContainer = document.createElement('div');
         imageContainer.classList.add('img-container');
@@ -336,9 +401,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const handleFiles = async (files) => {
-        files.forEach(file => reader.readAsDataURL(file));
+        files.forEach(file => {
+            if (isImageFile(file)) {
+                reader.readAsDataURL(file);
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: "Only image files are allowed.",
+                    icon: "error"
+                });
+            }
+        });
     }
-
 
     const createDeleteButton = (imageContainer) => {
         const deleteButton = document.createElement('button');

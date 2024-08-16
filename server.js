@@ -30,7 +30,7 @@ app.use(nocache());
 
 app.use(
   session({
-    secret: "secret-key",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: { secure: false, httpOnly: true, maxAge: 72 * 60 * 60 * 1000, sameSite: 'lax' },

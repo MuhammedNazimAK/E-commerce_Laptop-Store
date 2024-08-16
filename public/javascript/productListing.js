@@ -18,6 +18,7 @@ class ProductData {
 
     this.initEventListeners();
     this.initPriceSlider();
+    this.fetchProducts();
   }
 
   initEventListeners() {
@@ -282,30 +283,6 @@ class ProductData {
     }
     return str;
   }
-  
-  // function generateStarRating(rating) {
-  //   let starRating = '';
-  //   const fullStars = Math.floor(rating);
-  //   const hasHalfStar = rating % 1 !== 0;
-  
-  //   for (let i = 0; i < fullStars; i++) {
-  //     starRating += '<li class="fill"><i class="ion-android-star"></i></li>';
-  //   }
-  
-  //   if (hasHalfStar) {
-  //     starRating += '<li class="fill"><i class="ion-android-star-half"></i></li>';
-  //   }
-  
-  //   const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-  //   for (let i = 0; i < emptyStars; i++) {
-  //     starRating += '<li class="empty"><i class="ion-android-star"></i></li>';
-  //   }
-  
-  //   return starRating;
-  // }
-  
-
-
 
 document.addEventListener('DOMContentLoaded', () => {
   new ProductData();
