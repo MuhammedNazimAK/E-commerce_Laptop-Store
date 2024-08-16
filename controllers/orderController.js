@@ -65,8 +65,32 @@ const placeOrder = async (req, res) => {
   }
 };
 
+//admin side
+const getOrderManagementPage = async (req, res) => {
+  try {
+    const orders = await Order.find().sort({ createdAt: -1 });
+    res.render('admin/orderManagement', { orders });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Server error');
+  }
+};
+
+const cancelOrderAdmin = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    await Order.findByIdAndUpdate(orderId, { status: 'Cancelled' });
+    res.redirect('/orderManagement');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Server error');
+  }
+};
+
 module.exports = {
   placeOrder,
   showOrders,
-  cancelOrder
+  cancelOrder,
+  getOrderManagementPage,
+  cancelOrderAdmin
 };

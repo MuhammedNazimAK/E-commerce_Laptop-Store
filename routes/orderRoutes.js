@@ -10,6 +10,5 @@ router.get('/checkout', cartController.checkout);
 router.post('/place-order', requireAuth, orderController.placeOrder);
 router.get('/my-account/orders', requireAuth, orderController.showOrders);
 router.put('/my-account/cancel-order/:id', requireAuth, orderController.cancelOrder);
-//put
 
 module.exports = router;

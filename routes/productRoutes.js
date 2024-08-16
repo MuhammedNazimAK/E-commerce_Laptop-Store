@@ -7,4 +7,5 @@ router.get('/relatedProducts/:productId', productController.getRelatedProducts);
 router.get('/productDetails/:productId', productController.getProductDetailsViewOnUserPage);
 router.post('/productListing/search-and-sort', productController.searchAndSortProducts);
 
+
 module.exports = router;

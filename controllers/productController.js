@@ -146,6 +146,8 @@
 
     try {
       const product = await Product.findById(productId).lean();
+      const brands = await Product.distinct('basicInformation.brand');
+      const processors = await Product.distinct('technicalSpecification.processor');
       const categories = await Category.find().lean();
       if (!product) {
         return res.status(404).json({ success: false, message: "Product not found" });
@@ -153,7 +155,7 @@
 
       product.category = product.category.map(cat => cat._id.toString());
 
-      res.render("admin/editProduct", { product, categories });
+      res.render("admin/editProduct", { product, categories, brands, processors });
     } catch (error) {
       console.error("Error fetching product details:", error);
       res.status(500).json({ success: false, message: "Error fetching product details" });
@@ -161,89 +163,95 @@
   };
 
   const updateProduct = async (req, res) => {
-  console.log('Update Product');
+    console.log('Update Product');
+    
+    try {
+      const { productId } = req.params;
   
-  try {
-    const { productId } = req.params;
-    
-    const updatedData = JSON.parse(req.body.productData);
-    console.log('Updated Data:', updatedData);
-
-    console.log('reached here');
-    const existingProduct = await Product.findById(productId);
-    if (!existingProduct) {
-      return res.status(404).json({ success: false, message: "Product not found" });
-    }
-    console.log('Existing Product:', existingProduct);
-
-
-    let imageUrls = [];
-    if (req.files && req.files.images) {
-      const  imagesToUpload = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
-      const newImages = imagesToUpload.filter(img => !img.tempFilePath.startsWith('http'));
-      if (newImages.length > 0) {
-      try {
-        const uploadedImages = await uploadImages(imagesToUpload);
-        imageUrls = uploadedImages.filter(url => url !== null);
-        console.log('uploadedImages:', imageUrls);
+      let updatedData;
+      try { 
+        updatedData = JSON.parse(req.body.productData);
       } catch (error) {
-        console.error('Error uploading images:', error);
+        console.error("Error parsing product data:", error);
+        console.log('req.body.productData:', req.body.productData);
+        return res.status(400).json({ success: false, message: "Invalid product data" });
       }
-    }
-    } else {
-      console.log('No new images provided');
-    }
-
-    if (req.body.existingImages) {
-      imageUrls = imageUrls.concat(req.body.existingImages);
-    }
-
-    let categoryString = req.body.categories;
-    let parsedCategories = [];
-    if (categoryString && categoryString.length > 0) {
-      parsedCategories = JSON.parse(categoryString).map(categoryId => new mongoose.Types.ObjectId(categoryId));
-    }
-    
-
-    const updatedProduct = await Product.findOneAndUpdate(
-      { _id: productId },
-      {
-        $set: {
-             'basicInformation.name': updatedData.basicInformation.name,
-             'basicInformation.brand': updatedData.basicInformation.brand,
-             'basicInformation.description': updatedData.basicInformation.description,
-             'designAndBuild.color': updatedData.designAndBuild.color,
-             'technicalSpecification.processor': updatedData.technicalSpecification.processor,
-             'technicalSpecification.ram': updatedData.technicalSpecification.ram,
-             'technicalSpecification.storage': updatedData.technicalSpecification.storage,
-             'technicalSpecification.graphicsCard': updatedData.technicalSpecification.graphicsCard,
-             'pricingAndAvailability.regularPrice': updatedData.pricingAndAvailability.regularPrice,
-             'pricingAndAvailability.salesPrice': updatedData.pricingAndAvailability.salesPrice,
-             'pricingAndAvailability.stockAvailability': updatedData.pricingAndAvailability.stockAvailability,
-             
-          'images.highResolutionPhotos': [
-            ...(existingProduct.images?.highResolutionPhotos || []),
-            ...imageUrls
-          ],
-          'category': parsedCategories,
+      console.log('Updated Data:', updatedData);
+  
+      const existingProduct = await Product.findById(productId);
+      if (!existingProduct) {
+        return res.status(404).json({ success: false, message: "Product not found" });
+      }
+      console.log('Existing Product:', existingProduct);
+  
+      let imageUrls = [];
+      if (req.files && req.files.images) {
+        const imagesToUpload = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
+        const newImages = imagesToUpload.filter(img => !img.tempFilePath.startsWith('http'));
+        if (newImages.length > 0) {
+          try {
+            const uploadedImages = await uploadImages(newImages);
+            imageUrls = uploadedImages.filter(url => url !== null);
+            console.log('uploadedImages:', imageUrls);
+          } catch (error) {
+            console.error('Error uploading images:', error);
+            return res.status(500).json({ success: false, message: "Error uploading images" });
+          }
+        }
+      } else {
+        console.log('No new images provided');
+      }
+  
+      if (req.body.existingImages) {
+        const existingImages = Array.isArray(req.body.existingImages) ? req.body.existingImages : [req.body.existingImages];
+        imageUrls = [...new Set([...imageUrls, ...existingImages])]; // Remove duplicates
+      }
+  
+      let parsedCategories = [];
+      if (req.body.categories && req.body.categories.length > 0) {
+        try {
+          parsedCategories = JSON.parse(req.body.categories).map(categoryId => new mongoose.Types.ObjectId(categoryId));
+        } catch (error) {
+          console.error("Error parsing categories:", error);
+          return res.status(400).json({ success: false, message: "Invalid category data" });
+        }
+      }
+  
+      const updatedProduct = await Product.findOneAndUpdate(
+        { _id: productId },
+        {
+          $set: {
+            'basicInformation.name': updatedData.basicInformation.name,
+            'basicInformation.brand': updatedData.basicInformation.brand,
+            'basicInformation.description': updatedData.basicInformation.description,
+            'designAndBuild.color': updatedData.designAndBuild.color,
+            'technicalSpecification.processor': updatedData.technicalSpecification.processor,
+            'technicalSpecification.ram': updatedData.technicalSpecification.ram,
+            'technicalSpecification.storage': updatedData.technicalSpecification.storage,
+            'technicalSpecification.graphicsCard': updatedData.technicalSpecification.graphicsCard,
+            'pricingAndAvailability.regularPrice': updatedData.pricingAndAvailability.regularPrice,
+            'pricingAndAvailability.salesPrice': updatedData.pricingAndAvailability.salesPrice,
+            'pricingAndAvailability.stockAvailability': updatedData.pricingAndAvailability.stockAvailability,
+            'images.highResolutionPhotos': imageUrls,
+            'category': parsedCategories,
+          },
         },
-      },
-      { new: true }
-    )
-
-    console.log('Updated Product:', updatedProduct.toJSON());
-
-    if (!updatedProduct) {  
-      return res.status(404).json({ success: false, message: "Product not found" });
+        { new: true }
+      );
+  
+      if (!updatedProduct) {  
+        return res.status(404).json({ success: false, message: "Product not found" });
+      }
+  
+      console.log('Updated Product:', updatedProduct.toJSON());
+      res.json({ success: true, product: updatedProduct });
+    } catch (error) {
+      console.error("Error updating product:", error);
+      console.error(error.stack);
+      res.status(500).json({ success: false, message: "Error updating product", error: error.message });
     }
-
-    res.json({ success: true, product: updatedProduct });
-  } catch (error) {
-    console.error("Error updating product:", error);
-    console.error(error.stack);
-    res.status(500).json({ success: false, message: "Error updating product", error: error.message });
-  }
-};
+  };
+  
 
 
   const deleteImage = async (req, res) => {

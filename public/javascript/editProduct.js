@@ -1,27 +1,3 @@
-// cropper is assgned a value in the initImageCropper function
-async function handleProductImages(files) {
-    const formData = new FormData();
-    const files = [...event.target.files];
-
-        files.forEach((file, index) => {
-        if (typeof cropper !== 'undefined' && cropper) {
-            const canvas = cropper.getCroppedCanvas();
-            if (canvas) {
-                canvas.toBlob(async (blob) => {
-                    formData.append(`images`, blob, `image_${index}.jpg`);
-                }, 'image/jpeg');
-            } else {
-                formData.append('images', file);
-            }
-        } else {
-            formData.append('images', file);
-        }
-    });
-
-    return formData;
-}
-  
-
 function gatherProductData() {
     const fields = ['name', 'brand', 'description', 'processor', 'ram', 'storage', 'graphicsCard', 'color', 'regularPrice', 'salesPrice', 'stockAvailability'];
 
@@ -78,61 +54,65 @@ async function prepareFormData() {
     formData.append('productId', document.getElementById('update').dataset.productId);
     formData.append('productData', JSON.stringify(productData));
   
-    Object.entries(productData.basicInformation).forEach(([key, value]) => {
-      formData.append(`basicInformation[${key}]`, value);
-    });
+    // Object.entries(productData.basicInformation).forEach(([key, value]) => {
+    //   formData.append(`basicInformation[${key}]`, value);
+    // });
   
-    Object.entries(productData.technicalSpecification).forEach(([key, value]) => {
-      formData.append(`technicalSpecification[${key}]`, value);
-    });
+    // Object.entries(productData.technicalSpecification).forEach(([key, value]) => {
+    //   formData.append(`technicalSpecification[${key}]`, value);
+    // });
   
-    Object.entries(productData.designAndBuild).forEach(([key, value]) => {
-      formData.append(`designAndBuild[${key}]`, value);
-    });
+    // Object.entries(productData.designAndBuild).forEach(([key, value]) => {
+    //   formData.append(`designAndBuild[${key}]`, value);
+    // });
   
-    Object.entries(productData.pricingAndAvailability).forEach(([key, value]) => {
-      formData.append(`pricingAndAvailability[${key}]`, Number(value));
-    });
+    // Object.entries(productData.pricingAndAvailability).forEach(([key, value]) => {
+    //   formData.append(`pricingAndAvailability[${key}]`, Number(value));
+    // });
   
     formData.append('categories', JSON.stringify(productData.categories));
   
     // Append images
-    const processedImages = await handleProductImages(document.getElementById('product_images').files);
-    processedImages.forEach((file, index) => {
-    formData.append(`images`, file, file.name);
-    });
+    const imageInput = document.getElementById('fileAccess');
+    if (imageInput && imageInput.files.length > 0) {
+        for (let i = 0; i < imageInput.files.length; i++) {
+            formData.append('images', imageInput.files[i]);
+        }
+        console.log("imageInput.files.length", imageInput.files.length);
+        console.log('imageInput.files', imageInput.files);
+    } else {
+        console.log('No image files found.');
+    }
+
     return formData;
   };
 
-let isUpdating = false;
 
+  let isUpdating = false;
+
+// Handle form update button click
 async function handleUpdateClick(event) {
-    event.preventDefault();
+    const productId = event.target.dataset.productId;
 
     if (isUpdating) {
         return;
-    }
+    } 
 
     isUpdating = true;
 
     try {
         const updateData = await prepareFormData();
+        console.log("updateData", updateData);
 
-        for (let [key, value] of updateData.entries()) {
-            console.log(key, value);
-          }
-
-
-        const response = await axios.put(`/admin/editProduct/${document.getElementById('update').dataset.productId}`, updateData, {
+        const response = await axios.put(`/admin/editProduct/${productId}`, updateData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
         });
 
-        console.log("response:", response);
-
         if (response.data.success) {
             showSuccessMessage('Product updated successfully.');
+            console.log('Product updated successfully:', response.data);
         } else {
             showErrorMessage(response.data.message || 'There was an error updating the product.');
         }
@@ -160,154 +140,187 @@ function showErrorMessage(message, error) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const updateButton = document.getElementById('update');
-    if (!updateButton) {
-        console.error('Update button not found.');
-        return;
-    }
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("productForm");
+    const imageInput = document.getElementById("fileAccess");
+    const imagePreview = document.getElementById("imagePreview");
+    const openCropperModalBtn = document.getElementById("openCropperModalBtn");
+    const imageToCrop = document.getElementById("imageToCrop");
+    const cropAndSave = document.getElementById("cropAndSave");
+    const cropperModalElement = document.getElementById("cropperModal");
+    const formSubmitButton = document.getElementById("update");
+    console.log( "formSubmitButton", formSubmitButton );
+    const fileAccessError = document.getElementById("fileAccessError");
     
-    const productId = updateButton.dataset.productId;
-    console.log('Product ID:', productId);
-  
-    updateButton.addEventListener('click', handleUpdateClick);
+    let cropper; // hold the Cropper.js instance
+    let currentImage;
+    let originalImageBlobs = [];
 
-
-    const imageCropperModal = new bootstrap.Modal(document.getElementById('image-cropper-modal'), {});
-
-    const deleteButtons = document.querySelectorAll('.delete-btn');
-        
-    const imageInput = document.getElementById('product_images');
-    const imagePreviewContainer = document.getElementById('image-preview');
-    const imageToCrop = document.getElementById('cropper-image');
-    const cropSaveButton = document.getElementById('crop-image');
-
-    if (imageCropperModal && imageCropperModal._element) {
-        const { cropper, handleImageClick, handleCropSave } = initImageCropper(imageCropperModal);
-        handleCropSave(cropSaveButton);
-
-        imagePreviewContainer.addEventListener('click', (event) => {
-            if (event.target.matches('img')) {
-                handleImageClick(event.target);
-            }
-        });
+    // Function to validate if the file is an image
+    function isImageFile(file) {
+        return file && file.type.startsWith('image/');
     }
 
-    const createDeleteButton = (imageContainer) => {
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.classList.add('btn', 'btn-danger', 'btn-sm');
-        deleteButton.style.position = 'absolute';
-        deleteButton.style.top = '10px';
-        deleteButton.style.right = '10px';
-        deleteButton.style.zIndex = '1000';
+    imageInput.addEventListener("change", (event) => {
+        const files = event.target.files;
 
-        deleteButton.addEventListener('click', (event) => {
-            event.stopPropagation();
-            imageContainer.remove();
+        // Clear previous file access errors
+        fileAccessError.textContent = '';
+
+        Array.from(files).forEach((file) => {
+            if (!isImageFile(file)) {
+                fileAccessError.textContent = 'Only image files are allowed.';
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                const img = document.createElement("img");
+                img.src = e.target.result;
+                img.classList.add("img-thumbnail");
+                img.dataset.originalSrc = e.target.result;
+                img.dataset.index = originalImageBlobs.length;
+                img.dataset.cropped = 'false';
+                img.classList.add('preview-image');
+
+                const removeButton = document.createElement("button");
+                removeButton.textContent = "Remove";
+                removeButton.classList.add("btn", "btn-danger", "btn-sm", "delete-btn");
+                removeButton.dataset.imgSrc = e.target.result;
+                removeButton.dataset.index = originalImageBlobs.length;
+
+                const container = document.createElement("div");
+                container.classList.add("img-container");
+                container.appendChild(img);
+                container.appendChild(removeButton);
+                imagePreview.appendChild(container);
+
+                originalImageBlobs.push({ src: e.target.result, file });
+            };
+
+            reader.readAsDataURL(file);
         });
-
-        return deleteButton;
-    };
-
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        const img = document.createElement('img');
-        img.src = e.target.result;
-        img.classList.add('img-thumbnail');
-        img.style.cursor = 'pointer';
-
-        const imageContainer = document.createElement('div');
-        imageContainer.classList.add('img-container');
-        imageContainer.appendChild(img);
-
-        const deleteButton = createDeleteButton(imageContainer);
-        imageContainer.appendChild(deleteButton);
-
-        imagePreviewContainer.appendChild(imageContainer);
-    };
-
-    imageInput.addEventListener('change', (event) => {
-        const files = [...event.target.files];
-        handleProductImages(files)
-            .then(() => {
-                console.log('All images have been uploaded.');
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                Swal.fire({
-                    title: "Error!",
-                    text: "There was an error uploading the images.",
-                    icon: "error"
-                });
-            });
-        handleFiles(files);
     });
 
-    const handleFiles = async (files) => {
-        files.forEach(file => reader.readAsDataURL(file));
+    // Function to remove an image
+    function removeImage(index) {
+        const containers = document.querySelectorAll(".img-container");
+        if (containers[index]) {
+            containers[index].remove();
+            originalImageBlobs.splice(index, 1);
+            updateFileInput();
+        }
     }
 
-    deleteButtons.forEach((button) => {
-        button.addEventListener('click', async (event) => {
-            event.preventDefault();
+    // Event delegation for remove buttons
+    imagePreview.addEventListener("click", (event) => {
+        if (event.target.classList.contains("delete-btn")) {
             const index = event.target.dataset.index;
-            const confirmed = await confirmDelete();
-
-            if (confirmed) {
-                await deleteImage(index);
-
-                event.target.parentElement.remove();
-            }
-        });
+            removeImage(index);
+        }
     });
 
-    const confirmDelete = () => {
-        return new Promise((resolve) => {
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    resolve(true);
-                } else {
-                    resolve(false);
-                }
-            });
+    // Update file input with the current images
+    function updateFileInput() {
+        const dataTransfer = new DataTransfer();
+        originalImageBlobs.forEach(blob => {
+            const file = blob.file instanceof File ? blob.file : new File([blob.file], 'image/jpg', { type: 'image/jpeg' });
+            dataTransfer.items.add(file);
         });
-    };
-
-    const deleteImage = async (index) => {
-        try {
-            const response = await axios.delete(`/admin/deleteImage/${document.getElementById('update').dataset.productId}/${index}`);
-            data = response.data;
-            console.log(data);
-
-            if (response.data.success) {
-                Swal.fire({
-                    title: "Success!",
-                    text: "Image deleted successfully.",
-                    icon: "success"
-                });
-            } else {
-                Swal.fire({
-                    title: "Error!",
-                    text: response.data.message || "There was an error deleting the image.",
-                    icon: "error"
-                });
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            Swal.fire({
-                title: "Error!",
-                text: "There was an error deleting the image.",
-                icon: "error"
-            });
-        };
+        imageInput.files = dataTransfer.files;
     }
+
+    // Handle image cropping and saving
+    cropAndSave.addEventListener("click", () => {
+        if (cropper) {
+            cropper.getCroppedCanvas().toBlob((blob) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+
+                // Always save the original source if it's not already saved
+                if (!currentImage.dataset.originalSrc) {
+                    currentImage.dataset.originalSrc = currentImage.src;
+                }
+
+                // Update the image with the new cropped version
+                currentImage.src = reader.result;
+                currentImage.dataset.imgSrc = reader.result;
+                currentImage.dataset.cropped = 'true';
+                
+                // Update the blob in originalImageBlobs
+                const index = parseInt(currentImage.dataset.index);
+                originalImageBlobs[index] = { 
+                    src: reader.result, 
+                    file: blob, 
+                    originalSrc: currentImage.dataset.originalSrc 
+                };
+                
+                $(cropperModalElement).modal('hide');
+                updateFileInput(); // Update the file input after cropping
+            };
+            reader.readAsDataURL(blob);
+            });
+        }
+    });    
+
+    // Open cropper modal and initialize Cropper.js
+    imagePreview.addEventListener("click", (event) => {
+        if (event.target.classList.contains("img-thumbnail")) {
+            currentImage = event.target;
+
+            console.log("currentImage", currentImage);
+            console.log('data attributes', currentImage.dataset);
+
+            let imgSrc;
+            if (currentImage.dataset.originalSrc) {
+                // Always use the original source for editing
+                imgSrc = currentImage.dataset.originalSrc;
+            } else {
+                // Fallback to the current src or data-img-src if original is not available
+                imgSrc = currentImage.dataset.imgSrc || currentImage.src;
+            }
+
+        console.log('image source for cropper', imgSrc);
+
+        if (!imgSrc) {
+            console.error('No image source found for cropper.');
+            return;
+        }
+
+        imageToCrop.src = imgSrc;
+
+            imageToCrop.onload = () => {
+            $(cropperModalElement).modal('show');
+            };  
+        }
+    });
+
+    // Initialize cropper.js on modal show
+    $(cropperModalElement).on('shown.bs.modal', () => {
+        try {
+            console.log("imageToCrop", imageToCrop);
+        cropper = new Cropper(imageToCrop, {
+            aspectRatio: 4 / 3,
+            viewMode: 2,
+            autoCropArea: 1,
+            preview: ".cropper-preview",
+            ready() {
+                console.log("cropper ready");
+                cropper.reset();
+            },
+        });
+    } catch (error) {
+        console.error("Error initializing cropper:", error);
+    }
+});
+
+    // Destroy cropper instance on modal hide
+    $(cropperModalElement).on('hidden.bs.modal', () => {
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+    });
+
 });

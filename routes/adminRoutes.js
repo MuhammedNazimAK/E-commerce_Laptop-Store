@@ -4,6 +4,7 @@ const adminRoute = express.Router();
 const adminController = require('../controllers/admin/adminController');
 const productController = require('../controllers/productController');
 const categoryController = require('../controllers/categoryController');
+const orderController = require('../controllers/orderController');
 const adminAuth = require('../middleware/adminAuth');
 
 
@@ -40,8 +41,8 @@ adminRoute.put("/categories/:id", adminAuth.requireAuth, categoryController.edit
 adminRoute.patch("/categories", adminAuth.requireAuth, categoryController.softDeleteCategory);
 
 
-
-// Brand management (commented out)
-// adminRoute.get('/brands', adminAuth.requireAuth, adminController.getBrands);
+// Order management
+adminRoute.get('/orders', adminAuth.requireAuth, orderController.getOrderManagementPage);
+adminRoute.put('/cancel-order/:id', adminAuth.requireAuth, orderController.cancelOrderAdmin);
 
 module.exports = adminRoute;
