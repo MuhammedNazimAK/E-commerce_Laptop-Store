@@ -63,7 +63,11 @@ const addToCart = async (req, res) => {
 
       return res.json({
           success: true,
-          product: product,
+          product: {
+            _id: product._id,
+            name: product.basicInformation.name,
+            Image: product.images.highResolutionPhotos[0]
+          },
           cartItemCount: cart.items.length,
           totalPrice: totalPrice,
       });

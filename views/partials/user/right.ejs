@@ -209,5 +209,48 @@
     </div>
 </div> <!-- End Modal Add cart -->
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const addToCartButtons = document.querySelectorAll('.add-to-cart');
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const productId = this.getAttribute('data-product-id');
+            addToCart(productId);
+        });
+    });
+});
+
+function addToCart(productId) {
+    fetch('/addToCart', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ productId: productId, quantity: 1 }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateCartModal(data);
+            $('#modalAddcart').modal('show');
+        } else {
+            alert('Failed to add item to cart');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while adding the item to cart');
+    });
+}
+
+function updateCartModal(data) {
+    document.getElementById('modalProductImage').src = data.product.images[0] || '';
+    document.getElementById('modalCartItemCount').textContent = data.cartItemCount;
+    document.getElementById('modalTotalPrice').textContent = `$${data.totalPrice.toFixed(2)}`;
+}
+
+</script>
+
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="/javascript/productListing.js"></script>

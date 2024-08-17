@@ -38,7 +38,7 @@ app.use(
 );
 
 app.use(fileUpload({
-  limits: { fileSize: 50 * 1024 * 1024, files: 1 },
+  limits: { fileSize: 50 * 1024 * 1024, files: 5 },
   useTempFiles: true,
   tempFileDir: path.join(__dirname, 'public/tmp'),
 }));

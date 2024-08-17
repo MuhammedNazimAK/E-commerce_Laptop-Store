@@ -47,6 +47,8 @@ function gatherProductData() {
     };
 }
 
+let originalImageBlobs = [];
+
 async function prepareFormData() {
     const productData = gatherProductData();
     const formData = new FormData();
@@ -54,35 +56,24 @@ async function prepareFormData() {
     formData.append('productId', document.getElementById('update').dataset.productId);
     formData.append('productData', JSON.stringify(productData));
   
-    // Object.entries(productData.basicInformation).forEach(([key, value]) => {
-    //   formData.append(`basicInformation[${key}]`, value);
-    // });
-  
-    // Object.entries(productData.technicalSpecification).forEach(([key, value]) => {
-    //   formData.append(`technicalSpecification[${key}]`, value);
-    // });
-  
-    // Object.entries(productData.designAndBuild).forEach(([key, value]) => {
-    //   formData.append(`designAndBuild[${key}]`, value);
-    // });
-  
-    // Object.entries(productData.pricingAndAvailability).forEach(([key, value]) => {
-    //   formData.append(`pricingAndAvailability[${key}]`, Number(value));
-    // });
-  
     formData.append('categories', JSON.stringify(productData.categories));
   
     // Append images
-    const imageInput = document.getElementById('fileAccess');
-    if (imageInput && imageInput.files.length > 0) {
-        for (let i = 0; i < imageInput.files.length; i++) {
-            formData.append('images', imageInput.files[i]);
-        }
-        console.log("imageInput.files.length", imageInput.files.length);
-        console.log('imageInput.files', imageInput.files);
+    if (originalImageBlobs.length > 0) {
+        originalImageBlobs.forEach((blob, index) => {
+            const file = blob.file instanceof File ? blob.file : new File([blob.file], `image_${index}.jpg`, { type: 'image/jpeg' });
+            formData.append('images', file);
+        });
+        console.log("originalImageBlobs.length", originalImageBlobs.length);
+        console.log('originalImageBlobs', originalImageBlobs);
     } else {
-        console.log('No image files found.');
+        console.log('No images to append.');
     }
+
+    //append existing images
+    const existingImages = document.querySelectorAll('.existing-image');
+    const existingImageUrls = Array.from(existingImages).map(image => image.dataset.imgSrc);
+    formData.append('existingImages', JSON.stringify(existingImageUrls));
 
     return formData;
   };
@@ -102,7 +93,9 @@ async function handleUpdateClick(event) {
 
     try {
         const updateData = await prepareFormData();
-        console.log("updateData", updateData);
+        for (let pair of updateData.entries()) {
+            console.log(pair[0]+ ', ' + pair[1]);
+        }   
 
         const response = await axios.put(`/admin/editProduct/${productId}`, updateData, {
             headers: {
@@ -141,10 +134,8 @@ function showErrorMessage(message, error) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("productForm");
     const imageInput = document.getElementById("fileAccess");
     const imagePreview = document.getElementById("imagePreview");
-    const openCropperModalBtn = document.getElementById("openCropperModalBtn");
     const imageToCrop = document.getElementById("imageToCrop");
     const cropAndSave = document.getElementById("cropAndSave");
     const cropperModalElement = document.getElementById("cropperModal");
@@ -154,7 +145,6 @@ document.addEventListener("DOMContentLoaded", () => {
     
     let cropper; // hold the Cropper.js instance
     let currentImage;
-    let originalImageBlobs = [];
 
     // Function to validate if the file is an image
     function isImageFile(file) {

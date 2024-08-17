@@ -156,7 +156,7 @@
                             <% if (product.images && product.images.highResolutionPhotos.length > 0) { %>
                                 <% product.images.highResolutionPhotos.forEach((img, index) => { %>
                                     <div class="img-container">
-                                        <img src="<%= img %>" class="img-thumbnail" data-img-src="<%= img %>" data-index="<%= index %>">
+                                        <img src="<%= img %>" class="img-thumbnail existing-image" data-img-src="<%= img %>" data-index="<%= index %>">
                                         <button class="btn btn-danger btn-sm delete-btn" data-img-src="<%= img %>" data-index="<%= index %>">Remove</button>
                                     </div>
                                 <% }); %>

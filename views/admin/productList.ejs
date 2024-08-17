@@ -62,7 +62,7 @@
                                     </div>
                                 </td>
                                 <td><%= product.basicInformation.brand %></td>
-                                <td>$<%= product.pricingAndAvailability.regularPrice %></td>
+                                <td>₹<%= product.pricingAndAvailability.regularPrice %></td>
                                 <td>Stock: <%= product.pricingAndAvailability.stockAvailability %></td>
                                 <td>
                                     <span class="badge rounded-pill <%= product.status === false ? 'bg-danger' : 'bg-success' %>">
@@ -108,7 +108,7 @@
                             <img src="<%= product.images.highResolutionPhotos[1] %>" class="img-fluid" alt="">
                         </div>
                         <div class="col-md-8">
-                            <p><strong>Price:</strong> $<%= product.pricingAndAvailability.regularPrice %></p>
+                            <p><strong>Price:</strong> ₹<%= product.pricingAndAvailability.regularPrice %></p>
                             <p><strong>Stock:</strong> <%= product.pricingAndAvailability.stockAvailability %></p>
                             <p><strong>Description:</strong> <%= product.basicInformation.description %></p>
                             <p><strong>Processor:</strong> <%= product.technicalSpecification.processor %></p>

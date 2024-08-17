@@ -64,12 +64,12 @@
                                     <td class="product_name">
                                       <a href="/productDetails/<%= item._id %>"><%= item.basicInformation.name %></a>
                                     </td>
-                                    <td class="product-price">$<%= item.pricingAndAvailability.salesPrice.toFixed(2) || item.pricingAndAvailability.regularPrice.toFixed(2) %></td>
+                                    <td class="product-price">₹<%= item.pricingAndAvailability.salesPrice.toFixed(2) || item.pricingAndAvailability.regularPrice.toFixed(2) %></td>
                                     <td class="product_quantity">
                                       <label>Quantity</label>
                                       <input type="number" class="quantity-input" value="<%= item.quantity %>" min="1" max="<%= item.pricingAndAvailability.stockAvailability %>" data-product-id="<%= item._id %>">
                                     </td>
-                                    <td class="product_total">$<%= (item.pricingAndAvailability.salesPrice || item.pricingAndAvailability.regularPrice) * item.quantity %></td>
+                                    <td class="product_total">₹<%= (item.pricingAndAvailability.salesPrice || item.pricingAndAvailability.regularPrice) * item.quantity %></td>
                                   </tr>
                                 <% }); %>
                               </tbody>                              
@@ -105,7 +105,7 @@
                     <div class="coupon_inner">
                       <div class="cart_subtotal">
                         <p>Subtotal</p>
-                        <p class="cart_amount">$<%= subtotal.toFixed(2) %></p>
+                        <p class="cart_amount">₹<%= subtotal.toFixed(2) %></p>
                       </div>
                       <div class="cart_subtotal">
                         <p>Shipping</p>
@@ -115,7 +115,7 @@
                   
                       <div class="cart_subtotal">
                         <p>Total</p>
-                        <p class="cart_amount total">$<%= total.toFixed(2) %></p>
+                        <p class="cart_amount total">₹<%= total.toFixed(2) %></p>
                       </div>
                       <div class="checkout_btn">
                         <a href="/checkout" class="btn btn-md btn-golden">Proceed to Checkout</a>

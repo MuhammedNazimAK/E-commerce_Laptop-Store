@@ -181,7 +181,7 @@
                     
                     <!-- Images -->
                     <div class="mb-4">
-                        <label for="product_images" class="form-label">Images</label>
+                        <label for="product_images" class="form-label">Images (Maximum of 5)</label>
                         <input class="form-control" type="file" id="product_images" name="images" multiple>
                         <div id="image-preview" class="mt-3"></div>
                         <div class="error-message-container">
@@ -288,22 +288,27 @@ async function handleProductImages(event) {
             });
             return;
         }
+        formData.append('images', files[i]);
     }
 
-    files.forEach((file, index) => {
-        if (cropper) {
-            const canvas = cropper.getCroppedCanvas();
-            if (canvas) {
-                canvas.toBlob(async (blob) => {
-                    formData.append(`images`, blob, `image_${index}.jpg`);
-                }, 'image/jpeg');
-            } else {
-                formData.append('images', file);
-            }
-        } else {
-            formData.append('images', file);
-        }
-    });
+    // files.forEach((file, index) => {
+    //     if (cropper) {
+    //         const canvas = cropper.getCroppedCanvas();
+    //         if (canvas) {
+    //             canvas.toBlob(async (blob) => {
+    //                 formData.append(`images`, blob, `image_${index}.jpg`);
+    //             }, 'image/jpeg');
+    //         } else {
+    //             formData.append('images', file);
+    //         }
+    //     } else {
+    //         formData.append('images', file);
+    //     }
+    // });
+
+    const existingImages = JSON.parse(document.getElementById('existingImages').value || '[]');
+    console.log('existingImages:', existingImages);
+    formData.append('existingImages', JSON.stringify(existingImages));  
 
     return formData;
 }

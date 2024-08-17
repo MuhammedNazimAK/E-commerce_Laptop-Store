@@ -89,68 +89,73 @@
                             <div id="addressList">
                                 <!-- Address list will be dynamically populated here -->
                             </div>
-                            <button id="showButton" class="btn btn-md btn-black-default-hover mt-4">Add New Address</button>
+                            <button id="showButton" class="btn btn-md btn-black-default-hover mt-4" data-bs-toggle="modal" data-bs-target="#addAddressModal">Add New Address</button>
                             
-                            <!-- Add Address Form -->
-                            <form id="addressForm" style="display: none;">
-                                <div class="row">
-                                    <div class="col-lg-6">
-                                        <div class="default-form-box">
-                                            <label>Name <span>*</span></label>
-                                            <input type="text" name="name">
+                            <!-- Add Address Modal -->
+                            <div class="modal fade" id="addAddressModal" tabindex="-1" role="dialog" aria-labelledby="addAddressModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-body">
+                                            <div class="container-fluid">
+                                                <div class="row">
+                                                    <div class="col text-right">
+                                                        <button type="button" class="close modal-close" data-bs-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true"><i class="fa fa-times"></i></span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <form id="addAddressForm">
+                                                    <input type="hidden" id="addressId" name="addressId">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="default-form-box mb-20">
+                                                                <label>Name</label>
+                                                                <input type="text" id="addressName" name="name" class="form-control">
+                                                                <div id="addressNameError" class="error-message"></div>
+                                                            </div>
+                                                            <div class="default-form-box mb-20">
+                                                                <label>Address Type</label>
+                                                                <input type="text" id="addressType" name="addressType" class="form-control">
+                                                                <div id="addressTypeError" class="error-message"></div>
+                                                            </div>
+                                                            <div class="default-form-box mb-20">
+                                                                <label>City</label>
+                                                                <input type="text" id="city" name="city" class="form-control">
+                                                                <div id="cityError" class="error-message"></div>
+                                                            </div>
+                                                            <div class="default-form-box mb-20">
+                                                                <label>Landmark</label>
+                                                                <input type="text" id="landMark" name="landMark" class="form-control">
+                                                                <div id="landMarkError" class="error-message"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="default-form-box mb-20">
+                                                                <label>State</label>
+                                                                <input type="text" id="state" name="state" class="form-control">
+                                                                <div id="stateError" class="error-message"></div>
+                                                            </div>
+                                                            <div class="default-form-box mb-20">
+                                                                <label>Pin Code</label>
+                                                                <input type="text" id="pinCode" name="pinCode" class="form-control">
+                                                                <div id="pinCodeError" class="error-message"></div>
+                                                            </div>
+                                                            <div class="default-form-box mb-20">
+                                                                <label>Mobile</label>
+                                                                <input type="text" id="mobile" name="mobile" class="form-control">
+                                                                <div id="mobileError" class="error-message"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-right mt-3">
+                                                        <button type="submit" class="btn btn-md btn-black-default-hover">Save Address</button>
+                                                    </div>
+                                                </form>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-lg-6">
-                                        <div class="default-form-box">
-                                            <label>Mobile <span>*</span></label>
-                                            <input type="tel" name="mobile">
-                                        </div>
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="default-form-box">
-                                            <label>Address <span>*</span></label>
-                                            <input type="text" name="address">
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-6">
-                                        <div class="default-form-box">
-                                            <label>City <span>*</span></label>
-                                            <input type="text" name="city" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-6">
-                                        <div class="default-form-box">
-                                            <label>State <span>*</span></label>
-                                            <input type="text" name="state" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-6">
-                                        <div class="default-form-box">
-                                            <label>Pin Code <span>*</span></label>
-                                            <input type="text" name="pinCode" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-6">
-                                        <div class="default-form-box">
-                                            <label>Landmark</label>
-                                            <input type="text" name="landMark">
-                                        </div>
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="default-form-box">
-                                            <label>Address Type <span>*</span></label>
-                                            <select name="addressType" required>
-                                                <option value="home">Home</option>
-                                                <option value="work">Work</option>
-                                                <option value="other">Other</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-12 mt-3">
-                                        <button type="submit" class="btn btn-md btn-black-default-hover">Add Address</button>
                                     </div>
                                 </div>
-                            </form>
+                            </div>
         
                             <!-- Edit Address Form (initially hidden) -->
                             <form id="editAddressForm" style="display: none;">
@@ -174,22 +179,22 @@
                                             <% items.forEach(item => { %>
                                             <tr>
                                                 <td><%= item.basicInformation.name %> <strong> × <%= item.quantity %></strong></td>
-                                                <td>$<%= item.total.toFixed(2) %></td>
+                                                <td>₹<%= item.total.toFixed(2) %></td>
                                             </tr>
                                             <% }); %>
                                         </tbody>
                                         <tfoot>
                                             <tr>
                                                 <th>Cart Subtotal</th>
-                                                <td>$<%= items.reduce((sum, item) => sum + item.total, 0).toFixed(2) %></td>
+                                                <td>₹<%= items.reduce((sum, item) => sum + item.total, 0).toFixed(2) %></td>
                                             </tr>
                                             <tr>
                                                 <th>Shipping</th>
-                                                <td><strong>$25.00</strong></td>
+                                                <td><strong>₹25.00</strong></td>
                                             </tr>
                                             <tr class="order_total">
                                                 <th>Order Total</th>
-                                                <td><strong>$<%= (items.reduce((sum, item) => sum + item.total, 0) + 25).toFixed(2) %></strong></td>
+                                                <td><strong>₹<%= (items.reduce((sum, item) => sum + item.total, 0) + 25).toFixed(2) %></strong></td>
                                             </tr>
                                         </tfoot>
                                     </table>

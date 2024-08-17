@@ -44,15 +44,13 @@ const uploadVideos = async (videos) => {
 
 const uploadImages = async (images) => {
   try {
-  console.log('passed uploadImages');
   console.log('uploading images:', images);
-  console.log('recieved images:', images);
+  console.log('images.length:', images.length);
   if (!images || images.length === 0) {
     throw new Error('No valid images provided for upload');
   }
 
   const uploadPromises = images.map(async (image) => {
-    console.log('image:', image);
     if (!image || !image.tempFilePath || !fs.existsSync(image.tempFilePath)) {
       console.error('Invalid image:', image);
       return null;

@@ -1,4 +1,5 @@
 (function () {
+  if (document.querySelector('#product-container')) {
 class ProductData {
   constructor() {
     this.filters = {
@@ -238,7 +239,10 @@ class ProductData {
       }
     });
 
-    window.history.pushState({}, '', `${window.location.pathname}?${searchParams.toString()}`); 
+    const newURL = `${window.location.pathname}?${searchParams.toString()}`;
+    if (window.location.href !== newURL) {
+      window.history.pushState({}, '', newURL);
+    }
   }
 
    updateProductContainer(products) {
@@ -255,7 +259,7 @@ class ProductData {
       productElement.innerHTML = `
         <a href="/productDetails/${product._id}" class="product-list-img-link">
           <img class="img-fluid" src="${product.images.highResolutionPhotos[0]}" alt="${product.basicInformation.name}" style="width: 350px; height: 350px; object-fit: contain;">
-          <img class="img-fluid" src="${product.images.highResolutionPhotos[1] || product.images.highResolutionPhotos[0]}" alt="${product.basicInformation.name}" style="width: 350px; height: 350px; object-fit: contain;">
+          <img class="img-fluid" src="${product.images.highResolutionPhotos[0]}" alt="${product.basicInformation.name}" style="width: 350px; height: 350px; object-fit: contain;">
         </a>
         <div class="product-list-content">
           <h5 class="product-list-link"><a href="/productDetails/${product._id}">${product.basicInformation.name}</a></h5>
@@ -273,7 +277,7 @@ class ProductData {
           <p>${truncatedDescription}</p>
           <div class="product-action-icon-link-list">
             ${isUnavailable ? '' : `
-              <a href="/addToCart/${product._id}" data-bs-toggle="modal" data-bs-target="#modalAddcart" class="btn btn-lg btn-black-default-hover">Add to cart</a>
+              <a href="/addToCart/${product._id}" data-bs-toggle="modal" data-bs-target="#modalAddcart" class="btn btn-lg btn-black-default-hover add-to-cart" data-product-id="${product._id}">Add to cart</a>
               <a href="wishlist.html" class="btn btn-lg btn-black-default-hover"><i class="icon-heart"></i></a>
             `}
           </div>
@@ -307,4 +311,5 @@ class ProductData {
 document.addEventListener('DOMContentLoaded', () => {
   new ProductData();
 });
+  }
 })(); 

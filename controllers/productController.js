@@ -37,18 +37,36 @@
       console.log('req.files:', req.files);
 
       let imageUrls = [];
-      if (req.files && req.files.images) {
-        let imagesToUpload = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
-        if (imagesToUpload) { 
-          try {
-            const uploadedImages = await uploadImages(imagesToUpload);
-            imageUrls = uploadedImages;
-            console.log('Uploaded Image URLs:', imageUrls);
-      } catch (error) {
-            console.error('Error uploading images:', error);
-          }
+        if (req.files && req.files.images) {
+            let imagesToUpload = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
+            console.log('Number of new images to upload:', imagesToUpload.length);
+
+            if (imagesToUpload.length > 0) {
+                try {
+                    const newImageUrls = await uploadImages(imagesToUpload);
+                    console.log('Uploaded new images:', newImageUrls);
+                    imageUrls = [...newImageUrls];
+                } catch (error) {
+                    console.error('Error uploading new images:', error);
+                    return res.status(500).json({ success: false, message: "Error uploading new images" });
+                }
+            }
         }
+
+        // Handle existing images
+        if (req.body.existingImages) {
+          let existingImages;
+          try {
+              existingImages = JSON.parse(req.body.existingImages);
+              console.log('Existing images:', existingImages);
+              imageUrls = [...existingImages, ...imageUrls];
+          } catch (error) {
+              console.error("Error parsing existing images:", error);
+              return res.status(400).json({ success: false, message: "Invalid existing images data" });
+          }
       }
+
+      console.log('Final imageUrls:', imageUrls);
 
       const parsedCategories = Array.isArray(categories)
       ? categories
@@ -186,26 +204,36 @@
   
       let imageUrls = [];
       if (req.files && req.files.images) {
-        const imagesToUpload = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
-        const newImages = imagesToUpload.filter(img => !img.tempFilePath.startsWith('http'));
-        if (newImages.length > 0) {
-          try {
-            const uploadedImages = await uploadImages(newImages);
-            imageUrls = uploadedImages.filter(url => url !== null);
-            console.log('uploadedImages:', imageUrls);
-          } catch (error) {
-            console.error('Error uploading images:', error);
-            return res.status(500).json({ success: false, message: "Error uploading images" });
-          }
+        let imagesToUpload = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
+        console.log('Number of new images to upload:', imagesToUpload.length);
+
+        if (imagesToUpload.length > 0) {
+            try {
+                const newImageUrls = await uploadImages(imagesToUpload);
+                console.log('Uploaded new images:', newImageUrls);
+                imageUrls = [...newImageUrls];
+            } catch (error) {
+                console.error('Error uploading new images:', error);
+                return res.status(500).json({ success: false, message: "Error uploading new images" });
+            }
         }
-      } else {
-        console.log('No new images provided');
+    }
+
+    // Handle existing images
+    if (req.body.existingImages) {
+      let existingImages;
+      try {
+          existingImages = JSON.parse(req.body.existingImages);
+          console.log('Existing images:', existingImages);
+          imageUrls = [...existingImages, ...imageUrls];
+      } catch (error) {
+          console.error("Error parsing existing images:", error);
+          return res.status(400).json({ success: false, message: "Invalid existing images data" });
       }
+  }
   
-      if (req.body.existingImages) {
-        const existingImages = Array.isArray(req.body.existingImages) ? req.body.existingImages : [req.body.existingImages];
-        imageUrls = [...new Set([...imageUrls, ...existingImages])]; // Remove duplicates
-      }
+
+    console.log('Final imageUrls:', imageUrls);
   
       let parsedCategories = [];
       if (req.body.categories && req.body.categories.length > 0) {
