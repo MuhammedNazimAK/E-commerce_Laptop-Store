@@ -291,24 +291,9 @@ async function handleProductImages(event) {
         formData.append('images', files[i]);
     }
 
-    // files.forEach((file, index) => {
-    //     if (cropper) {
-    //         const canvas = cropper.getCroppedCanvas();
-    //         if (canvas) {
-    //             canvas.toBlob(async (blob) => {
-    //                 formData.append(`images`, blob, `image_${index}.jpg`);
-    //             }, 'image/jpeg');
-    //         } else {
-    //             formData.append('images', file);
-    //         }
-    //     } else {
-    //         formData.append('images', file);
-    //     }
-    // });
-
-    const existingImages = JSON.parse(document.getElementById('existingImages').value || '[]');
-    console.log('existingImages:', existingImages);
-    formData.append('existingImages', JSON.stringify(existingImages));  
+    // const existingImages = JSON.parse(document.getElementById('existingImages').value || '[]');
+    // console.log('existingImages:', existingImages);
+    // formData.append('existingImages', JSON.stringify(existingImages));  
 
     return formData;
 }
@@ -345,9 +330,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         modal._element.addEventListener('shown.bs.modal', () => {
             cropper = new Cropper(imageToCrop, {
-                aspectRatio: 4 / 3,
-                viewMode: 2,
+                aspectRatio: 1,
+                viewMode: 1,
                 autoCropArea: 1,
+                guides: true,
+                background: false,
+                zoomable: true
             });
         });
 

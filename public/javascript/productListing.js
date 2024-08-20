@@ -277,12 +277,21 @@ class ProductData {
           <p>${truncatedDescription}</p>
           <div class="product-action-icon-link-list">
             ${isUnavailable ? '' : `
-              <a href="/addToCart/${product._id}" data-bs-toggle="modal" data-bs-target="#modalAddcart" class="btn btn-lg btn-black-default-hover add-to-cart" data-product-id="${product._id}">Add to cart</a>
+              <a href="#" class="btn btn-lg btn-black-default-hover add-to-cart" data-product-id="${product._id}">Add to cart</a>
               <a href="wishlist.html" class="btn btn-lg btn-black-default-hover"><i class="icon-heart"></i></a>
             `}
           </div>
         </div>
       `;
+      const addToCartButton = productElement.querySelector('.btn-black-default-hover');
+      if (addToCartButton) {
+        addToCartButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          const productId = addToCartButton.getAttribute('data-product-id');
+          addToCart(productId);
+        });
+      }
+
       container.appendChild(productElement);
     });
   

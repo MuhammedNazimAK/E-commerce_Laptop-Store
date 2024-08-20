@@ -3,7 +3,6 @@ document.querySelectorAll('.product_remove a').forEach(button => {
     e.preventDefault();
     const row = e.target.closest('tr');
     const productId = row.dataset.productId;
-    console.log("productId", productId);
 
     if (!isValidObjectId(productId)) {
       Swal.fire({
@@ -72,9 +71,9 @@ document.querySelectorAll('.product_remove a').forEach(button => {
           body: JSON.stringify({ productId: productId, quantity: quantity })
         });
         if (response.ok) {
-          const price = parseFloat(row.querySelector('.product-price').textContent.replace('$', ''));
+          const price = parseFloat(row.querySelector('.product-price').textContent.replace('₹', ''));
           const total = row.querySelector('.product_total');
-          total.textContent = `$${(price * quantity).toFixed(2)}`;
+          total.textContent = `₹${(price * quantity).toFixed(2)}`;
           updateCartTotals();
         } else {
           alert('Failed to update quantity');
@@ -93,7 +92,7 @@ function updateTotalPrice(event) {
   const quantity = parseInt(input.value, 10);
   const totalPriceCell = row.querySelector('.product_total');
   const priceElement = row.querySelector('.product-price');
-  const productPrice = parseFloat(priceElement.textContent.replace('$', ''));
+  const productPrice = parseFloat(priceElement.textContent.replace('₹', ''));
 
   if (isNaN(productPrice)) {
     console.error('Invalid product price:', priceElement.textContent);
@@ -101,7 +100,7 @@ function updateTotalPrice(event) {
   }
 
   const totalPrice = productPrice * quantity;
-  totalPriceCell.textContent = `$${totalPrice.toFixed(2)}`;
+  totalPriceCell.textContent = `₹${totalPrice.toFixed(2)}`;
 
   updateCartTotals();
 }
@@ -119,7 +118,7 @@ function updateCartTotals() {
 
   const productTotalCells = document.querySelectorAll('.product_total');
   productTotalCells.forEach(cell => {
-    const totalPriceText = cell.textContent.replace('$', '');
+    const totalPriceText = cell.textContent.replace('₹', '');
     const totalPrice = parseFloat(totalPriceText);
 
     if (!isNaN(totalPrice)) {
@@ -132,9 +131,9 @@ function updateCartTotals() {
   const shipping = 25.00;
   const total = subtotal + shipping;
 
-  subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
+  subtotalElement.textContent = `₹${subtotal.toFixed(2)}`;
   shippingElement.textContent = `${shipping.toFixed(2)}`;
-  totalElement.textContent = `$${total.toFixed(2)}`;
+  totalElement.textContent = `₹${total.toFixed(2)}`;
 }
 
 

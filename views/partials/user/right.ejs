@@ -222,6 +222,7 @@
 });
 
 function addToCart(productId) {
+    console.log('productId', productId);
     fetch('/addToCart', {
         method: 'POST',
         headers: {

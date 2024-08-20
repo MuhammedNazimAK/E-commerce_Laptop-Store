@@ -62,15 +62,21 @@ const addToCart = async (req, res) => {
       }, 0);  
 
       return res.json({
-          success: true,
-          product: {
-            _id: product._id,
-            name: product.basicInformation.name,
-            Image: product.images.highResolutionPhotos[0]
+        success: true,
+        product: {
+          id: product.id,
+          name: product.basicInformation.name,
+          images: {
+            highResolutionPhotos: product.images.highResolutionPhotos[0]
           },
-          cartItemCount: cart.items.length,
-          totalPrice: totalPrice,
+          pricingAndAvailability: {
+            salesPrice: product.pricingAndAvailability.salesPrice
+          }
+        },
+        cartItemCount: cart.items.length,
+        totalPrice: totalPrice,
       });
+
   } catch (error) {
       console.error('Error:', error);
       return res.status(500).json({ success: false, message: 'Server error' });

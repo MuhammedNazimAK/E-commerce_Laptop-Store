@@ -157,13 +157,75 @@
                                 </div>
                             </div>
         
-                            <!-- Edit Address Form (initially hidden) -->
-                            <form id="editAddressForm" style="display: none;">
-                                <input type="hidden" id="addressId" name="addressId">
-                                <!-- Same fields as Add Address Form -->
-                                <!-- ... -->
-                            </form>
+                            <!-- Edit Address Modal -->
+                            <div class="modal fade" id="editAddressModal" tabindex="-1" role="dialog" aria-labelledby="editAddressModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-body">
+                                            <div class="container-fluid">
+                                                <div class="row">
+                                                    <div class="col text-right">
+                                                        <button type="button" class="close modal-close" data-bs-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true"><i class="fa fa-times"></i></span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <form id="editAddressForm">
+                                                    <input type="hidden" id="editAddressId" name="addressId">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="default-form-box mb-20 position-relative">
+                                                                <label>Name</label>
+                                                                <input type="text" id="editAddressName" name="name" class="form-control">
+                                                                <div id="editAddressNameError" class="error-message"></div>
+                                                            </div>
+                                                            <div class="default-form-box mb-20">
+                                                                <label>Address Type</label>
+                                                                <input type="text" id="editAddressType" name="addressType" class="form-control">
+                                                                <div id="editAddressTypeError" class="error-message"></div>
+                                                            </div>
+                                                            <div class="default-form-box mb-20">
+                                                                <label>City</label>
+                                                                <input type="text" id="editCity" name="city" class="form-control">
+                                                                <div id="editCityError" class="error-message"></div>
+                                                            </div>
+                                                            <div class="default-form-box mb-20">
+                                                                <label>Landmark</label>
+                                                                <input type="text" id="editLandMark" name="landMark" class="form-control">
+                                                                <div id="editLandMarkError" class="error-message"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="default-form-box mb-20" position="relative">
+                                                                <label>State</label>
+                                                                <input type="text" id="editState" name="state" class="form-control">
+                                                                <div id="editStateError" class="error-message"></div>
+                                                            </div>
+                                                            <div class="default-form-box mb-20">
+                                                                <label>Pin Code</label>
+                                                                <input type="text" id="editPinCode" name="pinCode" class="form-control">
+                                                                <div id="editPinCodeError" class="error-message"></div>
+                                                            </div>
+                                                            <div class="default-form-box mb-20">
+                                                                <label>Mobile</label>
+                                                                <input type="text" id="editMobile" name="mobile" class="form-control">
+                                                                <div id="editMobileError" class="error-message"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-right mt-3">
+                                                        <button type="submit" class="btn btn-md btn-black-default-hover">Save Changes</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
+
+
                         <div class="col-lg-6 col-md-6">
                             <form action="/place-order" method="POST">
                                 <h3>Your order</h3>
