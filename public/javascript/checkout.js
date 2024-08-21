@@ -3,10 +3,8 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("addressListContainer", addressListContainer);
   const addressForm = document.getElementById("addressForm");
   const editAddressForm = document.getElementById("editAddressForm");
-  const addressIdInput = document.getElementById("addressId");
+  // const addressIdInput = document.getElementById("addressId");
   const placeOrderButton = document.getElementById("placeOrder");
-
-  console.log("DOM content loaded", addEventListener);
 
   // Function to fetch and display user addresses
   function fetchAddresses() {
@@ -75,11 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load user addresses on page load
   fetchAddresses();
 
-  // Show/Hide Address Form
-  document.getElementById("showButton").addEventListener("click", () => {
-    addressForm.style.display =
-      addressForm.style.display === "none" ? "block" : "none";
-  });
 
   // Place Order
   placeOrderButton.addEventListener("click", () => {
@@ -152,18 +145,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+
 // Edit Address Function
-function editAddress(
-  id,
-  addressType,
-  name,
-  mobile,
-  address,
-  city,
-  state,
-  pinCode,
-  landMark
-) {
+function editAddress(id, addressType, name, mobile, address, city, state, pinCode, landMark) {
   const editAddressForm = document.getElementById("editAddressForm");
 
   document.getElementById("editAddressId").value = id;
@@ -176,41 +160,38 @@ function editAddress(
   document.getElementById("editMobile").value = mobile;
   document.getElementById("editAddress").value = address;
 
-  editAddressForm.style.display = "block";
+  $('#editAddressModal').modal('show');
 }
 
-// Remove Address Function
-function removeAddress(addressId) {
-  Swal.fire({
-    title: "Are you sure?",
-    text: "You won't be able to revert this!",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
-    confirmButtonText: "Yes, delete it!",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      fetch(`/my-account/delete-address/${addressId}`, {
-        method: "DELETE",
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.success) {
-            Swal.fire("Deleted!", "Your address has been deleted.", "success");
-            fetchAddresses();
-          } else {
-            Swal.fire("Error", data.message, "error");
-          }
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          Swal.fire(
-            "Error",
-            "An error occurred while deleting the address.",
-            "error"
-          );
-        });
+document.getElementById("editAddressForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+    
+  const formData = new FormData(e.target);
+  const data = Object.fromEntries(formData);
+  
+  try {
+    const response = await fetch(`/my-account/edit-address/${data.addressId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    console.log('response', response);
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      Swal.fire('Success', result.message, 'success');
+      updateAddressCard(data);
+      $('#editAddressModal').modal('hide');
+      fetchAddresses(); // Refresh the address list
+    } else {
+      Swal.fire('Error', result.message, 'error');
     }
-  });
-}
+  } catch (error) {
+    console.error('Error:', error);
+    Swal.fire('Error', 'Failed to update address', 'error');
+  }
+});
+
