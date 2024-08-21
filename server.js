@@ -8,13 +8,10 @@ require('dotenv').config();
 const passport = require('./config/passport');
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
-const productRoutes = require("./routes/productRoutes");
-const addressRoutes = require("./routes/addressRoutes");
-const orderRoutes = require("./routes/orderRoutes");
 const adminRoutes = require('./routes/adminRoutes');
 const flash = require('connect-flash');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 const app = express();
 
 connectDB();
@@ -50,9 +47,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use("/", userRoutes);
-app.use("/", productRoutes);
-app.use("/", addressRoutes);
-app.use("/", orderRoutes);
 app.use("/admin", adminRoutes);
 
 

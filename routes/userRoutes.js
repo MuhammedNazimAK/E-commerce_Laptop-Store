@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/user/userController');
+const productController = require('../controllers/productController');
+const addressController = require('../controllers/addressController');
+const orderController = require('../controllers/orderController');
 const cartController = require('../controllers/cartController');
 const { requireAuth, requireNoAuth } = require('../middleware/auth');
 const passport = require('passport');
@@ -18,6 +21,7 @@ router.post('/enter-otp', requireNoAuth, userController.verifyOtpAndCreateUser);
 router.post('/resend-otp', requireNoAuth, userController.resendOtp);
 
 
+
 //user account
 router.get('/my-account', userController.renderMyAccount);
 router.post('/logout', requireAuth, userController.logoutUser);
@@ -29,11 +33,38 @@ router.post('/reset-password/:token', userController.resetPassword);
 router.post('/change-password', requireAuth, userController.changePassword);
 
 
+
+//address controller
+router.get('/my-account/add-address', requireAuth, addressController.getAddresses);
+router.post('/my-account/add-address', requireAuth, addressController.addAddress);
+router.post('/checkout/add-address', requireNoAuth, addressController.addAddress);
+router.get('/my-account/edit-address/:addressId', requireAuth, addressController.getAddressDetails);
+router.post('/my-account/edit-address/:addressId', requireAuth, addressController.editAddress);
+router.put('/my-account/delete-address/:addressId', requireAuth, addressController.deleteAddress);
+
+
+
+//product controller
+router.get('/productListing', productController.loadProductListingPage);
+router.get('/relatedProducts/:productId', productController.getRelatedProducts);
+router.get('/productDetails/:productId', productController.getProductDetailsViewOnUserPage);
+router.post('/productListing/search-and-sort', productController.searchAndSortProducts);
+
+
+
 //cart controller
 router.post('/addToCart', cartController.addToCart);
 router.post('/removeFromCart', cartController.removeFromCart);
 router.get('/cart', cartController.getCart);
 router.post('/updateCart', cartController.updateCart);
+
+
+
+//order controller
+router.get('/checkout', cartController.checkout);
+router.post('/place-order', requireAuth, orderController.placeOrder);
+router.get('/my-account/orders', requireAuth, orderController.showOrders);
+router.put('/my-account/cancel-order/:id', requireAuth, orderController.cancelOrder);
 
 
 //passport authentication google

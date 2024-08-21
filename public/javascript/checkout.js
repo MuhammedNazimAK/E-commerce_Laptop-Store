@@ -1,9 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   const addressListContainer = document.getElementById("addressList");
-  console.log("addressListContainer", addressListContainer);
   const addressForm = document.getElementById("addressForm");
   const editAddressForm = document.getElementById("editAddressForm");
-  // const addressIdInput = document.getElementById("addressId");
+  const addressIdInput = document.getElementById("addressId");
   const placeOrderButton = document.getElementById("placeOrder");
 
   // Function to fetch and display user addresses
@@ -40,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   </svg>
                 </a>
                 <div class="dropdown-menu">
-                  <a onclick="editAddress('${address._id}', '${address.addressType}', '${address.name}', '${address.mobile}', '${address.address}', '${address.city}', '${address.state}', '${address.pinCode}', '${address.landMark}')" class="dropdown-item">Edit info</a>
+                  <a onclick="editAddress('${address._id}', '${address.addressType}', '${address.name}', '${address.mobile}', '${address.city}', '${address.state}', '${address.pinCode}', '${address.landMark}')" class="dropdown-item">Edit info</a>
                   <a onclick="removeAddress('${address._id}')" class="dropdown-item text-danger">Delete</a>
                 </div>
               </div>
@@ -147,7 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // Edit Address Function
-function editAddress(id, addressType, name, mobile, address, city, state, pinCode, landMark) {
+function editAddress(id, addressType, name, mobile, city, state, pinCode, landMark) {
   const editAddressForm = document.getElementById("editAddressForm");
 
   document.getElementById("editAddressId").value = id;
@@ -158,7 +157,9 @@ function editAddress(id, addressType, name, mobile, address, city, state, pinCod
   document.getElementById("editState").value = state;
   document.getElementById("editPinCode").value = pinCode;
   document.getElementById("editMobile").value = mobile;
-  document.getElementById("editAddress").value = address;
+
+  // Clear previous error messages
+  clearErrorMessages();
 
   $('#editAddressModal').modal('show');
 }
@@ -166,6 +167,10 @@ function editAddress(id, addressType, name, mobile, address, city, state, pinCod
 document.getElementById("editAddressForm").addEventListener("submit", async (e) => {
   e.preventDefault();
     
+  if (!validateEditAddressForm()) {
+    return; // Stop form submission if validation fails
+  }
+
   const formData = new FormData(e.target);
   const data = Object.fromEntries(formData);
   
@@ -177,7 +182,6 @@ document.getElementById("editAddressForm").addEventListener("submit", async (e) 
       },
       body: JSON.stringify(data),
     });
-    console.log('response', response);
     
     const result = await response.json();
     
@@ -194,4 +198,82 @@ document.getElementById("editAddressForm").addEventListener("submit", async (e) 
     Swal.fire('Error', 'Failed to update address', 'error');
   }
 });
+
+function validateEditAddressForm() {
+  let isValid = true;
+
+  // Validate Name
+  const name = document.getElementById("editAddressName").value.trim();
+  if (name === '') {
+    showError("editAddressName", "Please enter a name");
+    isValid = false;
+  } else {
+    clearError("editAddressName");
+  }
+
+  // Validate Mobile
+  const mobile = document.getElementById("editMobile").value.trim();
+  if (mobile === '') {
+    showError("editMobile", "Please enter a mobile number");
+    isValid = false;
+  } else if (!/^\d{10}$/.test(mobile)) {
+    showError("editMobile", "Please enter a valid 10-digit mobile number");
+    isValid = false;
+  } else {
+    clearError("editMobile");
+  }
+
+  // Validate Landmark
+  const landMark = document.getElementById("editLandMark").value.trim();
+  if (landMark === '') {
+    showError("editLandMark", "Please enter a landmark");
+    isValid = false;
+  } else {
+    clearError("editLandMark");
+  }
+
+  // Validate State
+  const state = document.getElementById("editState").value.trim();
+  if (state === '') {
+    showError("editState", "Please enter a state");
+    isValid = false;
+  } else {
+    clearError("editState");
+  }
+
+  // Validate Pin Code
+  const pinCode = document.getElementById("editPinCode").value.trim();
+  if (pinCode === '') {
+    showError("editPinCode", "Please enter a pin code");
+    isValid = false;
+  } else if (!/^\d{6}$/.test(pinCode)) {
+    showError("editPinCode", "Please enter a valid 6-digit pin code");
+    isValid = false;
+  } else {
+    clearError("editPinCode");
+  }
+  return isValid;
+}
+
+function showError(fieldId, message) {
+  const errorElement = document.getElementById(`${fieldId}Error`);
+  if (errorElement) {
+    errorElement.textContent = message;
+  }
+}
+
+function clearError(fieldId) {
+  const errorElement = document.getElementById(`${fieldId}Error`);
+  if (errorElement) {
+    errorElement.textContent = '';
+  }
+}
+
+function clearErrorMessages() {
+  const errorElements = document.querySelectorAll('[id$="Error"]');
+  errorElements.forEach(element => {
+    element.textContent = '';
+  });
+}
+
 
