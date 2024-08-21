@@ -135,56 +135,6 @@
     .product-default-single-item .action-link a:hover {
         color: #ff0000;
     }
-
-    /* Modal styles for Add to Cart and Wishlist */
-    .modal-content {
-        background-color: #000;
-        color: #fff;
-    }
-
-    .modal-header {
-        border-bottom: 1px solid #333;
-    }
-
-    .modal-footer {
-        border-top: 1px solid #333;
-    }
-
-    .modal-close {
-        color: #fff;
-    }
-
-    .modal-close:hover {
-        color: #ff0000;
-    }
-    .unavailable-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6);
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.2em;
-    font-weight: bold;
-}
-
-.unavailable-text {
-    color: #ff0000;
-    font-weight: bold;
-}
-
-    .unavailable-price {
-        color: #999;
-    }
-    .product-default-single-item .action-link-left a.disabled {
-        background-color: #ccc;
-        cursor: not-allowed;
-        pointer-events: none;
-    }
 </style>
     <!-- Start Header Area -->
 
@@ -403,5 +353,4 @@
 
     <!-- Start Footer Section -->
     <%- include("../partials/user/footer") %>
-    <script src="/javascript/addToCart.js"></script>
     
