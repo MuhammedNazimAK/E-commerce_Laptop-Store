@@ -69,10 +69,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = response.data;
 
             if (result.success) {
-                swal.fire('Success', result.message, 'success');
+                showSuccess('Profile updated successfully');
                 updateFormValues(result.user);
             } else {
-                swal.fire('Error', result.message, 'error');
+                showError(result.message || 'An error occurred while updating the profile. Please try again.');
             }
         } catch (error) {
             console.error('Error:', error);
@@ -109,27 +109,23 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     
             if (response.data.success) {
-                // Clear the form
                 this.reset();
                 
-                // Close the modal
                 const modal = bootstrap.Modal.getInstance(changePasswordModal);
                 modal.hide();
     
-                // Display success message
-                showFlashMessage('success', 'Password changed successfully');
+                showSuccess('Password changed successfully');
             } else {
-                // If the server sends an error message, display it
-                handleErrorMessage(response.data.msg);
+                showError(response.data.msg || 'An error occurred while changing the password. Please try again.');
             }
         } catch (error) {
             console.error('Error:', error);
             if (error.response) {
                 handleErrorMessage(error.response.data.msg);
             } else if (error.request) {
-                showFlashMessage('error', 'No response received from the server. Please try again.');
+                showError('No response received from the server. Please try again.');
             } else {
-                showFlashMessage('error', 'An unexpected error occurred. Please try again.');
+                showError('An unexpected error occurred. Please try again.');
             }
         } finally {
             // Re-enable submit button and restore original text
@@ -184,6 +180,30 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             alertDiv.remove();
         }, 5000);
+    }
+
+    function showError(message) {
+        Swal.fire({
+            icon: "error",
+            text: message,
+            toast: true,
+            position: "top-right",
+            showConfirmButton: false,
+            timerProgressBar: true,
+            timer: 3000,
+        });
+    }
+
+    function showSuccess(message) {
+        Swal.fire({
+            icon: "success",
+            text: message,
+            toast: true,
+            position: "top-right",
+            showConfirmButton: false,
+            timerProgressBar: true,
+            timer: 3000,
+        });
     }
 
     function validateProfileInputs() {

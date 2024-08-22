@@ -53,12 +53,13 @@ document.addEventListener('DOMContentLoaded', () => {
                   Swal.fire('Success', response.data.message, 'success');
                   updateAddressCard(data);
                   $('#editAddressModal').modal('hide');
+                  showSuccess(response.data.message || 'Address updated successfully');
               } else {
-                  Swal.fire('Error', response.data.message, 'error');
+                  showError(response.data.message || 'Failed to update address');
               }
           } catch (error) {
               console.error('Error:', error);
-              Swal.fire('Error', 'Failed to update address', 'error');
+              showError('Failed to update address');
           }
       });
 
@@ -96,6 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('response.data.address', response.data.address)
                   createAddressCard(response.data.address);
                   $('#addAddressModal').modal('hide');
+                  showSuccess(response.data.message || 'Address added successfully');
                   addAddressForm.reset();
               } else {
                 console.log('error', response.data.message || 'Failed to add address');
@@ -104,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           } catch (error) {
               console.error('Error:', error);
-              Swal.fire('Error', 'Failed to add address', 'error');
+              showError('Failed to add address');
           } finally {
               submitButton.disabled = false;
               submitButton.textContent = 'Save';
@@ -132,14 +134,14 @@ document.addEventListener('DOMContentLoaded', () => {
               try {
                   const response = await axios.delete(`/my-account/delete-address/${addressId}`);
                   if (response.data.success) {
-                      Swal.fire('Deleted!', response.data.message, 'success');
+                      showSuccess(response.data.message || 'Address deleted successfully');
                       removeAddressCard(addressId);
                   } else {
-                      Swal.fire('Error', response.data.message, 'error');
+                      showError (response.data.message || 'Failed to delete address');
                   }
               } catch (error) {
                   console.error('Error:', error);
-                  Swal.fire('Error', 'Failed to delete address', 'error');
+                  showError('Failed to delete address');
               }
           }
       }
@@ -279,3 +281,27 @@ function removeAddressCard(addressId) {
       addressCard.remove();
   }
 }
+
+function showError(message) {
+    Swal.fire({
+        icon: "error",
+        text: message,
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timerProgressBar: true,
+        timer: 3000,
+    });
+}
+
+function showSuccess(message) {
+    Swal.fire({
+        icon: "success",
+        text: message,
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timerProgressBar: true,
+        timer: 3000,
+    });
+}   
