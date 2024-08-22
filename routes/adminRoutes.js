@@ -43,6 +43,10 @@ adminRoute.patch("/categories", adminAuth.requireAuth, categoryController.softDe
 
 // Order management
 adminRoute.get('/orders', adminAuth.requireAuth, orderController.getOrderManagementPage);
-adminRoute.put('/cancel-order/:id', adminAuth.requireAuth, orderController.cancelOrderAdmin);
+adminRoute.get('/orders-list', adminAuth.requireAuth, orderController.getOrdersList);
+adminRoute.get('/orders/:id', adminAuth.requireAuth, orderController.getOrderDetails);
+adminRoute.put('/edit-order/:id', adminAuth.requireAuth, orderController.editOrderAdmin);
+
+
 
 module.exports = adminRoute;

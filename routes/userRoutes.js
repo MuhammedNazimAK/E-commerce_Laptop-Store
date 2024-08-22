@@ -63,6 +63,7 @@ router.post('/updateCart', cartController.updateCart);
 //order controller
 router.get('/checkout', cartController.checkout);
 router.post('/create-order', requireAuth, orderController.createOrder);
+router.get('/get-cart-status', requireAuth, orderController.getCartStatus);
 router.post('/confirm-cod-order/:orderId', requireAuth, orderController.confirmCODOrder);
 router.post('/verify-payment/:orderId', requireAuth, orderController.verifyRazorpayPayment);
 router.get('/order-confirmation/:orderId', orderController.showOrderConfirmation);
