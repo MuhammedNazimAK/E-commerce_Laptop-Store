@@ -5,6 +5,7 @@ const adminController = require('../controllers/admin/adminController');
 const productController = require('../controllers/productController');
 const categoryController = require('../controllers/categoryController');
 const orderController = require('../controllers/orderController');
+const couponController = require('../controllers/couponController');
 const adminAuth = require('../middleware/adminAuth');
 
 
@@ -46,6 +47,13 @@ adminRoute.get('/orders', adminAuth.requireAuth, orderController.getOrderManagem
 adminRoute.get('/orders-list', adminAuth.requireAuth, orderController.getOrdersList);
 adminRoute.get('/orders/:id', adminAuth.requireAuth, orderController.getOrderDetails);
 adminRoute.put('/edit-order/:id', adminAuth.requireAuth, orderController.editOrderAdmin);
+
+
+// Coupon management
+adminRoute.get('/coupon-management', adminAuth.requireAuth, couponController.getCouponManagement);
+adminRoute.post('/add-coupon', adminAuth.requireAuth, couponController.createCoupon);
+adminRoute.get('/coupons', adminAuth.requireAuth, couponController.listCoupons);
+adminRoute.get('/delete-coupon/:id', adminAuth.requireAuth, couponController.deleteCoupon);
 
 
 
