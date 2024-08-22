@@ -7,7 +7,7 @@ const loadCategoryManagementPage = (req, res) => {
         res.render('admin/categoryManagement'); // render the page, fetch data separately
     } catch (error) {
         console.error("Error loading category management page:", error);
-        res.status(500).render('error', { message: "Internal server error" });
+        res.status(500).render('users/pageNotFound', { message: "Internal server error" });
     }
 };
 

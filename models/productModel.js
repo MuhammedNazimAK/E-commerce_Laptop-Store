@@ -37,7 +37,7 @@ const productSchema = new Schema(
           "Intel Core i5", 
           "Intel Core i7", 
           "Intel Core i9"
-        ],        
+        ],
         required: true,
         trim: true,
       },

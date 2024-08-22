@@ -40,6 +40,14 @@ app.use(fileUpload({
   tempFileDir: path.join(__dirname, 'public/tmp'),
 }));
 
+// app.use((req, res, next) => {
+//   res.setHeader(
+//     'Content-Security-Policy',
+//     "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https://res.cloudinary.com; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com;"
+//   );
+//   next();
+// });
+
 app.use(flash());
 app.use(morgan('dev'));
 

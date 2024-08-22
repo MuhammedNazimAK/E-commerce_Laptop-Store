@@ -238,67 +238,70 @@
                         </div>
 
 
-                        <div class="col-lg-6 col-md-6">
-                            <form action="/place-order" method="POST">
-                                <h3>Your order</h3>
-                                <div class="order_table table-responsive">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Product</th>
-                                                <th>Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <% items.forEach(item => { %>
-                                            <tr>
-                                                <td><%= item.basicInformation.name %> <strong> × <%= item.quantity %></strong></td>
-                                                <td>₹<%= item.total.toFixed(2) %></td>
-                                            </tr>
-                                            <% }); %>
-                                        </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <th>Cart Subtotal</th>
-                                                <td>₹<%= items.reduce((sum, item) => sum + item.total, 0).toFixed(2) %></td>
-                                            </tr>
-                                            <tr>
-                                                <th>Shipping</th>
-                                                <td><strong>₹25.00</strong></td>
-                                            </tr>
-                                            <tr class="order_total">
-                                                <th>Order Total</th>
-                                                <td><strong>₹<%= (items.reduce((sum, item) => sum + item.total, 0) + 25).toFixed(2) %></strong></td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                                <div class="payment_method">
-                                    <div class="panel-default">
-                                        <label class="checkbox-default" for="currencyCod" data-bs-toggle="collapse"
-                                            data-bs-target="#methodCod">
-                                            <input type="checkbox" id="currencyCod" name="paymentMethod" value="cod">
-                                            <span>Cash on Delivery</span>
-                                        </label>
-                                        <div id="methodCod" class="collapse" data-parent="#methodCod">
-                                            <div class="card-body1">
-                                                <p>Please pay in cash upon delivery.</p>
-                                            </div>
+                            <div class="col-lg-6 col-md-6">
+                                <form action="/place-order" method="POST">
+                                    <h3>Your order</h3>
+                                    <div class="order_table table-responsive">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Product</th>
+                                                    <th>Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% items.forEach(item => { %>
+                                                <tr>
+                                                    <td><%= item.basicInformation.name %> <strong> × <%= item.quantity %></strong></td>
+                                                    <td>₹<%= item.total.toFixed(2) %></td>
+                                                </tr>
+                                                <% }); %>
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <th>Cart Subtotal</th>
+                                                    <td>₹<%= items.reduce((sum, item) => sum + item.total, 0).toFixed(2) %></td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Shipping</th>
+                                                    <td><strong>₹25.00</strong></td>
+                                                </tr>
+                                                <tr class="order_total">
+                                                    <th>Order Total</th>
+                                                    <td><strong>₹<%= (items.reduce((sum, item) => sum + item.total, 0) + 25).toFixed(2) %></strong></td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                    <div class="payment_method">
+                                        <div class="panel-default">
+                                            <label class="checkbox-default" for="paymentCod">
+                                                <input type="radio" id="paymentCod" name="paymentMethod" value="cod" required>
+                                                <span>Cash on Delivery</span>
+                                            </label>
                                         </div>
-                                    </div>
-                                    <div class="order_button pt-3">
-                                        <button id="placeOrder" class="btn btn-md btn-black-default-hover" type="submit">Place Order</button>
-                                    </div>
-                                </div>
-                            </form>
+                                        <br>
+                                        <div class="panel-default">
+                                            <label class="checkbox-default" for="paymentRazorpay">
+                                                <input type="radio" id="paymentRazorpay" name="paymentMethod" value="razorpay" required>
+                                                <span>Pay with Razorpay</span>
+                                            </label>
+                                        </div>
+                                        <div class="order_button pt-3">
+                                            <button id="placeOrder" class="btn btn-md btn-black-default-hover" type="button">Place Order</button>
+                                        </div>
+                                    </div>                                    
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div> <!-- End User Details Checkout Form -->
-        </div>
+                </div> <!-- End User Details Checkout Form -->
+            </div>
         
 
 
 <%- include("../partials/user/footer") %>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="/javascript/checkout.js"></script>
 <script src="/javascript/address.js"></script>
+

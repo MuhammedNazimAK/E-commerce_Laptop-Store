@@ -40,7 +40,7 @@ router.post('/my-account/add-address', requireAuth, addressController.addAddress
 router.post('/checkout/add-address', requireNoAuth, addressController.addAddress);
 router.get('/my-account/edit-address/:addressId', requireAuth, addressController.getAddressDetails);
 router.post('/my-account/edit-address/:addressId', requireAuth, addressController.editAddress);
-router.put('/my-account/delete-address/:addressId', requireAuth, addressController.deleteAddress);
+router.delete('/my-account/delete-address/:addressId', requireAuth, addressController.deleteAddress);
 
 
 
@@ -62,7 +62,10 @@ router.post('/updateCart', cartController.updateCart);
 
 //order controller
 router.get('/checkout', cartController.checkout);
-router.post('/place-order', requireAuth, orderController.placeOrder);
+router.post('/create-order', requireAuth, orderController.createOrder);
+router.post('/confirm-cod-order/:orderId', requireAuth, orderController.confirmCODOrder);
+router.post('/verify-payment/:orderId', requireAuth, orderController.verifyRazorpayPayment);
+router.get('/order-confirmation/:orderId', orderController.showOrderConfirmation);
 router.get('/my-account/orders', requireAuth, orderController.showOrders);
 router.put('/my-account/cancel-order/:id', requireAuth, orderController.cancelOrder);
 

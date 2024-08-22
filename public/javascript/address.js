@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           if (result.isConfirmed) {
               try {
-                  const response = await axios.put(`/my-account/delete-address/${addressId}`);
+                  const response = await axios.delete(`/my-account/delete-address/${addressId}`);
                   if (response.data.success) {
                       Swal.fire('Deleted!', response.data.message, 'success');
                       removeAddressCard(addressId);
