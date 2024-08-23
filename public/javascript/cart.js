@@ -1,139 +1,178 @@
-document.querySelectorAll('.product_remove a').forEach(button => {
-  button.addEventListener('click', async (e) => {
-    e.preventDefault();
-    const row = e.target.closest('tr');
-    const productId = row.dataset.productId;
+document.addEventListener('DOMContentLoaded', function() {
+  const removeButtons = document.querySelectorAll('.product_remove a');
+  const quantityInputs = document.querySelectorAll('.product_quantity input');
+  const applyCouponButton = document.getElementById('apply-coupon');
+  const viewCouponsButton = document.getElementById('view-coupons');
+  const removeCouponButton = document.getElementById('remove-coupon');
 
-    if (!isValidObjectId(productId)) {
-      Swal.fire({
-        title: 'Error',
-        text: 'Invalid product ID',
-        icon: 'error'
-      });
-      return;
-    }
+  removeButtons.forEach(button => {
+      button.addEventListener('click', removeProduct);
+  });
 
-    async function isValidObjectId(id) {
-      try {
-        return await mongoose.Types.ObjectId.isValid(id);
-      } catch (error) {
-        return false;
-      }
-    }
+  quantityInputs.forEach(input => {
+      input.addEventListener('change', updateQuantity);
+  });
 
-    // Show a confirmation popup
-    const confirmed = await Swal.fire({
+  applyCouponButton.addEventListener('click', applyCoupon);
+
+  removeCouponButton.addEventListener('click', removeCoupon);
+
+  viewCouponsButton.addEventListener('click', viewAvailableCoupons);
+
+  updateCartTotals();
+});
+
+
+async function removeProduct(e) {
+  e.preventDefault();
+  const row = e.target.closest('tr');
+  const productId = row.dataset.productId;
+
+  const confirmed = await Swal.fire({
       title: 'Are you sure?',
-      text: 'You wont be able to revert this!',
+      text: 'You won\'t be able to revert this!',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
       confirmButtonText: 'Yes, delete it!'
-    });
-
-    if (confirmed.isConfirmed) {
-      try {
-        const response = await axios.post('/removeFromCart', { productId: productId });
-        if (response.data.success) {
-          row.remove();
-          updateCartTotals();
-        } else {
-          Swal.fire({
-            title: 'Error',
-            text: response.data.message,
-            icon: 'error'
-          });
-        }
-      } catch (err) {
-        console.error(err);
-        Swal.fire({
-          title: 'Error',
-          text: 'Failed to remove item',
-          icon: 'error'
-        });
-      }
-    }
   });
 
-  // Handle quantity change
-  document.querySelectorAll('.product_quantity input').forEach(input => {
-    input.addEventListener('change', async (e) => {
-      const row = e.target.closest('tr');
-      const productId = row.dataset.productId;
-      const quantity = e.target.value;
+  if (confirmed.isConfirmed) {
       try {
-        const response = await fetch('/updateCart', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ productId: productId, quantity: quantity })
-        });
-        if (response.ok) {
+          const response = await axios.post('/removeFromCart', { productId });
+          if (response.data.success) {
+              row.remove();
+              updateCartTotals();
+          } else {
+              Swal.fire('Error', response.data.message, 'error');
+          }
+      } catch (err) {
+          console.error(err);
+          Swal.fire('Error', 'Failed to remove item', 'error');
+      }
+  }
+}
+
+async function updateQuantity(e) {
+  const row = e.target.closest('tr');
+  const productId = row.dataset.productId;
+  const quantity = e.target.value;
+
+  try {
+      const response = await axios.post('/updateCart', { productId, quantity });
+      if (response.data.success) {
           const price = parseFloat(row.querySelector('.product-price').textContent.replace('₹', ''));
           const total = row.querySelector('.product_total');
           total.textContent = `₹${(price * quantity).toFixed(2)}`;
           updateCartTotals();
-        } else {
-          alert('Failed to update quantity');
-        }
-      } catch (err) {
-        console.error(err);
-        alert('Error updating quantity');
+      } else {
+          Swal.fire('Error', 'Failed to update quantity', 'error');
       }
-    });
-  });
-});
-
-function updateTotalPrice(event) {
-  const input = event.target;
-  const row = input.closest('tr');
-  const quantity = parseInt(input.value, 10);
-  const totalPriceCell = row.querySelector('.product_total');
-  const priceElement = row.querySelector('.product-price');
-  const productPrice = parseFloat(priceElement.textContent.replace('₹', ''));
-
-  if (isNaN(productPrice)) {
-    console.error('Invalid product price:', priceElement.textContent);
-    return;
+  } catch (err) {
+      console.error(err);
+      Swal.fire('Error', 'Error updating quantity', 'error');
   }
-
-  const totalPrice = productPrice * quantity;
-  totalPriceCell.textContent = `₹${totalPrice.toFixed(2)}`;
-
-  updateCartTotals();
 }
 
-function updateCartTotals() {
+async function applyCoupon() {
+  const couponCode = document.getElementById('coupon-input').value;
+  try {
+      const response = await axios.post('/apply-coupon', { couponCode });
+      if (response.data.success) {
+          updateCartTotals(response.data.discount);
+          showAppliedCoupon(couponCode);
+          Swal.fire('Success', 'Coupon applied successfully', 'success');
+      } else {
+          Swal.fire('Error', response.data.message, 'error');
+      }
+  } catch (err) {
+      console.error(err);
+      Swal.fire('Error', 'Failed to apply coupon', 'error');
+  }
+}
+
+async function removeCoupon() {
+  try {
+      const response = await axios.post('/remove-coupon');
+      if (response.data.success) {
+          updateCartTotals(0);
+          hideAppliedCoupon();
+          Swal.fire('Success', 'Coupon removed successfully', 'success');
+      } else {
+          Swal.fire('Error', response.data.message, 'error');
+      }
+  } catch (err) {
+      console.error(err);
+      Swal.fire('Error', 'Failed to remove coupon', 'error');
+  }
+}
+
+
+async function viewAvailableCoupons() {
+  try {
+      const response = await axios.get('/available-coupons');
+      if (response.data.success) {
+          const couponsHtml = response.data.coupons.map(coupon => 
+              `<p>${coupon.code}: ${coupon.description}</p>`
+          ).join('');
+          
+          Swal.fire({
+              title: 'Available Coupons',
+              html: couponsHtml,
+              icon: 'info'
+          });
+      } else {
+          Swal.fire('Error', 'Failed to fetch available coupons', 'error');
+      }
+  } catch (err) {
+      console.error(err);
+      Swal.fire('Error', 'Failed to fetch available coupons', 'error');
+  }
+}
+
+function showAppliedCoupon(couponCode) {
+  document.getElementById('applied-coupon-code').textContent = couponCode;
+  document.getElementById('applied-coupon').style.display = 'block';
+  document.getElementById('coupon-input').value = '';
+  document.getElementById('coupon-input').disabled = true;
+  document.getElementById('apply-coupon').disabled = true;
+}
+
+function hideAppliedCoupon() {
+  document.getElementById('applied-coupon').style.display = 'none';
+  document.getElementById('coupon-input').disabled = false;
+  document.getElementById('apply-coupon').disabled = false;
+}
+
+function updateCartTotals(discount = 0) {
   let subtotal = 0;
-  const subtotalElement = document.querySelector('.cart_subtotal .cart_amount');
-  const shippingElement = document.querySelector('.cart_subtotal .cart_amount span');
-  const totalElement = document.querySelector('.cart_subtotal .cart_amount.total');
-
-  if (!subtotalElement || !shippingElement || !totalElement) {
-    console.error('One or more cart total elements not found');
-    return;
-  }
-
   const productTotalCells = document.querySelectorAll('.product_total');
+  
   productTotalCells.forEach(cell => {
-    const totalPriceText = cell.textContent.replace('₹', '');
-    const totalPrice = parseFloat(totalPriceText);
-
-    if (!isNaN(totalPrice)) {
-      subtotal += totalPrice;
-    } else {
-      console.error('Invalid total price:', totalPriceText);
-    }
+      const totalPrice = parseFloat(cell.textContent.replace('₹', ''));
+      if (!isNaN(totalPrice)) {
+          subtotal += totalPrice;
+      }
   });
 
-  const shipping = 25.00;
-  const total = subtotal + shipping;
+  const shipping = parseFloat(document.getElementById('shipping').textContent);
+  const total = subtotal + shipping - discount;
 
-  subtotalElement.textContent = `₹${subtotal.toFixed(2)}`;
-  shippingElement.textContent = `${shipping.toFixed(2)}`;
-  totalElement.textContent = `₹${total.toFixed(2)}`;
+  document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+  document.getElementById('total').textContent = total.toFixed(2);
+
+  if (discount > 0) {
+      document.getElementById('discount').textContent = discount.toFixed(2);
+      document.getElementById('discount-row').style.display = 'block';
+  } else {
+      document.getElementById('discount-row').style.display = 'none';
+  }
 }
 
-
+document.querySelectorAll('.product_quantity input').forEach(input => {
+  input.style.width = '60px';
+  input.style.height = '40px';
+  input.style.fontSize = '16px';
+  input.style.textAlign = 'center';
+});

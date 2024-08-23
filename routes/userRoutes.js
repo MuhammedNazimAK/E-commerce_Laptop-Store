@@ -4,6 +4,7 @@ const userController = require('../controllers/user/userController');
 const productController = require('../controllers/productController');
 const addressController = require('../controllers/addressController');
 const orderController = require('../controllers/orderController');
+const couponController = require('../controllers/couponController');
 const cartController = require('../controllers/cartController');
 const { requireAuth, requireNoAuth } = require('../middleware/auth');
 const passport = require('passport');
@@ -57,6 +58,9 @@ router.post('/addToCart', cartController.addToCart);
 router.post('/removeFromCart', cartController.removeFromCart);
 router.get('/cart', cartController.getCart);
 router.post('/updateCart', cartController.updateCart);
+router.get('/available-coupons', couponController.getAvailableCoupons);
+router.post('/apply-coupon', couponController.applyCoupon);
+router.post('/remove-coupon', couponController.removeCoupon);
 
 
 

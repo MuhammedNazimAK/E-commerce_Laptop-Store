@@ -85,47 +85,57 @@
       </div>
   </div> <!-- End Cart Table -->
 
-  <!-- Start Coupon Start -->
-  <div class="coupon_area">
-      <div class="container">
-          <div class="row">
-              <div class="col-lg-6 col-md-6">
-                  <div class="coupon_code left" data-aos="fade-up" data-aos-delay="200">
-                      <h3>Coupon</h3>
-                      <div class="coupon_inner">
-                          <p>Enter your coupon code if you have one.</p>
-                          <input class="mb-2" placeholder="Coupon code" type="text">
-                          <button type="submit" class="btn btn-md btn-golden">Apply coupon</button>
-                      </div>
-                  </div>
-              </div>
-              <div class="col-lg-6 col-md-6">
+
+<!-- Start Coupon Start -->
+<div class="coupon_area">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 col-md-6">
+                <div class="coupon_code left" data-aos="fade-up" data-aos-delay="200">
+                    <h3>Coupon</h3>
+                    <div class="coupon_inner">
+                        <p>Enter your coupon code if you have one.</p>
+                        <input class="mb-2" id="coupon-input" placeholder="Coupon code" type="text">
+                        <button type="button" id="apply-coupon" class="btn btn-md btn-golden">Apply coupon</button>
+                        <button type="button" id="view-coupons" class="btn btn-md btn-golden mt-2">View Available Coupons</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-6">
                 <div class="coupon_code right" data-aos="fade-up" data-aos-delay="400">
                     <h3>Cart Totals</h3>
                     <div class="coupon_inner">
-                      <div class="cart_subtotal">
-                        <p>Subtotal</p>
-                        <p class="cart_amount">₹<%= subtotal.toFixed(2) %></p>
-                      </div>
-                      <div class="cart_subtotal">
-                        <p>Shipping</p>
-                        <p class="cart_amount"><span><%= shipping.toFixed(2) %></p>
-                      </div>
-                      <a href="#">Calculate shipping</a>
-                  
-                      <div class="cart_subtotal">
-                        <p>Total</p>
-                        <p class="cart_amount total">₹<%= total.toFixed(2) %></p>
-                      </div>
-                      <div class="checkout_btn">
-                        <a href="/checkout" class="btn btn-md btn-golden">Proceed to Checkout</a>
-                      </div>
+                      <div id="applied-coupon" style="display: none;">
+                        <p>Applied Coupon: <span id="applied-coupon-code"></span></p>
+                        <button type="button" id="remove-coupon" class="btn btn-sm btn-danger">Remove Coupon</button>
+                     </div>
+                        <div class="cart_subtotal">
+                            <p>Subtotal</p>
+                            <p class="cart_amount">₹<span id="subtotal"><%= subtotal.toFixed(2) %></span></p>
+                        </div>
+                        <div class="cart_subtotal">
+                            <p>Shipping</p>
+                            <p class="cart_amount">₹<span id="shipping"><%= shipping.toFixed(2) %></span></p>
+                        </div>
+                        <div class="cart_subtotal" id="discount-row" style="display: none;">
+                            <p>Discount</p>
+                            <p class="cart_amount">-₹<span id="discount">0.00</span></p>
+                        </div>
+                        <a href="#">Calculate shipping</a>
+                    
+                        <div class="cart_subtotal">
+                            <p>Total</p>
+                            <p class="cart_amount total">₹<span id="total"><%= total.toFixed(2) %></span></p>
+                        </div>
+                        <div class="checkout_btn">
+                            <a href="/checkout" class="btn btn-md btn-golden">Proceed to Checkout</a>
+                        </div>
                     </div>
-                  </div>                  
-              </div>              
-          </div>
-      </div>
-  </div> <!-- End Coupon Start -->
+                </div>                  
+            </div>              
+        </div>
+    </div>
+</div> <!-- End Coupon Start -->
 </div> <!-- ...:::: End Cart Section:::... -->
 
 <script src="javascript/cart.js"></script>
