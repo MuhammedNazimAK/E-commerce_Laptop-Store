@@ -53,7 +53,8 @@ adminRoute.put('/edit-order/:id', adminAuth.requireAuth, orderController.editOrd
 adminRoute.get('/coupon-management', adminAuth.requireAuth, couponController.getCouponManagement);
 adminRoute.post('/add-coupon', adminAuth.requireAuth, couponController.createCoupon);
 adminRoute.get('/coupons', adminAuth.requireAuth, couponController.listCoupons);
-adminRoute.get('/delete-coupon/:id', adminAuth.requireAuth, couponController.deleteCoupon);
+adminRoute.patch('/coupon-management', adminAuth.requireAuth, couponController.toggleCouponStatus);
+adminRoute.delete('/coupon/:id', adminAuth.requireAuth, couponController.deleteCoupon);
 
 
 
