@@ -44,12 +44,13 @@ async function removeProduct(e) {
           if (response.data.success) {
               row.remove();
               updateCartTotals();
+              showSuccess('Item removed successfully');
           } else {
-              Swal.fire('Error', response.data.message, 'error');
+              showError(response.data.message || 'Failed to remove item');
           }
       } catch (err) {
           console.error(err);
-          Swal.fire('Error', 'Failed to remove item', 'error');
+          showError('Failed to remove item');
       }
   }
 }
@@ -67,11 +68,11 @@ async function updateQuantity(e) {
           total.textContent = `₹${(price * quantity).toFixed(2)}`;
           updateCartTotals();
       } else {
-          Swal.fire('Error', 'Failed to update quantity', 'error');
+          showError(response.data.message || 'Failed to update quantity');
       }
   } catch (err) {
       console.error(err);
-      Swal.fire('Error', 'Error updating quantity', 'error');
+      showError('Failed to update quantity');
   }
 }
 
@@ -82,13 +83,13 @@ async function applyCoupon() {
       if (response.data.success) {
           updateCartTotals(response.data.discount);
           showAppliedCoupon(couponCode);
-          Swal.fire('Success', 'Coupon applied successfully', 'success');
+          showSuccess('Coupon applied successfully');
       } else {
-          Swal.fire('Error', response.data.message, 'error');
+          showError(response.data.message || 'Failed to apply coupon');
       }
   } catch (err) {
       console.error(err);
-      Swal.fire('Error', 'Failed to apply coupon', 'error');
+      showError('Failed to apply coupon');
   }
 }
 
@@ -98,13 +99,13 @@ async function removeCoupon() {
       if (response.data.success) {
           updateCartTotals(0);
           hideAppliedCoupon();
-          Swal.fire('Success', 'Coupon removed successfully', 'success');
+          showSuccess('Coupon removed successfully');
       } else {
-          Swal.fire('Error', response.data.message, 'error');
+          showError(response.data.message || 'Failed to remove coupon');
       }
   } catch (err) {
       console.error(err);
-      Swal.fire('Error', 'Failed to remove coupon', 'error');
+      showError('Failed to remove coupon');
   }
 }
 
@@ -175,4 +176,29 @@ document.querySelectorAll('.product_quantity input').forEach(input => {
   input.style.height = '40px';
   input.style.fontSize = '16px';
   input.style.textAlign = 'center';
+
+  function showError(message) {
+    Swal.fire({
+      icon: "error",
+      text: message,
+      toast: true,
+      position: "top-right",
+      showConfirmButton: false,
+      timerProgressBar: true,
+      timer: 3000,
+    });
+  }
+
+  function showSuccess(message) {
+    Swal.fire({
+      icon: "success",
+      text: message,
+      toast: true,
+      position: "top-right",
+      showConfirmButton: false,
+      timerProgressBar: true,
+      timer: 3000,
+    });
+  }
+
 });

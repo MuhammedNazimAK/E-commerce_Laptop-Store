@@ -22,7 +22,6 @@ router.post('/enter-otp', requireNoAuth, userController.verifyOtpAndCreateUser);
 router.post('/resend-otp', requireNoAuth, userController.resendOtp);
 
 
-
 //user account
 router.get('/my-account', userController.renderMyAccount);
 router.post('/logout', requireAuth, userController.logoutUser);
@@ -34,7 +33,6 @@ router.post('/reset-password/:token', userController.resetPassword);
 router.post('/change-password', requireAuth, userController.changePassword);
 
 
-
 //address controller
 router.get('/my-account/add-address', requireAuth, addressController.getAddresses);
 router.post('/my-account/add-address', requireAuth, addressController.addAddress);
@@ -44,7 +42,6 @@ router.post('/my-account/edit-address/:addressId', requireAuth, addressControlle
 router.delete('/my-account/delete-address/:addressId', requireAuth, addressController.deleteAddress);
 
 
-
 //product controller
 router.get('/productListing', productController.loadProductListingPage);
 router.get('/relatedProducts/:productId', productController.getRelatedProducts);
@@ -52,16 +49,17 @@ router.get('/productDetails/:productId', productController.getProductDetailsView
 router.post('/productListing/search-and-sort', productController.searchAndSortProducts);
 
 
-
 //cart controller
 router.post('/addToCart', cartController.addToCart);
 router.post('/removeFromCart', cartController.removeFromCart);
 router.get('/cart', cartController.getCart);
 router.post('/updateCart', cartController.updateCart);
+
+
+//coupon controller
 router.get('/available-coupons', couponController.getAvailableCoupons);
 router.post('/apply-coupon', couponController.applyCoupon);
 router.post('/remove-coupon', couponController.removeCoupon);
-
 
 
 //order controller
