@@ -104,6 +104,23 @@
                   </div>
                 </div>
                 <div class="sidebar-single-widget">
+                  <h6 class="sidebar-title">SELECT BY CATEGORY</h6>
+                  <div class="sidebar-content">
+                    <div class="filter-type-select">
+                      <ul>
+                        <% categories.forEach(category => { %>
+                        <li>
+                          <label class="checkbox-default" for="category-<%= category %>">
+                            <input type="checkbox" id="category-<%= category %>" value="<%= category %>" class="category-filter">
+                            <span><%= category %></span>
+                          </label>
+                        </li>
+                        <% }) %>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div class="sidebar-single-widget">
                     <h6 class="sidebar-title">SELECT BY RAM</h6>
                     <div class="sidebar-content">
                       <div class="filter-type-select">

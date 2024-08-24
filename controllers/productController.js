@@ -127,14 +127,16 @@
       const rams = await Product.distinct('technicalSpecification.ram');
       const storages = await Product.distinct('technicalSpecification.storage');
       const graphicsCards = await Product.distinct('technicalSpecification.graphicsCard');
-  
+      const categories = await Product.distinct('category');
+
       res.render('users/productListing', { 
         user: req.session.user,
         brands,
         processors,
         rams,
         storages,
-        graphicsCards
+        graphicsCards,
+        categories
       });
     } catch (error) {
       console.error('Error loading product listing page:', error);
@@ -334,7 +336,7 @@ const getRelatedProducts = async (product) => {
         ]
       }
     ]
-  }).limit(8).lean(); // Limit related products
+  }).limit(8).lean();
 
   return relatedProducts;
 };
@@ -360,7 +362,6 @@ const getRelatedProducts = async (product) => {
   const searchAndSortProducts = async (req, res) => {
     try {
       const { filters, sort, page, itemsPerPage, searchQuery } = req.body;
-      console.log('received sort option:', req.body.sort);
       
       const aggregationPipeline = [];
   
@@ -409,6 +410,7 @@ const getRelatedProducts = async (product) => {
       }
   
       aggregationPipeline.push(matchStage);
+
   
       switch (sort) {
         case "popularity":
@@ -436,8 +438,11 @@ const getRelatedProducts = async (product) => {
           aggregationPipeline.push({ $sort: { "basicInformation.name": -1 } });
           break;
         default:
+          console.log('default case');
           aggregationPipeline.push({ $sort: { createdAt: -1 } });
       }
+
+      console.log('aggregationPipeline after sorting:', JSON.stringify(aggregationPipeline));
   
       // Count total products
       const countPipeline = [...aggregationPipeline, { $count: "total" }];
@@ -452,7 +457,7 @@ const getRelatedProducts = async (product) => {
   
       // Execute the aggregation
       const products = await Product.aggregate(aggregationPipeline);
-      console.log('first few sorted  products:', products.slice(0, 3));
+      console.log('first few sorted  products:', products.slice(0, 2));
   
       res.json({
         products,

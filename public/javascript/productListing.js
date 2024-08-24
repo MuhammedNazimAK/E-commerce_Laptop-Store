@@ -185,16 +185,15 @@ class ProductData {
   }
 
   async fetchProducts() {
-    console.log('Fetching products with sort option:', this.sortOption);
     try {
-      const response = await fetch('/productListing/search-and-sort', {
+      const response = await fetch(`/productListing/search-and-sort?=${Date.now()}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           filters: this.filters,
-          sort: this.sortOption,
+          sort: this.sortSelect,
           page: this.currentPage,
           itemsPerPage: this.itemsPerPage,
           searchQuery: this.searchQuery
@@ -320,5 +319,5 @@ class ProductData {
 document.addEventListener('DOMContentLoaded', () => {
   new ProductData();
 });
-  }
+}
 })(); 

@@ -6,6 +6,7 @@ const addressController = require('../controllers/addressController');
 const orderController = require('../controllers/orderController');
 const couponController = require('../controllers/couponController');
 const cartController = require('../controllers/cartController');
+const wishlistController = require('../controllers/wishListController');
 const { requireAuth, requireNoAuth } = require('../middleware/auth');
 const passport = require('passport');
 
@@ -71,6 +72,13 @@ router.post('/verify-payment/:orderId', requireAuth, orderController.verifyRazor
 router.get('/order-confirmation/:orderId', orderController.showOrderConfirmation);
 router.get('/my-account/orders', requireAuth, orderController.showOrders);
 router.put('/my-account/cancel-order/:id', requireAuth, orderController.cancelOrder);
+
+
+router.get('/wishlist', requireAuth, wishlistController.getWishList);
+router.post('/add-to-wishlist', requireAuth, wishlistController.addToWishList);
+router.post('/remove-from-wishlist', requireAuth, wishlistController.removeFromWishList);
+router.post('/add-to-cart', requireAuth, wishlistController.addToCart);
+
 
 
 //passport authentication google
