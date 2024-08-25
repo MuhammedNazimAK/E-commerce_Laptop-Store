@@ -75,6 +75,12 @@ const productSchema = new Schema(
       type: Boolean,
       default: false, // false indicates 'Draft', true indicates 'Published'
     },
+    inventory: {
+      inStock: { type: Number, required: true, default: 0 },
+      lowStockThreshold: { type: Number, required: true, default: 5 },
+      lastRestocked: { type: Date },
+      supplierInfo: { type: String },
+    },
   },
   {
     timestamps: true,

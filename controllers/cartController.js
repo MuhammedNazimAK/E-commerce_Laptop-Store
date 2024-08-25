@@ -4,82 +4,92 @@ const Product = require('../models/productModel');
 const mongoose = require('mongoose');
 
 
+
 const addToCart = async (req, res) => {
   console.log('came to add to cart')
   try {
-      const { productId, quantity } = req.body;
-      let userId = req.session.user?._id;
+    const { productId, quantity } = req.body;
+    let userId = req.session.user?._id;
 
-      console.log('productId', productId);
+    console.log('productId', productId);
+    console.log('userId', userId);
 
-      console.log('userId', userId);
+    if (!userId) {
+      // If the user is not authenticated, create a guest cart
+      userId = req.session.guestCartId || (req.session.guestCartId = new mongoose.Types.ObjectId());
+    }
 
-      if (!userId) {
-        // If the user is not authenticated, create a guest cart
-        userId = req.session.guestCartId || (req.session.guestCartId = new mongoose.Types.ObjectId());
+    console.log('guest userId', userId);
+
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ success: false, message: 'Invalid product ID' });
+    }
+
+    console.log('productId', productId);
+    console.log('passed mongoose.Types.ObjectId.isValid', productId);
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    // Check if there's enough stock
+    if (product.inventory.inStock < quantity) {
+      return res.status(400).json({ success: false, message: 'Not enough stock available' });
+    }
+
+    let cart = await Cart.findOne({ user: userId });
+    if (!cart) {
+      cart = new Cart({ user: userId, items: [] });
+    }
+
+    console.log('cart', cart);
+
+    // Check if the product is already in the cart
+    const cartItemIndex = cart.items.findIndex(item => item.product.toString() === productId);
+    if (cartItemIndex !== -1) {
+      const newQuantity = cart.items[cartItemIndex].quantity + quantity;
+      if (newQuantity > 5) {
+        return res.status(400).json({ success: false, message: 'Maximum quantity per item is 5' });
       }
-
-      console.log('guest userId', userId);
-  
-
-      if (!mongoose.Types.ObjectId.isValid(productId)) {
-          return res.status(400).json({ success: false, message: 'Invalid product ID' });
+      cart.items[cartItemIndex].quantity = newQuantity;
+    } else {
+      if (quantity > 5) {
+        return res.status(400).json({ success: false, message: 'Maximum quantity per item is 5' });
       }
+      cart.items.push({ product: productId, quantity: quantity });
+    }
 
-      console.log('productId', productId);
+    await cart.save();
 
-      console.log('passed mongoose.Types.ObjectId.isValid', productId);
+    console.log('cart', cart);
 
-      const product = await Product.findById(productId);
-      if (!product) {
-          return res.status(404).json({ success: false, message: 'Product not found' });
-      }
+    // Populate the product details in the cart
+    await cart.populate('items.product');
 
-      let cart = await Cart.findOne({ user: userId });
-      if (!cart) {
-          cart = new Cart({ user: userId, items: [] });
-      }
+    const totalPrice = cart.items.reduce((total, item) => {
+      return total + (item.product.pricingAndAvailability.salesPrice || item.product.pricingAndAvailability.regularPrice) * item.quantity;
+    }, 0);  
 
-      console.log('cart', cart);
-
-      // Check if the product is already in the cart
-      const cartItemIndex = cart.items.findIndex(item => item.product.toString() === productId);
-      if (cartItemIndex !== -1) {
-          cart.items[cartItemIndex].quantity += quantity;  
-      } else {
-          cart.items.push({ product: productId, quantity: quantity });
-      }
-
-      await cart.save();
-
-      console.log('cart', cart);
-
-      // Populate the product details in the cart
-      await cart.populate('items.product');
-
-      const totalPrice = cart.items.reduce((total, item) => {
-          return total + (item.product.pricingAndAvailability.salesPrice || item.product.pricingAndAvailability.regularPrice) * item.quantity;
-      }, 0);  
-
-      return res.json({
-        success: true,
-        product: {
-          id: product.id,
-          name: product.basicInformation.name,
-          images: {
-            highResolutionPhotos: product.images.highResolutionPhotos[0]
-          },
-          pricingAndAvailability: {
-            salesPrice: product.pricingAndAvailability.salesPrice
-          }
+    return res.json({
+      success: true,
+      product: {
+        id: product.id,
+        name: product.basicInformation.name,
+        images: {
+          highResolutionPhotos: product.images.highResolutionPhotos[0]
         },
-        cartItemCount: cart.items.length,
-        totalPrice: totalPrice,
-      });
+        pricingAndAvailability: {
+          salesPrice: product.pricingAndAvailability.salesPrice
+        }
+      },
+      cartItemCount: cart.items.length,
+      totalPrice: totalPrice,
+    });
 
   } catch (error) {
-      console.error('Error:', error);
-      return res.status(500).json({ success: false, message: 'Server error' });
+    console.error('Error:', error);
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 

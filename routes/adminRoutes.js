@@ -6,6 +6,7 @@ const productController = require('../controllers/productController');
 const categoryController = require('../controllers/categoryController');
 const orderController = require('../controllers/orderController');
 const couponController = require('../controllers/couponController');
+const inventoryController = require('../controllers/admin/inventoryController');
 
 const adminAuth = require('../middleware/adminAuth');
 const { categoryOfferValidationRules } = require('../middleware/categoryOfferValidation');
@@ -65,6 +66,10 @@ adminRoute.get('/coupons', adminAuth.requireAuth, couponController.listCoupons);
 adminRoute.patch('/coupon-management', adminAuth.requireAuth, couponController.toggleCouponStatus);
 adminRoute.delete('/coupon/:id', adminAuth.requireAuth, couponController.deleteCoupon);
 
+
+// Inventory management
+adminRoute.get('/inventory', adminAuth.requireAuth, inventoryController.getInventoryPage);
+adminRoute.put('/inventory/:productId', adminAuth.requireAuth, inventoryController.updateInventory);
 
 
 
