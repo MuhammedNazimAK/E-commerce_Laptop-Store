@@ -6,7 +6,9 @@ const productController = require('../controllers/productController');
 const categoryController = require('../controllers/categoryController');
 const orderController = require('../controllers/orderController');
 const couponController = require('../controllers/couponController');
+
 const adminAuth = require('../middleware/adminAuth');
+const { categoryOfferValidationRules } = require('../middleware/categoryOfferValidation');
 
 
 // Admin authentication
@@ -42,6 +44,13 @@ adminRoute.put("/categories/:id", adminAuth.requireAuth, categoryController.edit
 adminRoute.patch("/categories", adminAuth.requireAuth, categoryController.softDeleteCategory);
 
 
+// Category Offer management
+adminRoute.get('/category-offer-list', adminAuth.requireAuth, categoryController.loadCategoryOfferPage);
+adminRoute.get('/add-category-offer', adminAuth.requireAuth, categoryController.loadAddCategoryOfferPage);
+adminRoute.post('/add-category-offer', adminAuth.requireAuth, categoryOfferValidationRules(), categoryController.createCategoryOffer);
+adminRoute.put('/add-category-offer/:id', adminAuth.requireAuth, categoryOfferValidationRules(), categoryController.updateCategoryOffer);
+
+
 // Order management
 adminRoute.get('/orders', adminAuth.requireAuth, orderController.getOrderManagementPage);
 adminRoute.get('/orders-list', adminAuth.requireAuth, orderController.getOrdersList);
@@ -55,6 +64,9 @@ adminRoute.post('/add-coupon', adminAuth.requireAuth, couponController.createCou
 adminRoute.get('/coupons', adminAuth.requireAuth, couponController.listCoupons);
 adminRoute.patch('/coupon-management', adminAuth.requireAuth, couponController.toggleCouponStatus);
 adminRoute.delete('/coupon/:id', adminAuth.requireAuth, couponController.deleteCoupon);
+
+
+
 
 
 

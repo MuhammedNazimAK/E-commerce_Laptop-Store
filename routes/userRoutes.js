@@ -74,9 +74,11 @@ router.get('/my-account/orders', requireAuth, orderController.showOrders);
 router.put('/my-account/cancel-order/:id', requireAuth, orderController.cancelOrder);
 
 
+//wishlist controller
 router.get('/wishlist', requireAuth, wishlistController.getWishList);
+router.get('/wishlist-items', requireAuth, wishlistController.getWishListItems);
 router.post('/add-to-wishlist', requireAuth, wishlistController.addToWishList);
-router.post('/remove-from-wishlist', requireAuth, wishlistController.removeFromWishList);
+router.put('/remove-from-wishlist', requireAuth, wishlistController.removeFromWishList);
 router.post('/add-to-cart', requireAuth, wishlistController.addToCart);
 
 

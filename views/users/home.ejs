@@ -272,7 +272,7 @@
                                         <% } %>
                                     </div>
                                     <div class="action-link-right">
-                                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalAddwishlist"><i class="icon-heart"></i></a>
+                                        <a href="#" class="add-to-wishlist" data-product-id="<%= product._id %>"><i class="icon-heart"></i></a>
                                     </div>
                                 </div>
                             </div>
@@ -353,4 +353,5 @@
 
     <!-- Start Footer Section -->
     <%- include("../partials/user/footer") %>
+    <script src="/javascript/wishlist.js"></script>
     
