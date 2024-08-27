@@ -115,12 +115,15 @@ const logoutAdmin = (req, res) => {
                 return res.redirect('/pageNotFound');
             }
         });
-        res.redirect('/admin/login');
+        setTimeout(() => {
+            res.redirect('/admin/login');
+        }, 1000);
     } catch (error) {
         console.error("Error while logging out admin:", error.message);
         res.status(500).send("Internal server Error");
     }
 }
+ 
 
 module.exports = {
     loadAdminLoginPage,

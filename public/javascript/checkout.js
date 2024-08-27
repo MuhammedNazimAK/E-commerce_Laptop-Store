@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
 async function handlePlaceOrder() {
   const selectedAddressId = getSelectedAddressId();
   const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
-  const couponCode = document.getElementById("couponCode")?.value || "";
+  const couponCode = document.getElementById("appliedCouponCode")?.value || "";
 
   if (!selectedAddressId) {
     showError("Please select an address.");
@@ -109,7 +109,7 @@ async function handlePlaceOrder() {
     console.error('Error:', error);
     showError("An error occurred while processing your order. Please try again.");
   }
-}
+};
 
 function handleCODOrder(orderId) {
   axios.post(`/confirm-cod-order/${orderId}`)
@@ -137,7 +137,7 @@ function handleRazorpayOrder(orderId, amount) {
   }
 
   const options = {
-    key: 'YOUR_RAZORPAY_KEY_ID', // Replace with your actual Razorpay key
+    key: 'YOUR_RAZORPAY_KEY_ID',
     amount: amount,
     currency: "INR",
     name: "Your Company Name",

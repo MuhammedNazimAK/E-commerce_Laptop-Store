@@ -9,6 +9,7 @@ const passport = require('./config/passport');
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require('./routes/adminRoutes');
+const { addUserToLocals } = require('./middleware/authMiddleware');
 const flash = require('connect-flash');
 
 const PORT = process.env.PORT;
@@ -40,6 +41,7 @@ app.use(fileUpload({
   tempFileDir: path.join(__dirname, 'public/tmp'),
 }));
 
+app.use(addUserToLocals);
 app.use(flash());
 app.use(morgan('dev'));
 

@@ -55,8 +55,14 @@ document.addEventListener('DOMContentLoaded', function() {
   async function updateQuantity(e) {
     const row = e.target.closest('tr');
     const productId = row.dataset.productId;
-    const quantity = e.target.value;
+    const quantity = parseInt(e.target.value);
   
+    if (quantity > 5) {
+      showError('Quantity cannot exceed 5 for this item');
+      e.target.value = 5;
+      return;
+    }
+
     try {
       const response = await axios.post('/updateCart', { productId, quantity });
       if (response.data.success) {
@@ -66,20 +72,26 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCartTotals();
       } else {
         showError(response.data.message || 'Failed to update quantity');
+        e.target.value = response.data.quantity;
       }
     } catch (err) {
       console.error(err);
       showError('Failed to update quantity');
+      e.target.value = e.target.defaultValue;
     }
   }
   
   async function applyCoupon() {
     const couponCode = document.getElementById('coupon-input').value;
     try {
-      const response = await axios.post('/apply-coupon', { couponCode });
+      const response = await axios.post('/apply-coupon', { couponCode }, { withCredentials: true });
+      console.log('response', response);
       if (response.data.success) {
-        updateCartTotals(response.data.discount);
-        showAppliedCoupon(couponCode);
+        console.log('response.data', response.data);
+        const discountedAmount = response.data.discountAmount;
+        const cartTotal = response.data.cartTotal;
+        updateCartTotals(discountedAmount, cartTotal);
+        showAppliedCoupon(couponCode, discountedAmount);
         showSuccess('Coupon applied successfully');
       } else {
         showError(response.data.message || 'Failed to apply coupon');
@@ -128,12 +140,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  function showAppliedCoupon(couponCode) {
+  function showAppliedCoupon(couponCode, discount) {
     document.getElementById('applied-coupon-code').textContent = couponCode;
-    document.getElementById('applied-coupon').style.display = 'block';
+    document.getElementById('applied-coupon-discount').textContent = `${discount.toFixed(2)} off`;  
+    document.getElementById('applied-coupon').style.display = 'flex';
     document.getElementById('coupon-input').value = '';
     document.getElementById('coupon-input').disabled = true;
     document.getElementById('apply-coupon').disabled = true;
+    document.getElementById('remove-coupon').style.display = 'block';
   }
   
   function hideAppliedCoupon() {
@@ -142,29 +156,39 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('apply-coupon').disabled = false;
   }
   
-  function updateCartTotals(discount = 0) {
+  function updateCartTotals(discount = 0, cartTotal = null) {
     let subtotal = 0;
-    const productTotalCells = document.querySelectorAll('.product_total');
-    
-    productTotalCells.forEach(cell => {
-      const totalPrice = parseFloat(cell.textContent.replace('₹', ''));
-      if (!isNaN(totalPrice)) {
-        subtotal += totalPrice;
-      }
-    });
   
-    const shipping = parseFloat(document.getElementById('shipping').textContent);
-    const total = subtotal + shipping - discount;
+    if (cartTotal === null) {
+      // Calculate subtotal from product totals if cartTotal is not provided
+      const productTotalCells = document.querySelectorAll('.product_total');
+      
+      productTotalCells.forEach(cell => {
+        const totalPrice = parseFloat(cell.textContent.replace('₹', '').trim());
+        if (!isNaN(totalPrice)) {
+          subtotal += totalPrice;
+        }
+      });
+    } else {
+      // Use the provided cartTotal
+      subtotal = cartTotal;
+    }
   
-    document.getElementById('subtotal').textContent = subtotal.toFixed(2);
-    document.getElementById('total').textContent = total.toFixed(2);
+    const shipping = parseFloat(document.getElementById('shipping').textContent.replace('₹', '').trim()) || 0;
+    const total = Math.max(0, subtotal + shipping - discount);
+  
+    document.getElementById('subtotal').textContent = `${subtotal.toFixed(2)}`;
+    document.getElementById('total').textContent = `${total.toFixed(2)}`;
   
     if (discount > 0) {
-      document.getElementById('discount').textContent = discount.toFixed(2);
-      document.getElementById('discount-row').style.display = 'block';
+      document.getElementById('discount').textContent = `${discount.toFixed(2)}`;
+      document.getElementById('discount-row').style.display = 'table-row';
     } else {
       document.getElementById('discount-row').style.display = 'none';
     }
+  
+    // Update shipping display
+    document.getElementById('shipping').textContent = `${shipping.toFixed(2)}`;
   }
   
   function showError(message) {

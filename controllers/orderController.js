@@ -5,28 +5,63 @@ const Product = require('../models/productModel');
 const { razorpay } = require('../config/razorpay');
 
 //user side
-const showOrders = async (req, res) => {
+const cancelOrder = async (req, res) => {
   try {
-    const userId = req.user.id;
-    console.log('userId', userId);
-    
-    const orders = await Order.find({ userId: userId }).sort({ createdAt: -1 });
-    res.render('users/my-account', { orders: orders });
+    const orderId = req.params.id;
+    const order = await Order.findById(orderId).populate('products.product');
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    if (order.status === 'Cancelled' || order.status === 'Delivered') {
+      return res.status(400).json({ success: false, message: 'Cannot cancel this order' });
+    }
+
+    // Revert stock
+    for (let item of order.products) {
+      await Product.findByIdAndUpdate(item.product._id, {
+        $inc: { 'pricingAndAvailability.stockAvailability': item.quantity }
+      });
+    }
+
+    order.status = 'Cancelled';
+    await order.save();
+
+    res.json({ success: true, message: 'Order cancelled successfully' });
   } catch (error) {
-    console.error(error);
-    res.status(500).send('Server error');
+    console.error('Error cancelling order:', error);
+    res.status(500).json({ success: false, message: 'Error cancelling order' });
   }
 };
 
 
-const cancelOrder = async (req, res) => {
+const returnOrder = async (req, res) => {
   try {
     const orderId = req.params.id;
-    await Order.findByIdAndUpdate(orderId, { status: 'Cancelled' });
-    res.redirect('/my-account#orders');
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    if (order.status !== 'Delivered') {
+      return res.status(400).json({ success: false, message: 'Can only return delivered orders' });
+    }
+
+    // Check if return is within allowed time (e.g., 14 days)
+    const returnPeriod = 14 * 24 * 60 * 60 * 1000; // 14 days in milliseconds
+    if (Date.now() - order.deliveredAt > returnPeriod) {
+      return res.status(400).json({ success: false, message: 'Return period has expired' });
+    }
+
+    order.status = 'Return Requested';
+    await order.save();
+
+    res.json({ success: true, message: 'Return request submitted successfully' });
   } catch (error) {
-    console.error(error);
-    res.status(500).send('Server error');
+    console.error('Error requesting return:', error);
+    res.status(500).json({ success: false, message: 'Error requesting return' });
   }
 };
 
@@ -93,8 +128,8 @@ const createOrder = async (req, res) => {
     console.log('Order saved:', savedOrder);
 
     // Update product stock
-    for (let item of cart.items) {
-      await Product.findByIdAndUpdate(item.product._id, {
+    for (let item of orderProducts) {
+      await Product.findByIdAndUpdate(item.product, {
         $inc: { 'pricingAndAvailability.stockAvailability': -item.quantity }
       });
     }
@@ -279,7 +314,7 @@ const getOrdersList = async (req, res) => {
 const getOrderDetails = async (req, res) => {
   try {
     const orderId = req.params.id;
-    const order = await Order.findById(orderId).populate('userId', 'firstName lastName email');
+    const order = await Order.findById(orderId).populate('userId', 'firstName lastName email shippingAddress');
     
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
@@ -316,13 +351,13 @@ const editOrderAdmin = async (req, res) => {
 
 
 module.exports = {
+  cancelOrder,
+  returnOrder,
   createOrder,
   confirmCODOrder,
   getCartStatus,
   verifyRazorpayPayment,
   showOrderConfirmation,
-  showOrders,
-  cancelOrder,
   getOrderManagementPage,
   getOrdersList,
   getOrderDetails,

@@ -45,7 +45,9 @@ const orderSchema = new mongoose.Schema({
     status: String,
     update_time: String,
     email_address: String
-  }
+  },
+  deliveredAt: Date,
+  canceledAt: Date
 }, {
   timestamps: true
 });

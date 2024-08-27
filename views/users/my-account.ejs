@@ -126,36 +126,22 @@
                     <div class="tab-pane fade" id="orders">
                         <h4>Orders</h4>
                         <div class="table_page table-responsive">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Order</th>
-                                        <th>Date</th>
-                                        <th>Status</th>
-                                        <th>Total</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% orders.forEach(order => { %>
-                                    <tr>
-                                        <td><%= order._id %></td>
-                                        <td><%= order.createdAt.toDateString() %></td>
-                                        <td><%= order.status %></td>
-                                        <td>$<%= order.total.toFixed(2) %></td>
-                                        <td>
-                                          <% if(order.status !== 'Cancelled') { %>
-                                            <form action="/cancel-order/<%= order._id %>" method="put">
-                                              <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
-                                            </form>
-                                          <% } %>
-                                        </td>
-                                    </tr>
-                                    <% }); %>
-                                </tbody>
-                            </table>
+                          <table>
+                            <thead>
+                              <tr>
+                                <th>Order</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                                <th>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody id="orderTableBody">
+                              <!-- Orders will be dynamically inserted here -->
+                            </tbody>
+                          </table>
                         </div>
-                    </div>
+                      </div>
                     <div class="tab-pane fade" id="downloads">
                         <h4>Downloads</h4>
                         <div class="table_page table-responsive">   
@@ -451,4 +437,5 @@
 <script src="/javascript/editUserProfile.js"></script>
 <script src="/javascript/sharedValidation.js"></script>
 <script src="/javascript/address.js"></script>
+<script src="/javascript/myAccount.js"></script>
 

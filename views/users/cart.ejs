@@ -1,6 +1,23 @@
 <%- include("../partials/user/header") %>
 <%- include("../partials/user/right") %>
 
+<style>
+    #applied-coupon {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+  
+    .applied-coupon-info {
+      flex-grow: 1;
+    }
+  
+    #remove-coupon {
+      margin-left: 10px;
+    }
+  </style>  
+
 <!-- ...:::: Start Breadcrumb Section:::... -->
 <div class="breadcrumb-section breadcrumb-bg-color--golden">
   <div class="breadcrumb-wrapper">
@@ -105,33 +122,36 @@
                 <div class="coupon_code right" data-aos="fade-up" data-aos-delay="400">
                     <h3>Cart Totals</h3>
                     <div class="coupon_inner">
-                      <div id="applied-coupon" style="display: none;">
-                        <p>Applied Coupon: <span id="applied-coupon-code"></span></p>
-                        <button type="button" id="remove-coupon" class="btn btn-sm btn-danger">Remove Coupon</button>
-                     </div>
-                        <div class="cart_subtotal">
-                            <p>Subtotal</p>
-                            <p class="cart_amount">₹<span id="subtotal"><%= subtotal.toFixed(2) %></span></p>
-                        </div>
-                        <div class="cart_subtotal">
-                            <p>Shipping</p>
-                            <p class="cart_amount">₹<span id="shipping"><%= shipping.toFixed(2) %></span></p>
-                        </div>
-                        <div class="cart_subtotal" id="discount-row" style="display: none;">
-                            <p>Discount</p>
-                            <p class="cart_amount">-₹<span id="discount">0.00</span></p>
-                        </div>
-                        <a href="#">Calculate shipping</a>
-                    
-                        <div class="cart_subtotal">
-                            <p>Total</p>
-                            <p class="cart_amount total">₹<span id="total"><%= total.toFixed(2) %></span></p>
-                        </div>
-                        <div class="checkout_btn">
-                            <a href="/checkout" class="btn btn-md btn-golden">Proceed to Checkout</a>
-                        </div>
+                        <div id="applied-coupon" style="display: none;">
+                            <div class="applied-coupon-info">
+                              <p>Applied Coupon: <span id="applied-coupon-code"></span></p>
+                              <p>Discount: ₹<span id="applied-coupon-discount"></span></p>
+                            </div>
+                            <button type="button" id="remove-coupon" class="btn btn-md btn-golden">Remove Coupon</button>
+                          </div>
+                      <div class="cart_subtotal">
+                          <p>Subtotal</p>
+                          <p class="cart_amount">₹<span id="subtotal"><%= subtotal.toFixed(2) %></span></p>
+                      </div>
+                      <div class="cart_subtotal">
+                          <p>Shipping</p>
+                          <p class="cart_amount">₹<span id="shipping"><%= shipping.toFixed(2) %></span></p>
+                      </div>
+                      <div class="cart_subtotal" id="discount-row" style="display: none;">
+                          <p>Discount</p>
+                          <p class="cart_amount">-₹<span id="discount">0.00</span></p>
+                      </div>
+                      <a href="#">Calculate shipping</a>
+                  
+                      <div class="cart_subtotal">
+                          <p>Total</p>
+                          <p class="cart_amount total">₹<span id="total"><%= total.toFixed(2) %></span></p>
+                      </div>
+                      <div class="checkout_btn">
+                          <a href="/checkout" class="btn btn-md btn-golden">Proceed to Checkout</a>
+                      </div>
                     </div>
-                </div>                  
+                </div>                                  
             </div>              
         </div>
     </div>

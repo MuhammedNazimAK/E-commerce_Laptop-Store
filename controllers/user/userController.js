@@ -214,6 +214,7 @@ const renderRegisterPage = (req, res) => {
 };
 
 const renderMyAccount = async (req, res) => {
+  console.log('reached render my account');
   try {
     let user = null;
     let orders = [];
@@ -232,9 +233,11 @@ const renderMyAccount = async (req, res) => {
     const successMessage = req.flash('success');
     const errorMessage = req.flash('error');
 
+    console.log("orders being sent", orders);
+
     res.render("users/my-account", { 
       user: user,
-      orders, 
+      orders: JSON.stringify(orders), 
       addresses, 
       success: successMessage.length > 0,
       error: errorMessage.length > 0,

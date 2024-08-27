@@ -19,8 +19,6 @@ const addToCart = async (req, res) => {
       userId = req.session.guestCartId || (req.session.guestCartId = new mongoose.Types.ObjectId());
     }
 
-    console.log('guest userId', userId);
-
     if (!mongoose.Types.ObjectId.isValid(productId)) {
       return res.status(400).json({ success: false, message: 'Invalid product ID' });
     }
@@ -213,10 +211,18 @@ const updateCart = async (req, res) => {
 
     const itemIndex = cart.items.findIndex(item => item.product.toString() === productId);
     if (itemIndex > -1) {
+
+      if (quantity > 5) {
+        return res.status(400).json({ success: false, message: 'Quantity cannot exceed 5 for this item', quantity: cart.items[itemIndex].quantity });
+      }
       cart.items[itemIndex].quantity = quantity;
       await cart.save();
       return res.status(200).json({ success: true, message: 'Product quantity updated successfully' });
     } else {
+      
+      if (quantity > 5) {
+        return res.status(400).json({ success: false, message: 'Quantity cannot exceed 5 for this item', quantity: 0 });
+      }
       cart.items.push({ product: productId, quantity: 0 });
       await cart.save();
       return res.status(200).json({ success: true, message: 'Product quantity updated successfully' });
@@ -231,29 +237,22 @@ const updateCart = async (req, res) => {
 const checkout = async (req, res) => {
   console.log('came to checkout');
   try {
-
     let userId = req.session.user?._id;
     const addressId = await Address.findOne({ userId: userId });
     console.log('addressId dsihi aushdifhsid', addressId);  
   
     if (!userId) {
-      // If the user is not authenticated, create a guest cart
       userId = req.session.guestCartId || (req.session.guestCartId = new mongoose.Types.ObjectId());
     }
     console.log('userId', userId);
     
     const cart = await Cart.findOne({ user: userId }).populate('items.product');
-    if (!cart) {
-      console.log('cart not found'); 
-      return res.render('users/checkout', { items: [] });
+    if (!cart || cart.items.length === 0) {
+      console.log('cart not found or empty'); 
+      return res.render('users/checkout', { items: [], priceDetails: {} });
     }
 
     console.log('passed cart', cart);
-
-    if (!cart.items.length === 0) {
-      console.log('cart is empty'); 
-      return res.render('users/checkout', { items: [] });
-    }
 
     const items = cart.items.map(item => {
       const product = item.product;
@@ -266,13 +265,31 @@ const checkout = async (req, res) => {
         addressId,
       };
     });
-    console.log('addressId', addressId);
-    
 
+    // Calculate price details
+    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+    const gstRate = 0.18; // 18% GST
+    const gstAmount = subtotal * gstRate;
+    
+    let discountAmount = 0;
+    if (req.session.appliedCoupon) {
+      discountAmount = req.session.appliedCoupon.discountAmount;
+    }
+
+    const total = subtotal + gstAmount - discountAmount;
+
+    const priceDetails = {
+      subtotal: subtotal.toFixed(2),
+      gst: gstAmount.toFixed(2),
+      discount: discountAmount.toFixed(2),
+      total: total.toFixed(2),
+      couponCode: req.session.appliedCoupon?.code || null
+    };
 
     console.log('items', items);
-
-    return res.render('users/checkout', { items });
+    
+    console.log('priceDetails', priceDetails);
+    return res.render('users/checkout', { items, priceDetails, addressId });
   } catch (error) {
     console.error('Error in checkout:', error);
     return res.status(500).json({ success: false, message: 'Server error' });

@@ -6,6 +6,7 @@ class ProductData {
       minPrice: 0,
       maxPrice: Infinity,
       brands: [],
+      categories: [],
       rams: [],
       processors: [],
       graphicsCards: [],
@@ -49,7 +50,7 @@ class ProductData {
       });
     }
 
-    document.querySelectorAll('.brand-filter, .ram-filter, .processor-filter, .graphics-card-filter')
+    document.querySelectorAll('.brand-filter, .category-filter, .ram-filter, .processor-filter, .graphics-card-filter')
       .forEach(checkbox => {
         checkbox.addEventListener('change', () => this.updateFilters());
       });
@@ -113,6 +114,7 @@ class ProductData {
 
   updateFilters() {
     this.filters.brands = [...document.querySelectorAll('.brand-filter:checked')].map(el => el.value);
+    this.filters.categories = [...document.querySelectorAll('.category-filter:checked')].map(el => el.value);
     this.filters.rams = [...document.querySelectorAll('.ram-filter:checked')].map(el => el.value);
     this.filters.processors = [...document.querySelectorAll('.processor-filter:checked')].map(el => el.value);
     this.filters.graphicsCards = [...document.querySelectorAll('.graphics-card-filter:checked')].map(el => el.value);

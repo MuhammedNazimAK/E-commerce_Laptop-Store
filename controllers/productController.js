@@ -15,7 +15,6 @@
 
   //handle product creation
   const addProduct = async (req, res) => {
-    console.log('addProductjdisfjishjdfhijsiadjif');
     try {
       const { 
         name,
@@ -32,9 +31,6 @@
         status,
         categories,
       } = req.body;
-
-      console.log('Request Body:', req.body);
-      console.log('req.files:', req.files);
 
       let imageUrls = [];
         if (req.files && req.files.images) {
@@ -127,7 +123,8 @@
       const rams = await Product.distinct('technicalSpecification.ram');
       const storages = await Product.distinct('technicalSpecification.storage');
       const graphicsCards = await Product.distinct('technicalSpecification.graphicsCard');
-      const categories = await Product.distinct('category');
+      const categoryIds = await Product.distinct('category');
+      const categories = await Category.find({ _id: { $in: categoryIds } }).select('name');
 
       res.render('users/productListing', { 
         user: req.session.user,
@@ -136,7 +133,7 @@
         rams,
         storages,
         graphicsCards,
-        categories
+        categories: categories.map(cat => ({ _id: cat._id, name: cat.name }))
       });
     } catch (error) {
       console.error('Error loading product listing page:', error);
@@ -373,6 +370,7 @@ const getRelatedProducts = async (product) => {
               { "basicInformation.name": { $regex: searchQuery, $options: "i" } },
               { "basicInformation.brand": { $regex: searchQuery, $options: "i" } },
               { "basicInformation.description": { $regex: searchQuery, $options: "i" } },
+              { "category": { $regex: searchQuery, $options: "i" } },
             ],
           },
         });
@@ -387,6 +385,13 @@ const getRelatedProducts = async (product) => {
   
       if (filters.brands.length > 0) {
         matchStage.$match["basicInformation.brand"] = { $in: filters.brands };
+      }
+      if (filters.categories && filters.categories.length > 0) {
+        matchStage.$match.category = { 
+          $elemMatch: { 
+            $in: filters.categories.map(id => new mongoose.Types.ObjectId(id))
+          }
+        };
       }
       if (filters.rams.length > 0) {
         matchStage.$match["technicalSpecification.ram"] = { $in: filters.rams };
@@ -442,7 +447,7 @@ const getRelatedProducts = async (product) => {
           aggregationPipeline.push({ $sort: { createdAt: -1 } });
       }
 
-      console.log('aggregationPipeline after sorting:', JSON.stringify(aggregationPipeline));
+      console.log('aggregationPipeline after matchStagesorting:', JSON.stringify(aggregationPipeline));
   
       // Count total products
       const countPipeline = [...aggregationPipeline, { $count: "total" }];

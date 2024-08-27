@@ -70,8 +70,8 @@ router.get('/get-cart-status', requireAuth, orderController.getCartStatus);
 router.post('/confirm-cod-order/:orderId', requireAuth, orderController.confirmCODOrder);
 router.post('/verify-payment/:orderId', requireAuth, orderController.verifyRazorpayPayment);
 router.get('/order-confirmation/:orderId', orderController.showOrderConfirmation);
-router.get('/my-account/orders', requireAuth, orderController.showOrders);
 router.put('/my-account/cancel-order/:id', requireAuth, orderController.cancelOrder);
+router.put('/my-account/return-order/:id', requireAuth, orderController.returnOrder);
 
 
 //wishlist controller
