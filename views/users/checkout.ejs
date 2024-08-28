@@ -346,5 +346,5 @@
 
 <%- include("../partials/user/footer") %>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script src="/javascript/checkout.js"></script>
+<script src="/javascript/checkout.js" data-razorpay-key="<%= process.env.RAZORPAY_KEY_ID %>"></script>  
 <script src="/javascript/address.js"></script>

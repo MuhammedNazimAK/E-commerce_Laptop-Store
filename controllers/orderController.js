@@ -3,8 +3,28 @@ const User = require('../models/userModel');
 const Cart = require('../models/cartModel');
 const Product = require('../models/productModel');  
 const { razorpay } = require('../config/razorpay');
+require('dotenv').config();
 
 //user side
+const getSingleOrderDetails = async (req, res) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.id, userId: req.session.user._id })
+      .populate('products.product')
+      .populate('shippingAddress')
+      .populate('userId', 'name email phone');
+    
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    
+    res.json(order);
+  } catch (error) {
+    console.error('Error fetching order details:', error);
+    res.status(500).json({ message: 'Error fetching order details' });
+  }
+};
+
+
 const cancelOrder = async (req, res) => {
   try {
     const orderId = req.params.id;
@@ -28,6 +48,10 @@ const cancelOrder = async (req, res) => {
     order.status = 'Cancelled';
     await order.save();
 
+    for (const item of order.products) {
+      await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } });
+    }
+
     res.json({ success: true, message: 'Order cancelled successfully' });
   } catch (error) {
     console.error('Error cancelling order:', error);
@@ -49,7 +73,7 @@ const returnOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Can only return delivered orders' });
     }
 
-    // Check if return is within allowed time (e.g., 14 days)
+    // Check if return is within allowed time
     const returnPeriod = 14 * 24 * 60 * 60 * 1000; // 14 days in milliseconds
     if (Date.now() - order.deliveredAt > returnPeriod) {
       return res.status(400).json({ success: false, message: 'Return period has expired' });
@@ -57,6 +81,10 @@ const returnOrder = async (req, res) => {
 
     order.status = 'Return Requested';
     await order.save();
+
+    for (const item of order.products) {
+      await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } });
+    }
 
     res.json({ success: true, message: 'Return request submitted successfully' });
   } catch (error) {
@@ -81,8 +109,6 @@ const createOrder = async (req, res) => {
     }
 
     const user = await User.findById(req.session.user._id);
-    console.log('User ID:', req.session.user._id);
-    console.log('Full user object:', user);
 
     // Fetch the user's cart
     const cart = await Cart.findOne({ user: user._id }).populate('items.product');
@@ -141,7 +167,7 @@ const createOrder = async (req, res) => {
     if (paymentMethod === 'razorpay') {
       // Create Razorpay order
       const razorpayOrder = await razorpay.orders.create({
-        amount: total * 100, // Amount in paise
+        amount: total * 100,
         currency: 'INR',
         receipt: savedOrder._id.toString(),
       });
@@ -169,9 +195,7 @@ const getCartStatus = async (req, res) => {
   console.log('Getting cart status');
   try {
     const user = await User.findById(req.session.user._id).populate('cart.product');
-    console.log('Session user:', req.session.user);
-console.log('Found user:', user);
-console.log('User cart:', user.cart);
+
     const isEmpty = !user.cart || user.cart.length === 0;
     console.log('Cart is empty:', isEmpty);
     res.json({ isEmpty });
@@ -205,6 +229,7 @@ const confirmCODOrder = async (req, res) => {
 
 // verify Razorpay payment
 const verifyRazorpayPayment = async (req, res) => {
+  console.log('Verifying Razorpay payment');
   try {
     const order = await Order.findOne({ razorpayOrderId: req.params.orderId });
     if (!order) {
@@ -213,8 +238,9 @@ const verifyRazorpayPayment = async (req, res) => {
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
+    console.log('Verifying Razorpay payment', process.env.RAZORPAY_KEY_ID);
     const generatedSignature = crypto
-      .createHmac('sha256', 'YOUR_RAZORPAY_KEY_SECRET')
+      .createHmac('sha256', process.env.RAZORPAY_SECRET)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
 
@@ -351,6 +377,7 @@ const editOrderAdmin = async (req, res) => {
 
 
 module.exports = {
+  getSingleOrderDetails,
   cancelOrder,
   returnOrder,
   createOrder,

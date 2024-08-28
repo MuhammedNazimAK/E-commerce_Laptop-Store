@@ -96,6 +96,8 @@ async function handlePlaceOrder() {
       withCredentials: true
     });
 
+    console.log('order data', orderData);
+
     if (response.data.success) {
       if (paymentMethod === 'cod') {
         handleCODOrder(response.data.orderId);
@@ -130,17 +132,20 @@ function handleCODOrder(orderId) {
 }
 
 function handleRazorpayOrder(orderId, amount) {
+  const razorpayKey = document.querySelector('script[data-razorpay-key]').getAttribute('data-razorpay-key');
+
   if (typeof Razorpay === 'undefined') {
     console.error('Razorpay is not defined. Make sure the Razorpay script is loaded.');
     showError("Payment gateway is not available. Please try again later.");
     return;
   }
+  console.log('razor', razorpayKey);
 
   const options = {
-    key: 'YOUR_RAZORPAY_KEY_ID',
+    key: razorpayKey,
     amount: amount,
     currency: "INR",
-    name: "Your Company Name",
+    name: "Laptop Store",
     description: "Order Payment",
     order_id: orderId,
     handler: function (response) {

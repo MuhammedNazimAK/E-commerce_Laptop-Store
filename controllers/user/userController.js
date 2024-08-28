@@ -226,6 +226,7 @@ const renderMyAccount = async (req, res) => {
       
       if (user) {
         orders = await Order.find({ userId }).sort({ createdAt: -1 });
+        console.log('orders fecthed', orders);
         addresses = await Address.find({ userId });
       }
     }
