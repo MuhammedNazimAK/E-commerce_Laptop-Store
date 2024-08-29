@@ -16,60 +16,6 @@
 
     </style>
 
-    <!-- Start Mobile Header -->
-    <div class="mobile-header mobile-header-bg-color--golden section-fluid d-lg-block d-xl-none">
-        <div class="container">
-            <div class="row">
-                <div class="col-12 d-flex align-items-center justify-content-between">
-                    <!-- Start Mobile Left Side -->
-                    <div class="mobile-header-left">
-                        <ul class="mobile-menu-logo">
-                            <li>
-                                <a href="users/home">
-                                    <div class="logo">
-                                        <img src="assets/images/logo/logo_black.png" alt="">
-                                    </div>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                    <!-- End Mobile Left Side -->
-
-                    <!-- Start Mobile Right Side -->
-                    <div class="mobile-right-side">
-                        <ul class="header-action-link action-color--black action-hover-color--golden">
-                            <li>
-                                <a href="#search">
-                                    <i class="icon-magnifier"></i>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#offcanvas-wishlish" class="offcanvas-toggle">
-                                    <i class="icon-heart"></i>
-                                    <span class="item-count">3</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#offcanvas-add-cart" class="offcanvas-toggle">
-                                    <i class="icon-bag"></i>
-                                    <span class="item-count">3</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#mobile-menu-offcanvas" class="offcanvas-toggle offside-menu">
-                                    <i class="icon-menu"></i>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                    <!-- End Mobile Right Side -->
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- End Mobile Header -->
-
-
     <!-- ...:::: Start Breadcrumb Section:::... -->
     <div class="breadcrumb-section breadcrumb-bg-color--golden">
         <div class="breadcrumb-wrapper">
@@ -143,10 +89,9 @@
                         </div>
                       </div>
 
-
                       <!-- Order Details Modal -->
                         <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-lg">
+                            <div class="modal-dialog modal-lg modal-dialog-centered">
                             <div class="modal-content">
                                 <div class="modal-header">
                                 <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
@@ -161,6 +106,7 @@
                                     <p><strong>Status:</strong> <span id="orderStatus"></span></p>
                                     <p><strong>Total:</strong> $<span id="orderTotal"></span></p>
                                     <p><strong>Payment Method:</strong> <span id="orderPayment"></span></p>
+                                    <p><strong>Shipping Address:</strong> <span id="orderShippingAddress"></span></p>
                                     </div>
                                 </div>
                                 <div class="row mt-4">
@@ -183,7 +129,7 @@
                                 </div>
                                 </div>
                                 <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-md btn-black-default-hover" data-bs-dismiss="modal">Close</button>
                                 </div>
                             </div>
                             </div>
@@ -485,7 +431,7 @@
 <script src="/javascript/sharedValidation.js"></script>
 <script src="/javascript/address.js"></script>
 <script>
-    window.ordersData = '<%- orders %>';
+    window.ordersData = '<%- ordersData %>';
 </script>  
 <script src="/javascript/myAccount.js"></script>
 

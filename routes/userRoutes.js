@@ -51,7 +51,7 @@ router.post('/productListing/search-and-sort', productController.searchAndSortPr
 
 
 //cart controller
-router.post('/addToCart', cartController.addToCart);
+router.post('/add-to-cart', cartController.addToCart);
 router.post('/removeFromCart', cartController.removeFromCart);
 router.get('/cart', cartController.getCart);
 router.post('/updateCart', cartController.updateCart);
@@ -80,8 +80,6 @@ router.get('/wishlist', requireAuth, wishlistController.getWishList);
 router.get('/wishlist-items', requireAuth, wishlistController.getWishListItems);
 router.post('/add-to-wishlist', requireAuth, wishlistController.addToWishList);
 router.put('/remove-from-wishlist', requireAuth, wishlistController.removeFromWishList);
-router.post('/add-to-cart', requireAuth, wishlistController.addToCart);
-
 
 
 //passport authentication google

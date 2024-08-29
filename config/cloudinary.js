@@ -84,7 +84,7 @@ const uploadImages = async (images) => {
 } catch (error) {
   console.error('Error uploading images:', error);
   throw error;
-}
+ }
 };
 
 

@@ -223,22 +223,53 @@ const renderMyAccount = async (req, res) => {
     if (req.session && req.session.user && req.session.user._id) {
       const userId = req.session.user._id;
       user = await User.findById(userId);
-      
+
       if (user) {
-        orders = await Order.find({ userId }).sort({ createdAt: -1 });
-        console.log('orders fecthed', orders);
+        orders = await Order.find({ userId })
+          .sort({ createdAt: -1 })
+          .populate({
+            path: 'shippingAddress',
+            model: 'Address',
+            select: 'address'
+          })
+          .populate('products.product');
+
         addresses = await Address.find({ userId });
       }
     }
 
+    // Transform the populated data
+    const transformedOrders = orders.map(order => {
+      const orderObj = order.toObject();
+      let shippingAddressData = 'Unknown';
+
+      if (orderObj.shippingAddress && orderObj.shippingAddress.address && orderObj.shippingAddress.address.length > 0) {
+        const address = orderObj.shippingAddress.address[0];
+        shippingAddressData = `${address.name}, ${address.city}, ${address.state}, ${address.pinCode}`;
+      }
+
+      return {
+        ...orderObj,
+        shippingAddress: shippingAddressData,
+        products: orderObj.products.map(product => ({
+          ...product,
+          product: {
+            basicInformation: {
+              name: product.product.basicInformation ? product.product.basicInformation.name : 'Unknown Product'
+            }
+          }
+        }))
+      };
+    });
+
+    console.log('Transformed orders:', JSON.stringify(transformedOrders, null, 2));
+
     const successMessage = req.flash('success');
     const errorMessage = req.flash('error');
 
-    console.log("orders being sent", orders);
-
     res.render("users/my-account", { 
       user: user,
-      orders: JSON.stringify(orders), 
+      ordersData: JSON.stringify(transformedOrders),
       addresses, 
       success: successMessage.length > 0,
       error: errorMessage.length > 0,

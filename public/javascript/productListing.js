@@ -278,8 +278,8 @@ class ProductData {
           <p>${truncatedDescription}</p>
           <div class="product-action-icon-link-list">
             ${isUnavailable ? '' : `
-              <a href="#" class="btn btn-lg btn-black-default-hover add-to-cart" data-product-id="${product._id}">Add to cart</a>
-              <a href="wishlist.html" class="btn btn-lg btn-black-default-hover"><i class="icon-heart"></i></a>
+              <a href="#" class="btn btn-lg btn-black-default-hover add-to-cart" data-bs-toggle="modal" data-bs-target="#modalAddcart" id="quantity" data-product-id="${product._id}">Add to cart</a>
+              <a href="#" class="btn btn-lg btn-black-default-hover add-to-wishlist ${product.inWishlist ? 'added-to-wishlist' : ''}" data-product-id="${product._id}"><i class="icon-heart"></i></a>
             `}
           </div>
         </div>

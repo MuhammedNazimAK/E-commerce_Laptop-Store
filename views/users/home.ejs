@@ -272,7 +272,7 @@
                                         <% } %>
                                     </div>
                                     <div class="action-link-right">
-                                        <a href="#" class="add-to-wishlist" data-product-id="<%= product._id %>"><i class="icon-heart"></i></a>
+                                        <a href="#" class="btn btn-black-default-hover add-to-wishlist <%= product.inWishlist ? 'added-to-wishlist' : ''%>" data-product-id="<%= product._id %>"><i class="icon-heart"></i></a>
                                     </div>
                                 </div>
                             </div>
@@ -354,6 +354,5 @@
 <button type="hidden" id="applyCouponButton"></button>
     <!-- Start Footer Section -->
     <%- include("../partials/user/footer") %>
-    <script src="/javascript/cart.js"></script>
     <script src="/javascript/wishlist.js"></script>
     

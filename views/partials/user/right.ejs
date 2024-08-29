@@ -237,7 +237,7 @@ continueShoppingbtn.addEventListener('click', (e) => {
 
 function addToCart(productId) {
     console.log('productId', productId);
-    fetch('/addToCart', {
+    fetch('/add-to-cart', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

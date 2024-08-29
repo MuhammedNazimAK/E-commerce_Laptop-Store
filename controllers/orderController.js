@@ -3,6 +3,7 @@ const User = require('../models/userModel');
 const Cart = require('../models/cartModel');
 const Product = require('../models/productModel');  
 const { razorpay } = require('../config/razorpay');
+const crypto = require('crypto');
 require('dotenv').config();
 
 //user side
@@ -140,7 +141,10 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid total amount' });
     }
 
+    const randomOrderId = crypto.randomBytes(8).toString('hex');
+
     const order = new Order({
+      orderId: randomOrderId,
       userId: req.session.user._id,
       shippingAddress: addressId,
       paymentMethod,
@@ -182,7 +186,7 @@ const createOrder = async (req, res) => {
       });
     }
 
-    res.json({ success: true, orderId: savedOrder._id });
+    res.json({ success: true, orderId: randomOrderId });
   } catch (error) {
     console.error('Error creating order:', error);
     res.status(500).json({ success: false, message: 'Failed to create order' });
