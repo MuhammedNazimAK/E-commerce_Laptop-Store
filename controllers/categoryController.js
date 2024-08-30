@@ -101,12 +101,13 @@ const softDeleteCategory = async (req, res) => {
 
 // Category Offer controller
 const categoryOfferController = {
-  getAllCategoryOffers: async (req, res) => {
+
+  getCategoryOffersPage: async (req, res) => {
     try {
-      const offers = await CategoryOffer.find().populate('category', 'name');
-      res.json(offers);
+      res.render('admin/category-offer-list');  
     } catch (error) {
-      res.status(500).json({ message: 'Error fetching category offers', error: error.message });
+        console.error("Error loading category offer page:", error);
+        res.status(500).render('users/pageNotFound', { message: "Internal server error" });
     }
   },
 
@@ -242,9 +243,10 @@ const loadAddCategoryOfferPage = async (req, res) => {
 };
 
 const loadCategoryOfferPage = async (req, res) => {
+  console.log('reached here loading category offer`')
     try {
-        const offers = await CategoryOffer.find().populate('category', 'name');
-        res.status(200).render('admin/category-offer-list', { offers });
+      const offers = await CategoryOffer.find().populate('category', 'name');
+        res.status(200).json({offers: offers});
     } catch (error) {
         console.error("Error loading category offer page:", error);
         res.status(500).render('users/pageNotFound', { message: "Internal server error" });

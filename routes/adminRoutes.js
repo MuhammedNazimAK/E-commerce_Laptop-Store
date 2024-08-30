@@ -46,8 +46,9 @@ adminRoute.patch("/categories", adminAuth.requireAuth, categoryController.softDe
 
 
 // Category Offer management
-adminRoute.get('/category-offer-list', adminAuth.requireAuth, categoryController.loadCategoryOfferPage);
-adminRoute.get('/add-category-offer', adminAuth.requireAuth, categoryController.loadAddCategoryOfferPage);
+adminRoute.get('/category-offer-list', adminAuth.requireAuth, categoryController.getCategoryOffersPage);
+adminRoute.get('/category-offers', adminAuth.requireAuth, categoryController.loadCategoryOfferPage);
+adminRoute.get('/add-category-offer/:id', adminAuth.requireAuth, categoryController.loadAddCategoryOfferPage);
 adminRoute.post('/add-category-offer', adminAuth.requireAuth, categoryOfferValidationRules(), categoryController.createCategoryOffer);
 adminRoute.put('/add-category-offer/:id', adminAuth.requireAuth, categoryOfferValidationRules(), categoryController.updateCategoryOffer);
 

@@ -8,7 +8,9 @@ const mongoose = require('mongoose');
 const addToCart = async (req, res) => {
   console.log('came to add to cart')
   try {
+    console.log('req.body', req.body);
     const { productId, quantity } = req.body;
+    console.log('quantity', quantity);
     let userId = req.session.user?._id;
 
     console.log('productId', productId);
@@ -23,7 +25,6 @@ const addToCart = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid product ID' });
     }
 
-    console.log('productId', productId);
     console.log('passed mongoose.Types.ObjectId.isValid', productId);
 
     const product = await Product.findById(productId);
@@ -31,12 +32,17 @@ const addToCart = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
+    console.log('passeded product checking', product);
+
     // Check if there's enough stock
-    if (product.inventory.inStock < quantity) {
+    console.log('product inventory', product.pricingAndAvailability.stockAvailability);
+    if (!product.pricingAndAvailability || typeof product.pricingAndAvailability.stockAvailability !== 'number' || product.pricingAndAvailability.stockAvailability < quantity) {
       return res.status(400).json({ success: false, message: 'Not enough stock available' });
     }
+    console.log('checked for enough stock', product.pricingAndAvailability.stockAvailability);
 
     let cart = await Cart.findOne({ user: userId });
+    console.log('cart found', cart);
     if (!cart) {
       cart = new Cart({ user: userId, items: [] });
     }
@@ -58,9 +64,19 @@ const addToCart = async (req, res) => {
       cart.items.push({ product: productId, quantity: quantity });
     }
 
-    await cart.save();
+    console.log('Product found:', product);
+    console.log('Cart before update:', cart);
 
-    console.log('cart', cart);
+
+    try {
+      await cart.save();
+    } catch (saveError) {
+      console.error('Error saving cart:', saveError);
+      return res.status(500).json({ success: false, message: 'Error saving cart' });
+    }    
+
+    // ... after updating cart
+      console.log('Cart after update:', cart);
 
     // Populate the product details in the cart
     await cart.populate('items.product');

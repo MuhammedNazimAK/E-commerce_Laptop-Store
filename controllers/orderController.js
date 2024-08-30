@@ -50,7 +50,9 @@ const cancelOrder = async (req, res) => {
     await order.save();
 
     for (const item of order.products) {
-      await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } });
+      await Product.findByIdAndUpdate(item.product, {
+        $inc: { 'pricingAndAvailability.stockAvailability': item.quantity }
+      });
     }
 
     res.json({ success: true, message: 'Order cancelled successfully' });
@@ -84,7 +86,9 @@ const returnOrder = async (req, res) => {
     await order.save();
 
     for (const item of order.products) {
-      await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } });
+      await Product.findByIdAndUpdate(item.product, {
+        $inc: { 'pricingAndAvailability.stockAvailability': item.quantity }
+      });
     }
 
     res.json({ success: true, message: 'Return request submitted successfully' });
