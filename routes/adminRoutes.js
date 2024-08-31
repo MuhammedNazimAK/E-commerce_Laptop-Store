@@ -7,6 +7,7 @@ const categoryController = require('../controllers/categoryController');
 const orderController = require('../controllers/orderController');
 const couponController = require('../controllers/couponController');
 const inventoryController = require('../controllers/admin/inventoryController');
+const salesReportController = require('../controllers/admin/salesReportController');
 
 const adminAuth = require('../middleware/adminAuth');
 const { categoryOfferValidationRules } = require('../middleware/categoryOfferValidation');
@@ -73,6 +74,10 @@ adminRoute.get('/inventory', adminAuth.requireAuth, inventoryController.getInven
 adminRoute.put('/inventory/:productId', adminAuth.requireAuth, inventoryController.updateInventory);
 
 
+
+//sales report
+adminRoute.get('/sales-report', salesReportController.getSalesReport);
+adminRoute.post('/generate-sales-report', salesReportController.generateSalesReport);
 
 
 
