@@ -136,8 +136,8 @@
                         </div>
                         <!-- Start  Product Details Meta Area-->
                         <div class="product-details-meta mb-20">
-                            <a href="wishlist.html" class="icon-space-right"><i class="icon-heart"></i>Add to wishlist</a>
-                            <a href="#" class="icon-space-right"><i class="icon-tag"></i>Available Coupons</a>
+                            <a href="#" class="icon-space-right add-to-wishlist <%= product.inWishlist ? 'added-to-wishlist' : ''%>" data-product-id="<%= product._id %>"><i class="icon-heart"></i>Add to wishlist</a>
+                            <a href="#" id="view-coupons" class="icon-space-right"><i class="icon-tag"></i>Available Coupons</a>
                         </div> <!-- End  Product Details Meta Area-->
                     </div> <!-- End Product Variable Area -->
 
@@ -363,11 +363,11 @@
                                                 </a>
                                                 <div class="action-link">
                                                     <div class="action-link-left">
-                                                        <a href="#" class="btn btn-lg btn-black-default-hover add-to-cart" data-product-id="${product._id}">Add to cart</a>                                                    </div>
+                                                        <a href="#" class="btn btn-block btn-lg btn-black-default-hover" data-bs-toggle="modal" data-bs-target="#modalAddcart" id="quantity" onclick="addToCart('<%= product._id %>')">+ Add To Cart</a>                                                    </div>
                                                     <div class="action-link-right">
                                                         <a href="#" data-bs-toggle="modal" data-bs-target="#modalQuickview"><i class="icon-magnifier"></i></a>
-                                                        <a href="wishlist.html"><i class="icon-heart"></i></a>
-                                                        <a href="compare.html"><i class="icon-shuffle"></i></a>
+                                                        <a href="#"><i class="icon-heart add-to-wishlist <%= product.inWishlist ? 'added-to-wishlist' : ''%>" data-product-id="<%= product._id %>"></i></a>
+                                                        <a href="#"><i class="icon-shuffle"></i></a>
                                                     </div>
                                                 </div>
                                             </div>
@@ -406,9 +406,11 @@
 <!-- End Product Default Slider Section -->
 
 
+
     <!-- material-scrolltop button -->
     <button class="material-scrolltop" type="button"></button>
 
+    <script src="/javascript/wishlist.js"></script>
     <script src="/assets/js/vendor/vendor.min.js"></script>
     <script src="/assets/js/plugins/plugins.min.js"></script>
 

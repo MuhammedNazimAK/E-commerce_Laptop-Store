@@ -103,6 +103,8 @@ async function handlePlaceOrder() {
         handleCODOrder(response.data.orderId);
       } else if (paymentMethod === 'razorpay') {
         handleRazorpayOrder(response.data.orderId, response.data.amount);
+      } else if (paymentMethod === 'wallet') {
+        handleWalletOrder(response.data.orderId, response.data.amount);
       }
     } else {
       showError(response.data.message || "Failed to create order.");
@@ -111,7 +113,7 @@ async function handlePlaceOrder() {
     console.error('Error:', error);
     showError("An error occurred while processing your order. Please try again.");
   }
-};
+}
 
 function handleCODOrder(orderId) {
   axios.post(`/confirm-cod-order/${orderId}`)
@@ -178,6 +180,24 @@ function verifyPayment(paymentResponse, orderId) {
     .catch(error => {
       console.error('Error:', error);
       showError("An error occurred while verifying your payment. Please contact support.");
+    });
+}
+
+function handleWalletOrder(orderId, amount) {
+  axios.post('/use-funds', { amount: amount, orderId: orderId })
+    .then(response => {
+      showSuccess('Order placed successfully using wallet balance');
+      setTimeout(() => {
+        window.location.href = `/order-confirmation/${orderId}`;
+      }, 1500);
+    })
+    .catch(error => {
+      if (error.response && error.response.status === 400) {
+        showError('Insufficient wallet balance. Choose another payment method.');
+      } else {
+        console.error('Error processing wallet payment:', error);
+        showError("An error occurred while processing your wallet payment. Please try again.");
+      }
     });
 }
 

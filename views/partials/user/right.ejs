@@ -215,12 +215,13 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-    document.body.addEventListener('click', function(e) {
-        if (e.target.classList.contains('add-to-cart')) {
+    const addToCartButtons = document.querySelectorAll('.add-to-cart');
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
             e.preventDefault();
-            const productId = e.target.getAttribute('data-product-id');
+            const productId = this.getAttribute('data-product-id');
             addToCart(productId);
-        }
+        });
     });
 });
 
@@ -235,7 +236,7 @@ continueShoppingbtn.addEventListener('click', (e) => {
 });
 
 function addToCart(productId) {
-    console.log('Adding to cart:', productId);
+    console.log('productId', productId);
     fetch('/add-to-cart', {
         method: 'POST',
         headers: {
@@ -243,19 +244,13 @@ function addToCart(productId) {
         },
         body: JSON.stringify({ productId: productId, quantity: 1 }),
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
         if (data.success) {
             updateCartModal(data);
             $('#modalAddcart').modal('show');
         } else {
-            console.error('Failed to add item to cart:', data.message);
-            alert(data.message || 'Failed to add item to cart');
+            alert('Failed to add item to cart');
         }
     })
     .catch(error => {

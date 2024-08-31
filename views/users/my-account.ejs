@@ -48,6 +48,7 @@
                     <ul role="tablist" class="nav flex-column dashboard-list">
                         <li><a href="#dashboard" data-bs-toggle="tab" class="nav-link btn btn-block btn-md btn-black-default-hover active">Dashboard</a></li>
                         <li><a href="#orders" data-bs-toggle="tab" class="nav-link btn btn-block btn-md btn-black-default-hover">Orders</a></li>
+                        <li><a href="#wallet" data-bs-toggle="tab" class="nav-link btn btn-block btn-md btn-black-default-hover">Wallet</a></li>
                         <li><a href="#downloads" data-bs-toggle="tab" class="nav-link btn btn-block btn-md btn-black-default-hover">Downloads</a></li>
                         <li><a href="#address" data-bs-toggle="tab" class="nav-link btn btn-block btn-md btn-black-default-hover">Addresses</a></li>
                         <li><a href="#account-details" data-bs-toggle="tab" class="nav-link btn btn-block btn-md btn-black-default-hover">Account details</a></li>
@@ -135,6 +136,25 @@
                             </div>
                         </div>
 
+                        <div class="tab-pane fade" id="wallet">
+                            <h4>My Wallet</h4>
+                            <div id="walletBalance"></div>
+                            <div id="transactions">
+                              <h5>Transaction History</h5>
+                              <table id="transactionTable">
+                                <thead>
+                                  <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                  </tr>
+                                </thead>
+                                <tbody></tbody>
+                              </table>
+                            </div>
+                          </div>
+                          
                     <div class="tab-pane fade" id="downloads">
                         <h4>Downloads</h4>
                         <div class="table_page table-responsive">   
@@ -434,4 +454,5 @@
     window.ordersData = '<%- ordersData %>';
 </script>  
 <script src="/javascript/myAccount.js"></script>
+<script src="/javascript/wallet.js"></script>
 
