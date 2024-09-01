@@ -2,6 +2,10 @@ const bcrypt = require('bcrypt');
 const Admin = require('../../models/adminModel');
 const User = require('../../models/userModel');
 
+const Order = require('../../models/orderModel');
+const Product = require('../../models/productModel');
+const Category = require('../../models/categoryModel');
+
 
 const loadAdminLoginPage = async (req, res) => {
     try {
@@ -125,6 +129,111 @@ const logoutAdmin = (req, res) => {
 }
  
 
+// Dashboard data
+const getDashboardData = async (req, res) => {
+    try {
+        const totalRevenue = await Order.aggregate([
+            { $match: { status: 'Delivered' } },
+            { $group: { _id: null, total: { $sum: '$total' } } }
+        ]);
+
+        const totalOrders = await Order.countDocuments();
+        const totalProducts = await Product.countDocuments();
+        const totalCategories = await Category.countDocuments();
+
+        const currentDate = new Date();
+        const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        const monthlyEarning = await Order.aggregate([
+            { $match: { status: 'Delivered', createdAt: { $gte: firstDayOfMonth } } },
+            { $group: { _id: null, total: { $sum: '$total' } } }
+        ]);
+
+        // Generate sample data for charts (replace with actual data in production)
+        const saleStatistics = {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            values: [65, 59, 80, 81, 56, 55]
+        };
+
+        const revenueByArea = {
+            labels: ['North', 'South', 'East', 'West'],
+            values: [300, 250, 200, 150]
+        };
+
+        res.json({
+            totalRevenue: totalRevenue[0]?.total || 0,
+            totalOrders,
+            totalProducts,
+            totalCategories,
+            monthlyEarning: monthlyEarning[0]?.total || 0,
+            saleStatistics,
+            revenueByArea
+        });
+    } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        res.status(500).json({ message: 'Error fetching dashboard data' });
+    }
+};
+
+const getLatestOrders = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = 5;
+        const skip = (page - 1) * limit;
+
+        let query = {};
+
+        if (req.query.category) {
+            const category = await Category.findOne({ name: req.query.category });
+            if (category) {
+                query['products.product'] = { $in: await Product.find({ category: category._id }).distinct('_id') };
+            }
+        }
+
+        if (req.query.date) {
+            const date = new Date(req.query.date);
+            query.createdAt = {
+                $gte: date,
+                $lt: new Date(date.getTime() + 24 * 60 * 60 * 1000)
+            };
+        }
+
+        if (req.query.status) {
+            query.status = req.query.status;
+        }
+
+        const totalOrders = await Order.countDocuments(query);
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        const orders = await Order.find(query)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate('userId', 'firstName lastName')
+            .populate('products.product', 'name');
+
+        const formattedOrders = orders.map(order => ({
+            _id: order._id,
+            orderId: order.orderId,
+            billingName: `${order.userId.firstName} ${order.userId.lastName}`,
+            createdAt: order.createdAt,
+            total: order.total,
+            status: order.status,
+            paymentMethod: order.paymentMethod
+        }));
+
+        res.json({
+            orders: formattedOrders,
+            currentPage: page,
+            totalPages
+        });
+    } catch (error) {
+        console.error('Error fetching latest orders:', error);
+        res.status(500).json({ message: 'Error fetching latest orders' });
+    }
+};
+
+
+
 module.exports = {
     loadAdminLoginPage,
     verifyAdminCredentials,
@@ -132,4 +241,6 @@ module.exports = {
     loadCustomersList,
     toggleUserBlockStatus,
     logoutAdmin,
+    getDashboardData,
+    getLatestOrders,
 };

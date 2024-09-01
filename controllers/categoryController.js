@@ -16,7 +16,7 @@ const loadCategoryManagementPage = (req, res) => {
 
 const getAllCategories = async (req, res) => {
     try {
-        const categories = await Category.find({});
+        const categories = await Category.find({}, '_id name');
         res.status(200).json(categories); 
     } catch (error) {
         console.error("Error fetching categories:", error);
@@ -252,6 +252,8 @@ const loadCategoryOfferPage = async (req, res) => {
         res.status(500).render('users/pageNotFound', { message: "Internal server error" });
     }
 };
+
+
 
 module.exports = {
     loadCategoryManagementPage,

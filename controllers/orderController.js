@@ -49,11 +49,6 @@ const cancelOrder = async (req, res) => {
     order.status = 'Cancelled';
     await order.save();
 
-    for (const item of order.products) {
-      await Product.findByIdAndUpdate(item.product, {
-        $inc: { 'pricingAndAvailability.stockAvailability': item.quantity }
-      });
-    }
 
     res.json({ success: true, message: 'Order cancelled successfully' });
   } catch (error) {
@@ -218,7 +213,10 @@ const getCartStatus = async (req, res) => {
 const confirmCODOrder = async (req, res) => {
   console.log('Confirming COD order');
   try {
-    const order = await Order.findById(req.params.orderId);
+    console.log('order id', req.params.orderId);
+    console.log('order id next', req.params.orderId._id)
+    const order = await Order.findById(req.params.orderId._id);
+
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }

@@ -6,15 +6,17 @@ const productController = require('../controllers/productController');
 const categoryController = require('../controllers/categoryController');
 const orderController = require('../controllers/orderController');
 const couponController = require('../controllers/couponController');
+const referralOfferController = require('../controllers/admin/referralOfferController');
 const inventoryController = require('../controllers/admin/inventoryController');
 const salesReportController = require('../controllers/admin/salesReportController');
 
 const adminAuth = require('../middleware/adminAuth');
+
 const { categoryOfferValidationRules } = require('../middleware/categoryOfferValidation');
 
 
 // Admin authentication
-adminRoute.get("/login", adminAuth.requireNoAuth, adminController.loadAdminLoginPage);       
+adminRoute.get("/login", adminAuth.requireNoAuth, adminController.loadAdminLoginPage);
 adminRoute.post("/login", adminAuth.requireNoAuth, adminController.verifyAdminCredentials);
 adminRoute.get("/logout", adminAuth.requireAuth, adminController.logoutAdmin);
 
@@ -23,7 +25,8 @@ adminRoute.get("/logout", adminAuth.requireAuth, adminController.logoutAdmin);
 adminRoute.get("/dashboard", adminAuth.requireAuth, adminController.loadAdminDashboard);
 adminRoute.get("/customers", adminAuth.requireAuth, adminController.loadCustomersList);
 adminRoute.patch("/customers", adminAuth.requireAuth, adminController.toggleUserBlockStatus);
-
+adminRoute.get('/dashboard-data', adminAuth.requireAuth, adminController.getDashboardData);
+adminRoute.get('/latest-orders', adminAuth.requireAuth, adminController.getLatestOrders);
 
 
 // Product management
@@ -37,6 +40,16 @@ adminRoute.patch('/products/softDelete', adminAuth.requireAuth, productControlle
 adminRoute.delete('/deleteImage/:productId/:index', adminAuth.requireAuth, productController.deleteImage);
 
 
+// Product Offer management
+adminRoute.get('/product-offer-list', adminAuth.requireAuth, productController.getProductOffersPage);
+adminRoute.get('/product-offers', adminAuth.requireAuth, productController.loadProductOfferPage);
+adminRoute.get('/add-product-offer', adminAuth.requireAuth, productController.loadAddProductOfferPage);
+adminRoute.post('/add-product-offer', adminAuth.requireAuth, productController.createProductOffer);
+adminRoute.get('/edit-product-offer/:id', adminAuth.requireAuth, productController.loadEditProductOfferPage);
+adminRoute.put('/update-product-offer/:id', adminAuth.requireAuth, productController.updateProductOffer);
+adminRoute.delete('/delete-product-offer/:id', adminAuth.requireAuth, productController.deleteProductOffer);
+
+
 // Category management
 adminRoute.get("/categoryManagement", adminAuth.requireAuth, categoryController.loadCategoryManagementPage);
 adminRoute.get("/categories", adminAuth.requireAuth, categoryController.getAllCategories);
@@ -48,10 +61,13 @@ adminRoute.patch("/categories", adminAuth.requireAuth, categoryController.softDe
 
 // Category Offer management
 adminRoute.get('/category-offer-list', adminAuth.requireAuth, categoryController.getCategoryOffersPage);
+adminRoute.get('/add-category-offer/:id', adminAuth.requireAuth, categoryController.getCategoryOfferById);
 adminRoute.get('/category-offers', adminAuth.requireAuth, categoryController.loadCategoryOfferPage);
-adminRoute.get('/add-category-offer/:id', adminAuth.requireAuth, categoryController.loadAddCategoryOfferPage);
+adminRoute.get('/add-category-offer', adminAuth.requireAuth, categoryController.loadAddCategoryOfferPage);
+adminRoute.get('/categories', adminAuth.requireAuth, categoryController.getAllCategories);
 adminRoute.post('/add-category-offer', adminAuth.requireAuth, categoryOfferValidationRules(), categoryController.createCategoryOffer);
 adminRoute.put('/add-category-offer/:id', adminAuth.requireAuth, categoryOfferValidationRules(), categoryController.updateCategoryOffer);
+adminRoute.delete('/delete-category-offer/:id', adminAuth.requireAuth, categoryController.deleteCategoryOffer);
 
 
 // Order management
@@ -69,10 +85,19 @@ adminRoute.patch('/coupon-management', adminAuth.requireAuth, couponController.t
 adminRoute.delete('/coupon/:id', adminAuth.requireAuth, couponController.deleteCoupon);
 
 
+// Referral Offer management
+adminRoute.get('/referral-offer-list', adminAuth.requireAuth, referralOfferController.getReferralOffersPage);
+adminRoute.get('/referral-offers/:id', adminAuth.requireAuth, referralOfferController.loadReferralOfferPage);
+adminRoute.get('/add-referral-offer', adminAuth.requireAuth, referralOfferController.loadAddReferralOfferPage);
+adminRoute.post('/add-referral-offer', adminAuth.requireAuth, referralOfferController.createReferralOffer);
+adminRoute.put('/update-referral-offer/:id', adminAuth.requireAuth, referralOfferController.updateReferralOffer);
+adminRoute.delete('/delete-referral-offer/:id', adminAuth.requireAuth, referralOfferController.deleteReferralOffer);
+
+
+
 // Inventory management
 adminRoute.get('/inventory', adminAuth.requireAuth, inventoryController.getInventoryPage);
 adminRoute.put('/inventory/:productId', adminAuth.requireAuth, inventoryController.updateInventory);
-
 
 
 //sales report
