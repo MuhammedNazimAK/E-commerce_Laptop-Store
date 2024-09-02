@@ -153,11 +153,6 @@ function handleRazorpayOrder(orderId, amount) {
     handler: function (response) {
       verifyPayment(response, orderId);
     },
-    prefill: {
-      name: "Customer Name",
-      email: "customer@example.com",
-      contact: "9999999999"
-    },
     theme: {
       color: "#3399cc"
     }

@@ -1,9 +1,61 @@
   const Product = require("../models/productModel");
   const Category = require("../models/categoryModel");
   const ProductOffer = require('../models/productOfferModel');
+  const CategoryOffer = require('../models/categoryOfferModel');
   const { validationResult } = require('express-validator');
   const { uploadImages, cloudinary } = require("../config/cloudinary");
   const mongoose = require("mongoose");
+
+  async function getProductWithOffers(productId) {
+    const product = await Product.findById(productId).populate('category');
+  
+    const currentDate = new Date();
+  
+    // Get product-specific offers
+    const productOffers = await ProductOffer.find({
+      product: productId,
+      isActive: true,
+      startDate: { $lte: currentDate },
+      endDate: { $gte: currentDate }
+    });
+  
+    // Get category offers
+    const categoryOffers = await CategoryOffer.find({
+      category: product.category._id,
+      isActive: true,
+      startDate: { $lte: currentDate },
+      endDate: { $gte: currentDate }
+    });
+  
+    // Get default offers (product offers with isDefault set to true)
+    const defaultOffers = await ProductOffer.find({
+      isDefault: true,
+      isActive: true,
+      startDate: { $lte: currentDate },
+      endDate: { $gte: currentDate }
+    });
+  
+    const allOffers = [...productOffers, ...categoryOffers, ...defaultOffers];
+  
+    let bestOffer = { discountPercentage: 0, offerName: '' };
+    let discountedPrice = product.pricingAndAvailability.salesPrice;
+  
+    if (allOffers.length > 0) {
+      bestOffer = allOffers.reduce((best, current) =>
+        current.discountPercentage > best.discountPercentage ? current : best
+      , { discountPercentage: 0, offerName: '' });
+  
+      discountedPrice = product.pricingAndAvailability.regularPrice * (1 - bestOffer.discountPercentage / 100);
+    }
+  
+    return {
+      ...product.toObject(),
+      originalPrice: product.pricingAndAvailability.regularPrice,
+      discountedPrice: discountedPrice,
+      discount: bestOffer.discountPercentage,
+      offerName: bestOffer.offerName
+    };
+  }
 
   const getAddProductPage = async (req, res) => {
     try {
@@ -119,7 +171,6 @@
 
   const loadProductListingPage = async (req, res) => {
     try {
-      
       const brands = await Product.distinct('basicInformation.brand');
       const processors = await Product.distinct('technicalSpecification.processor');
       const rams = await Product.distinct('technicalSpecification.ram');
@@ -127,15 +178,18 @@
       const graphicsCards = await Product.distinct('technicalSpecification.graphicsCard');
       const categoryIds = await Product.distinct('category');
       const categories = await Category.find({ _id: { $in: categoryIds } }).select('name');
-
-      res.render('users/productListing', { 
+      const products = await Promise.all((await Product.find()).map(async (product) => {
+        return await getProductWithOffers(product._id);
+      }));
+      res.render('users/productListing', {
         user: req.session.user,
         brands,
         processors,
         rams,
         storages,
         graphicsCards,
-        categories: categories.map(cat => ({ _id: cat._id, name: cat.name }))
+        categories: categories.map(cat => ({ id: cat.id, name: cat.name })),
+        products
       });
     } catch (error) {
       console.error('Error loading product listing page:', error);
@@ -341,21 +395,23 @@ const getRelatedProducts = async (product) => {
 };
 
 
-  const getProductDetailsViewOnUserPage = async (req, res) => {
-    const { productId } = req.params;
-    
-    try {
-      const product = await Product.findById(productId).lean();
-      const relatedProducts = await getRelatedProducts(product);
-      if (!product) {
-        return res.status(404).render({ success: false, message: "Product not found" });
-      }
-      res.render("users/productDetails", { product, relatedProducts });
-    } catch (error) {
-      console.error("Error fetching product details:", error);
-      res.status(500).json({ success: false, message: "Error fetching product details" });
+const getProductDetailsViewOnUserPage = async (req, res) => {
+  const { productId } = req.params;
+  try {
+    const product = await getProductWithOffers(productId);
+    const relatedProducts = await getRelatedProducts(product);
+    const relatedProductsWithOffers = await Promise.all(relatedProducts.map(async (relatedProduct) => {
+      return await getProductWithOffers(relatedProduct._id);
+    }));
+    if (!product) {
+      return res.status(404).render({ success: false, message: "Product not found" });
     }
-  };
+    res.render("users/productDetails", { product, relatedProducts, relatedProductsWithOffers });
+  } catch (error) {
+    console.error("Error fetching product details:", error);
+    res.status(500).json({ success: false, message: "Error fetching product details" });
+  }
+};
 
 
   const searchAndSortProducts = async (req, res) => {
@@ -634,14 +690,24 @@ const productOfferController = {
         }
       }
 
+      // Handle default offer changes
       if (isDefault !== undefined && isDefault !== offer.isDefault) {
         if (isDefault) {
-          // Deactivate all other default offers
+          // If setting this offer as default, deactivate all other default offers
           await ProductOffer.updateMany(
             { isDefault: true, _id: { $ne: req.params.id } },
             { $set: { isDefault: false, isActive: false } }
           );
         }
+      }
+
+      // Handle activation of default offer
+      if (isActive && isDefault) {
+        // If activating a default offer, deactivate all other default offers
+        await ProductOffer.updateMany(
+          { isDefault: true, isActive: true, _id: { $ne: req.params.id } },
+          { $set: { isActive: false } }
+        );
       }  
 
       offer.offerName = offerName || offer.offerName;
@@ -651,6 +717,7 @@ const productOfferController = {
       offer.endDate = endDate || offer.endDate;
       offer.isActive = isActive !== undefined ? isActive : offer.isActive;
       offer.isDefault = isDefault !== undefined ? isDefault : offer.isDefault;
+      offer.product = product || offer.product;
 
       await offer.save();
       res.json({ message: 'Product offer updated successfully', offer });
@@ -683,8 +750,9 @@ const productOfferController = {
 
   loadProductOfferPage: async (req, res) => {
     try {
-      const offers = await ProductOffer.find().populate('product', 'name');
-      
+      const offers = await ProductOffer.find().populate({ path: 'product', select: 'basicInformation' });
+
+      console.log('offers', JSON.stringify(offers, null, 2));
       // Sort offers: default offer first, then by start date
       offers.sort((a, b) => {
         if (a.isDefault && !b.isDefault) return -1;
@@ -722,18 +790,18 @@ const productOfferController = {
     }
   },
 
-  getProductOfferDetails: async (req, res) => {
-    try {
-      const offer = await ProductOffer.findById(req.params.id).populate('product');
-      if (!offer) {
-        return res.status(404).json({ message: "Product offer not found" });
-      }
-      res.json({ offer });
-    } catch (error) {
-      console.error("Error fetching product offer details:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  }
+  // getProductOfferDetails: async (req, res) => {
+  //   try {
+  //     const offer = await ProductOffer.findById(req.params.id).populate('product');
+  //     if (!offer) {
+  //       return res.status(404).json({ message: "Product offer not found" });
+  //     }
+  //     res.json({ offer });
+  //   } catch (error) {
+  //     console.error("Error fetching product offer details:", error);
+  //     res.status(500).json({ message: "Internal server error" });
+  //   }
+  // }
 };
 
   

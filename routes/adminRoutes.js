@@ -101,8 +101,8 @@ adminRoute.put('/inventory/:productId', adminAuth.requireAuth, inventoryControll
 
 
 //sales report
-adminRoute.get('/sales-report', salesReportController.getSalesReport);
-adminRoute.post('/generate-sales-report', salesReportController.generateSalesReport);
+adminRoute.get('/sales-report', adminAuth.requireAuth, salesReportController.getSalesReport);
+adminRoute.post('/generate-sales-report', adminAuth.requireAuth, salesReportController.generateSalesReport);
 
 
 

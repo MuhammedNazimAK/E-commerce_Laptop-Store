@@ -2,22 +2,76 @@ const User = require("../../models/userModel");
 const Product = require('../../models/productModel');
 const Address = require('../../models/addressModel');
 const Order = require('../../models/orderModel');
+const ProductOffer = require('../../models/productOfferModel');
+const CategoryOffer = require('../../models/categoryOfferModel');
 const sendEmail = require('../../utils/sendEmail');
 const nodeMailer = require('nodemailer');
 const bcrypt = require("bcrypt");
 const crypto = require('crypto');
 require('dotenv').config();
 
-const renderLoginPage = (req, res) => {
-  const message = req.session.message || req.flash('success') || req.flash('error') || '';
 
-  delete req.session.message;
-  res.render("users/login", { error: message || "" });
-};
+async function getProductWithOffers(productId) {
+  const product = await Product.findById(productId).populate('category');
+
+  const currentDate = new Date();
+
+  // Get product-specific offers
+  const productOffers = await ProductOffer.find({
+    product: productId,
+    isActive: true,
+    startDate: { $lte: currentDate },
+    endDate: { $gte: currentDate }
+  });
+
+  // Get category offers
+  const categoryOffers = await CategoryOffer.find({
+    category: product.category._id,
+    isActive: true,
+    startDate: { $lte: currentDate },
+    endDate: { $gte: currentDate }
+  });
+
+  // Get default offers (product offers with isDefault set to true)
+  const defaultOffers = await ProductOffer.find({
+    isDefault: true,
+    isActive: true,
+    startDate: { $lte: currentDate },
+    endDate: { $gte: currentDate }
+  });
+
+  const allOffers = [...productOffers, ...categoryOffers, ...defaultOffers];
+
+  let bestOffer = { discountPercentage: 0, offerName: '' };
+  let discountedPrice = product.pricingAndAvailability.salesPrice;
+
+  if (allOffers.length > 0) {
+    bestOffer = allOffers.reduce((best, current) =>
+      current.discountPercentage > best.discountPercentage ? current : best
+    , { discountPercentage: 0, offerName: '' });
+
+    discountedPrice = product.pricingAndAvailability.regularPrice * (1 - bestOffer.discountPercentage / 100);
+  }
+
+  return {
+    ...product.toObject(),
+    originalPrice: product.pricingAndAvailability.regularPrice,
+    discountedPrice: discountedPrice,
+    discount: bestOffer.discountPercentage,
+    offerName: bestOffer.offerName
+  };
+}
+
 
 const renderHomePage = async (req, res) => {
   try {
-    const products = await Product.find({ }).limit(8).lean();
+    const products = await Promise.all(
+      (await Product.find().limit(8)).map(async (product) => {
+        const productWithOffers = await getProductWithOffers(product._id);
+        return productWithOffers;
+      })
+    );
+
     return res.render("users/home", { products });
   } catch (error) {
     console.error("Error fetching products:", error);
@@ -25,6 +79,12 @@ const renderHomePage = async (req, res) => {
   }
 };
 
+const renderLoginPage = (req, res) => {
+  const message = req.session.message || req.flash('success') || req.flash('error') || '';
+
+  delete req.session.message;
+  res.render("users/login", { error: message || "" });
+};
 
 const authenticateUser = async (req, res) => {
   try {
