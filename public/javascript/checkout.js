@@ -145,7 +145,7 @@ function handleRazorpayOrder(orderId, amount) {
 
   const options = {
     key: razorpayKey,
-    amount: amount,
+    amount: amount * 100,
     currency: "INR",
     name: "Laptop Store",
     description: "Order Payment",
@@ -165,6 +165,7 @@ function handleRazorpayOrder(orderId, amount) {
 function verifyPayment(paymentResponse, orderId) {
   axios.post(`/verify-payment/${orderId}`, paymentResponse)
     .then(response => {
+      console.log('response', response.data);
       if (response.data.success) {
         showSuccess("Payment successful and order placed!");
         window.location.href = `/order-confirmation/${orderId}`;

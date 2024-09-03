@@ -37,7 +37,6 @@ function gatherProductData() {
         }
     }
 
-    console.log("categories", categories);
     return {
         basicInformation,
         technicalSpecification,
@@ -64,8 +63,6 @@ async function prepareFormData() {
             const file = blob.file instanceof File ? blob.file : new File([blob.file], `image_${index}.jpg`, { type: 'image/jpeg' });
             formData.append('images', file);
         });
-        console.log("originalImageBlobs.length", originalImageBlobs.length);
-        console.log('originalImageBlobs', originalImageBlobs);
     } else {
         console.log('No images to append.');
     }
@@ -93,9 +90,6 @@ async function handleUpdateClick(event) {
 
     try {
         const updateData = await prepareFormData();
-        for (let pair of updateData.entries()) {
-            console.log(pair[0]+ ', ' + pair[1]);
-        }   
 
         const response = await axios.put(`/admin/editProduct/${productId}`, updateData, {
             headers: {

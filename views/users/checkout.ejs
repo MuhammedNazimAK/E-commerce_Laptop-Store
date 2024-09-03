@@ -47,7 +47,7 @@
                       <nav aria-label="breadcrumb">
                           <ul>
                               <li><a href="index.html">Home</a></li>
-                              <li><a href="shop-grid-sidebar-left.html">Shop</a></li>
+                              <li><a href="cart">Cart</a></li>
                               <li class="active" aria-current="page">Checkout</li>
                           </ul>
                       </nav>
@@ -350,7 +350,7 @@
 
 <input type="hidden" id="appliedCouponCode" value="<%= priceDetails.couponCode %>">
 
-<%- include("../partials/user/footer") %>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<%- include("../partials/user/footer") %>
 <script src="/javascript/checkout.js" data-razorpay-key="<%= process.env.RAZORPAY_KEY_ID %>"></script>  
 <script src="/javascript/address.js"></script>

@@ -8,6 +8,7 @@ const orderController = require('../controllers/orderController');
 const couponController = require('../controllers/couponController');
 const referralOfferController = require('../controllers/admin/referralOfferController');
 const inventoryController = require('../controllers/admin/inventoryController');
+const dashboardController = require('../controllers/admin/dashboardController');
 const salesReportController = require('../controllers/admin/salesReportController');
 
 const adminAuth = require('../middleware/adminAuth');
@@ -27,6 +28,10 @@ adminRoute.get("/customers", adminAuth.requireAuth, adminController.loadCustomer
 adminRoute.patch("/customers", adminAuth.requireAuth, adminController.toggleUserBlockStatus);
 adminRoute.get('/dashboard-data', adminAuth.requireAuth, adminController.getDashboardData);
 adminRoute.get('/latest-orders', adminAuth.requireAuth, adminController.getLatestOrders);
+adminRoute.get('/dashboard-data', adminAuth.requireAuth, dashboardController.getDashboardData);
+adminRoute.get('/top-lists', adminAuth.requireAuth, dashboardController.getDashboardData);
+adminRoute.get('/sales-data', adminAuth.requireAuth, dashboardController.getSalesData);
+
 
 
 // Product management

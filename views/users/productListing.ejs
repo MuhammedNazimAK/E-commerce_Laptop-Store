@@ -4,10 +4,14 @@
 
 
 <style>
-  #product-container {
-  padding-left: 20px; /* Moves the entire container to the right */
+  .slider-range {
+  transform: translate(0%) scale(0.432191, 1);
+  color: blue;
+  background-color: #b19361;
 }
-
+  #product-container {
+  padding-left: 5px; /* Moves the entire container to the right */
+}
 .product-unavailable {
   color: red;
   font-weight: bold;
@@ -24,11 +28,12 @@
 .product-list-img-link {
   flex: 0 0 260px;
   margin-right: 10px;
+  background-color: #fef5ef;  
 }
 
 .product-list-content {
   flex: 1;
-  padding-top: 40px;
+  padding-top: 60px;
 }
 
 .product-action-icon-link-list {
@@ -270,5 +275,5 @@
       
       <%- include("../partials/user/footer") %> 
       <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.js"></script>
-      <script src="/javascript/productListing.js"></script>
-      <script src="/javascript/wishlist.js"></script>
+      <script src="/javascript/productListing.js" defer></script>
+      <script src="/javascript/wishlist.js" defer></script>

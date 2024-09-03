@@ -263,7 +263,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 <script>
     
-    const imageCropperModal = new bootstrap.Modal(document.getElementById('image-cropper-modal'), {});
+const imageCropperModal = new bootstrap.Modal(document.getElementById('image-cropper-modal'), {});
 
 let cropper;
     let orginalImages = new Map();
@@ -368,6 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
         img.src = e.target.result;
         img.classList.add('img-thumbnail');
         img.style.cursor = 'pointer';
+        img.loading = 'lazy';
 
         orginalImages.set(img, e.target.result);
 
