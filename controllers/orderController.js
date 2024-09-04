@@ -101,7 +101,7 @@ const createOrder = async (req, res) => {
     const { addressId, paymentMethod, couponCode } = req.body;
     
     if (!addressId || !paymentMethod) {
-      return res.status(400).json({ success: false, message: 'Missing required fields' });
+      return res.status(400).json({ success: false, message: 'Please select an address and payment method.' });
     }
 
     if (!req.session.user || !req.session.user._id) {
@@ -209,6 +209,36 @@ const getCartStatus = async (req, res) => {
 };
 
 
+const useFunds = async (req, res) => {
+  try {
+    const { amount, orderId } = req.body;
+    const userId = req.session.user._id;
+
+    const wallet = await Wallet.findOne({ userId });
+    if (!wallet || wallet.balance < amount) {
+      return res.status(400).json({ success: false, message: 'Insufficient wallet balance. Choose another payment method.' });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    wallet.addTransaction(-amount, 'Order Payment');
+    await wallet.save();
+
+    order.status = 'Confirmed';
+    order.paymentMethod = 'wallet';
+    await order.save();
+
+    res.json({ success: true, message: 'Payment successful and order confirmed' });
+  } catch (error) {
+    console.error('Error using wallet funds:', error);
+    res.status(500).json({ success: false, message: 'Failed to process wallet payment' });
+  }
+};
+
+
 // Confirm COD order
 const confirmCODOrder = async (req, res) => {
   console.log('Confirming COD order');
@@ -218,7 +248,7 @@ const confirmCODOrder = async (req, res) => {
     const order = await Order.findById(req.params.orderId._id);
 
     if (!order) {
-      return res.status(404).json({ success: false, message: 'Order not found' });
+      return res.status(404).json({ success: false, message: 'Failed to confirm COD order.' });
     }
 
     order.status = 'Confirmed';
@@ -249,6 +279,10 @@ const verifyRazorpayPayment = async (req, res) => {
       .createHmac('sha256', process.env.RAZORPAY_SECRET)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
+
+      if (generatedSignature !== razorpay_signature) {
+        return res.status(400).json({ success: false, message: 'Payment verification failed.' });
+      }      
 
     if (generatedSignature === razorpay_signature) {
       order.status = 'confirmed';
@@ -284,6 +318,7 @@ const showOrderConfirmation = async (req, res) => {
     res.status(500).render('users/pageNotFound', { message: 'An error occurred while fetching the order' });
   }
 };
+
 
 
 
@@ -387,6 +422,7 @@ module.exports = {
   cancelOrder,
   returnOrder,
   createOrder,
+  useFunds,
   confirmCODOrder,
   getCartStatus,
   verifyRazorpayPayment,

@@ -188,7 +188,7 @@
         rams,
         storages,
         graphicsCards,
-        categories: categories.map(cat => ({ id: cat.id, name: cat.name })),
+        categories: categories.map(cat => ({ _id: cat._id, name: cat.name })),
         products
       });
     } catch (error) {

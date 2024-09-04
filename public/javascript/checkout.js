@@ -1,4 +1,3 @@
-// Function to fetch and display user addresses
 function fetchAddresses() {
   const addressListContainer = document.getElementById("addressList");
   
@@ -50,98 +49,137 @@ function fetchAddresses() {
     });
 }
 
+const API_ENDPOINTS = {
+  CREATE_ORDER: '/create-order',
+  CONFIRM_COD_ORDER: '/confirm-cod-order',
+  VERIFY_PAYMENT: '/verify-payment',
+  USE_FUNDS: '/use-funds'
+};
+
+const ERROR_MESSAGES = {
+  NO_ADDRESS: 'Please select an address.',
+  NO_PAYMENT_METHOD: 'Please select a payment method.',
+  ORDER_CREATION_FAILED: 'Failed to create order.',
+  COD_CONFIRMATION_FAILED: 'Failed to confirm COD order.',
+  PAYMENT_VERIFICATION_FAILED: 'Payment verification failed.',
+  INSUFFICIENT_BALANCE: 'Insufficient wallet balance. Choose another payment method.',
+  GENERAL_ERROR: 'An error occurred. Please try again.',
+  RAZORPAY_UNDEFINED: 'Payment gateway is not available. Please try again later.'
+};
+
 document.addEventListener("DOMContentLoaded", () => {
-  // Load user addresses on page load
   fetchAddresses();
   initializeAddAddress();
 
   const addAddressModal = document.getElementById('addAddressModal');
-  addAddressModal.addEventListener('hidden.bs.modal', () => {
-    const errorDivs = document.querySelectorAll('.error-message');
-    errorDivs.forEach(div => div.textContent = '');
-  });
+  addAddressModal.addEventListener('hidden.bs.modal', clearErrorMessages);
 
   const placeOrderButton = document.getElementById("placeOrder");
-  placeOrderButton.addEventListener("click", handlePlaceOrder);
+  placeOrderButton.addEventListener("click", debounce(handlePlaceOrder, 300));
 });
 
-async function handlePlaceOrder() {
-  const selectedAddressId = getSelectedAddressId();
-  const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
-  const couponCode = document.getElementById("appliedCouponCode")?.value || "";
-
-  if (!selectedAddressId) {
-    showError("Please select an address.");
-    return;
-  }
-
-  if (!paymentMethod) {
-    showError("Please select a payment method.");
-    return;
-  }
-
-  try {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    const orderData = {
-      addressId: selectedAddressId,
-      paymentMethod: paymentMethod,
-      couponCode: couponCode,
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
     };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 
-    const response = await axios.post("/create-order", orderData, {
-      headers: {
-        'X-CSRF-Token': csrfToken,
-        'Content-Type': 'application/json'
-      },
-      withCredentials: true
-    });
+async function handlePlaceOrder() {
+  try {
+    showLoading('Placing order...');
+    const orderData = validateOrderData();
+    if (!orderData) return;
 
-    console.log('order data', orderData);
+    const response = await createOrder(orderData);
 
     if (response.data.success) {
-      if (paymentMethod === 'cod') {
-        handleCODOrder(response.data.orderId);
-      } else if (paymentMethod === 'razorpay') {
-        handleRazorpayOrder(response.data.orderId, response.data.amount);
-      } else if (paymentMethod === 'wallet') {
-        handleWalletOrder(response.data.orderId, response.data.amount);
-      }
+      await handlePaymentMethod(response.data);
     } else {
-      showError(response.data.message || "Failed to create order.");
+      showError(response.data.message || ERROR_MESSAGES.ORDER_CREATION_FAILED);
     }
+    return response.data.success;
   } catch (error) {
-    console.error('Error:', error);
-    showError("An error occurred while processing your order. Please try again.");
+    handleError(error);
+    throw error;
+  } finally {
+    hideLoading();
   }
 }
 
-function handleCODOrder(orderId) {
-  axios.post(`/confirm-cod-order/${orderId}`)
-    .then(response => {
-      if (response.data.success) {
-        showSuccess("Order placed successfully!");
-        setTimeout(() => {
-          window.location.href = `/order-confirmation/${orderId}`;
-        }, 1500);
-      } else {
-        showError(response.data.message || "Failed to confirm COD order.");
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      showError("An error occurred while confirming your COD order. Please contact support.");
-    });
+function validateOrderData() {
+  const selectedAddressId = getSelectedAddressId();
+  const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
+  const couponCode = document.getElementById("appliedCouponCode")?.value?.trim() || "";
+
+  if (!selectedAddressId) {
+    showError(ERROR_MESSAGES.NO_ADDRESS);
+    return null;
+  }
+
+  if (!paymentMethod) {
+    showError(ERROR_MESSAGES.NO_PAYMENT_METHOD);
+    return null;
+  }
+
+  return { addressId: selectedAddressId, paymentMethod, couponCode };
+}
+
+async function createOrder(orderData) {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  return await axios.post(API_ENDPOINTS.CREATE_ORDER, orderData, {
+    headers: {
+      'X-CSRF-Token': csrfToken,
+      'Content-Type': 'application/json'
+    },
+    withCredentials: true
+  });
+}
+
+async function handlePaymentMethod(responseData) {
+  const { paymentMethod, orderId, amount } = responseData;
+  switch (paymentMethod) {
+    case 'cod':
+      await handleCODOrder(orderId);
+      break;
+    case 'razorpay':
+      await handleRazorpayOrder(orderId, amount);
+      break;
+    case 'wallet':
+      await handleWalletOrder(orderId, amount);
+      break;
+    default:
+      showError('Invalid payment method');
+  }
+}
+
+async function handleCODOrder(orderId) {
+  try {
+    const response = await axios.post(`${API_ENDPOINTS.CONFIRM_COD_ORDER}/${orderId}`);
+    if (response.data.success) {
+      showSuccess("Order placed successfully!");
+      redirectToOrderConfirmation(orderId);
+    } else {
+      showError(response.data.message || ERROR_MESSAGES.COD_CONFIRMATION_FAILED);
+    }
+  } catch (error) {
+    handleError(error);
+  }
 }
 
 function handleRazorpayOrder(orderId, amount) {
   const razorpayKey = document.querySelector('script[data-razorpay-key]').getAttribute('data-razorpay-key');
 
   if (typeof Razorpay === 'undefined') {
-    console.error('Razorpay is not defined. Make sure the Razorpay script is loaded.');
-    showError("Payment gateway is not available. Please try again later.");
+    console.error(ERROR_MESSAGES.RAZORPAY_UNDEFINED);
+    showError(ERROR_MESSAGES.RAZORPAY_UNDEFINED);
     return;
   }
-  console.log('razor', razorpayKey);
 
   const options = {
     key: razorpayKey,
@@ -150,86 +188,103 @@ function handleRazorpayOrder(orderId, amount) {
     name: "Laptop Store",
     description: "Order Payment",
     order_id: orderId,
-    handler: function (response) {
-      verifyPayment(response, orderId);
-    },
-    theme: {
-      color: "#3399cc"
-    }
+    handler: (response) => verifyPayment(response, orderId),
+    theme: { color: "#3399cc" }
   };
 
   const rzp = new Razorpay(options);
   rzp.open();
 }
 
-function verifyPayment(paymentResponse, orderId) {
-  axios.post(`/verify-payment/${orderId}`, paymentResponse)
-    .then(response => {
-      console.log('response', response.data);
-      if (response.data.success) {
-        showSuccess("Payment successful and order placed!");
-        window.location.href = `/order-confirmation/${orderId}`;
-      } else {
-        showError(response.data.message || "Payment verification failed.");
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      showError("An error occurred while verifying your payment. Please contact support.");
-    });
+async function verifyPayment(paymentResponse, orderId) {
+  try {
+    const response = await axios.post(`${API_ENDPOINTS.VERIFY_PAYMENT}/${orderId}`, paymentResponse);
+    if (response.data.success) {
+      showSuccess("Payment successful and order placed!");
+      redirectToOrderConfirmation(orderId);
+    } else {
+      showError(response.data.message || ERROR_MESSAGES.PAYMENT_VERIFICATION_FAILED);
+    }
+  } catch (error) {
+    handleError(error);
+  }
 }
 
-function handleWalletOrder(orderId, amount) {
-  axios.post('/use-funds', { amount: amount, orderId: orderId })
-    .then(response => {
+async function handleWalletOrder(orderId, amount) {
+  try {
+    const response = await axios.post(API_ENDPOINTS.USE_FUNDS, { amount, orderId });
+    if (response.data.success) {
       showSuccess('Order placed successfully using wallet balance');
-      setTimeout(() => {
-        window.location.href = `/order-confirmation/${orderId}`;
-      }, 1500);
-    })
-    .catch(error => {
-      if (error.response && error.response.status === 400) {
-        showError('Insufficient wallet balance. Choose another payment method.');
-      } else {
-        console.error('Error processing wallet payment:', error);
-        showError("An error occurred while processing your wallet payment. Please try again.");
-      }
-    });
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      showLoading('Redirecting to order confirmation...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      redirectToOrderConfirmation(orderId);
+    } else {
+      showError(response.data.message || ERROR_MESSAGES.GENERAL_ERROR);
+    }
+  } catch (error) {
+    if (error.response && error.response.status === 400) {
+      showError(ERROR_MESSAGES.INSUFFICIENT_BALANCE);
+    } else {
+      handleError(error);
+    }
+  }
 }
 
 function showError(message) {
-  Swal.fire({
-    icon: "error",
-    text: message,
-    toast: true,
-    position: "top-right",
-    showConfirmButton: false,
-    timerProgressBar: true,
-    timer: 3000,
-  });
+  displayMessage('error', message);
 }
 
 function showSuccess(message) {
+  displayMessage('success', message);
+}
+
+function displayMessage(icon, message) {
   Swal.fire({
-    icon: "success",
+    icon,
     text: message,
     toast: true,
-    position: "top-right",
+    position: 'top-right',
     showConfirmButton: false,
     timerProgressBar: true,
-    timer: 3000,
+    timer: 3000
   });
 }
 
 function getSelectedAddressId() {
-  const addressRadios = document.getElementsByName("addressSelection");
-  for (const radio of addressRadios) {
-    if (radio.checked) {
-      return radio.getAttribute("data-address-id");
-    }
-  }
-  return null;
+  const selectedRadio = document.querySelector('input[name="addressSelection"]:checked');
+  return selectedRadio ? selectedRadio.getAttribute("data-address-id") : null;
 }
+
+function handleError(error) {
+  console.error('Error:', error);
+  showError(ERROR_MESSAGES.GENERAL_ERROR);
+}
+
+function showLoading(message) {
+  Swal.fire({
+    title: message,
+    allowOutsideClick: false,
+    showConfirmButton: false,
+    willOpen: () => {
+      Swal.showLoading();
+    }
+  });
+}
+
+function hideLoading() {
+  Swal.close();
+}
+
+function redirectToOrderConfirmation(orderId) {
+    window.location.href = `/order-confirmation/${orderId}`;
+}
+
+function clearErrorMessages() {
+  const errorDivs = document.querySelectorAll('.error-message');
+  errorDivs.forEach(div => div.textContent = '');
+}
+
 
 // Add address form initialization
 function initializeAddAddress() {
@@ -270,7 +325,6 @@ async function handleAddAddress(e) {
   }
 }
 
-// Delete Address
 function removeAddress(addressId) {
   Swal.fire({
     title: 'Are you sure?',
@@ -299,7 +353,6 @@ function removeAddress(addressId) {
   });
 }
 
-// Edit Address Function
 function editAddress(id, addressType, name, mobile, city, state, pinCode, landMark) {
   const editAddressForm = document.getElementById("editAddressForm");
 
@@ -423,7 +476,6 @@ function clearErrorMessages() {
   });
 }
 
-// validation for add address form
 function validateAllInputs() {
   const isNameValid = validateNameInput('addressName', 'addressNameError');
   const isAddressTypeValid = validateAddressInput('addressType', 'addressTypeError', 'Please enter an address type');
