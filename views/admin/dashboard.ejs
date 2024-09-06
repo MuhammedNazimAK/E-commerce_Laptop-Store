@@ -83,9 +83,10 @@
                         </select>
                     </div>
                     <canvas id="salesChart" height="120px"></canvas>
+                    <div id="additionalStats" class="mt-4"></div>
                 </article>
             </div>
-        </div>
+        </div>        
         <div class="col-xl-4 col-lg-12">
             <div class="card mb-4">
                 <article class="card-body">
@@ -172,6 +173,61 @@
             </div>
         </div>
     </div>
+
+
+    <!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Order Information</h6>
+                        <p><strong>Order ID:</strong> <span id="orderId"></span></p>
+                        <p><strong>Status:</strong> <span id="orderStatus"></span></p>
+                        <p><strong>Date:</strong> <span id="orderDate"></span></p>
+                        <p><strong>Total:</strong> <span id="orderTotal"></span></p>
+                        <p><strong>Payment Method:</strong> <span id="orderPayment"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Customer Information</h6>
+                        <p><strong>Name:</strong> <span id="customerName"></span></p>
+                        <p><strong>Email:</strong> <span id="customerEmail"></span></p>
+                        <p><strong>Phone:</strong> <span id="customerPhone"></span></p>
+                        <p><strong>Shipping Address:</strong> <span id="shippingAddress"></span></p>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6>Order Items</h6>
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orderItemsTableBody">
+                                <!-- Order items will be dynamically inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
     <div class="pagination-area mt-30 mb-50">
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-start" id="pagination">
@@ -294,23 +350,109 @@
         salesChart = new Chart(ctx.getContext('2d'), {
             type: 'line',
             data: {
-                labels: salesData.labels,
-                datasets: [{
-                    label: 'Sales',
-                    data: salesData.values,
-                    borderColor: 'rgb(75, 192, 192)',
-                    tension: 0.1
-                }]
+                labels: salesData.map(item => item.date),
+                datasets: [
+                    {
+                        label: 'Total Revenue',
+                        data: salesData.map(item => item.totalRevenue),
+                        borderColor: 'rgb(75, 192, 192)',
+                        yAxisID: 'y-axis-1',
+                    },
+                    {
+                        label: 'Order Count',
+                        data: salesData.map(item => item.orderCount),
+                        borderColor: 'rgb(255, 99, 132)',
+                        yAxisID: 'y-axis-2',
+                    },
+                    {
+                        label: 'Cumulative Revenue',
+                        data: salesData.map(item => item.cumulativeRevenue),
+                        borderColor: 'rgb(54, 162, 235)',
+                        yAxisID: 'y-axis-1',
+                    }
+                ]
             },
             options: {
                 responsive: true,
                 scales: {
-                    y: {
-                        beginAtZero: true
+                    'y-axis-1': {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Revenue'
+                        }
+                    },
+                    'y-axis-2': {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Order Count'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
                     }
                 }
             }
         });
+
+        displayAdditionalStats(salesData);
+    }   
+
+    function displayAdditionalStats(salesData) {
+        const statsContainer = document.getElementById('additionalStats');
+        if (!statsContainer) return;
+
+        const latestData = salesData[salesData.length - 1];
+        const previousWeekData = salesData[salesData.length - 2] || { totalRevenue: 0, orderCount: 0, avgOrderValue: 0 };
+
+        const calculateChange = (current, previous) => {
+            const change = ((current - previous) / previous) * 100;
+            return change.toFixed(2);
+        };
+
+        const html = `
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Revenue</h5>
+                            <p class="card-text">₹${latestData.totalRevenue.toFixed(2)}</p>
+                            <p class="card-text text-muted">
+                                ${calculateChange(latestData.totalRevenue, previousWeekData.totalRevenue)}% from last week
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Order Count</h5>
+                            <p class="card-text">${latestData.orderCount}</p>
+                            <p class="card-text text-muted">
+                                ${calculateChange(latestData.orderCount, previousWeekData.orderCount)}% from last week
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Average Order Value</h5>
+                            <p class="card-text">₹${latestData.avgOrderValue.toFixed(2)}</p>
+                            <p class="card-text text-muted">
+                                ${calculateChange(latestData.avgOrderValue, previousWeekData.avgOrderValue)}% from last week
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        statsContainer.innerHTML = html;
     }
 
     function fetchTopLists() {
@@ -334,11 +476,11 @@
     function updateTopList(elementId, items) {
         const listElement = document.getElementById(elementId);
         if (!listElement || !Array.isArray(items)) return;
-
+        
         listElement.innerHTML = items.map((item, index) => `
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>${index + 1}. ${item.products.basicinfromation.name}</span>
-                <span class="badge bg-primary rounded-pill">₹${item.revenue.toFixed(2)}</span>
+                <span>${index + 1}. ${item.name}</span>
+                <span class="badge bg-primary rounded-pill">₹${item.revenue.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
             </li>
         `).join('');
     }
@@ -348,7 +490,7 @@
     }
 
     function fetchLatestOrders(page = 1, category = '', date = '', status = '') {
-        axios.get(`/admin/latest-orders`, {
+        axios.get('/admin/latest-orders', {
             params: { page, category, date, status }
         })
             .then(function (response) {
@@ -374,7 +516,7 @@
                 <td>₹${order.total.toFixed(2)}</td>
                 <td><span class="badge badge-pill badge-soft-${getStatusColor(order.status)}">${order.status}</span></td>
                 <td><i class="material-icons md-payment font-xxl text-muted mr-5"></i> ${order.paymentMethod}</td>
-                <td><a href="/orders/${order._id}" class="btn btn-xs"> View details</a></td>
+                <td><button onclick="fetchOrderItems('${order._id}')" class="btn btn-xs btn-outline-primary">View Items</button></td>
             </tr>
         `).join('');
     }
@@ -433,6 +575,62 @@
             timer: 3000,
         });
     }
+
+    const fetchOrderItems = async (orderId) => {
+  try {
+    const response = await axios.get(`/admin/orders/${orderId}`);
+    const order = response.data;
+    renderOrderDetails(order);
+    new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
+  } catch (error) {
+    console.error('Error fetching order details:', error);
+    showError('Failed to fetch order details. Please try again.');
+  }
+};
+
+const renderOrderDetails = (order) => {
+    console.log('Rendering order details:', JSON.stringify(order, null, 2));
+    if (!order) {
+        console.error('Order object is undefined');
+        return;
+    }
+
+    // Order Information
+    document.getElementById('orderId').textContent = order.orderId || 'N/A';
+    document.getElementById('orderStatus').textContent = order.status || 'N/A';
+    document.getElementById('orderDate').textContent = order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A';
+    document.getElementById('orderTotal').textContent = order.total ? `₹${(order.total).toFixed(2)}` : 'N/A';
+    document.getElementById('orderPayment').textContent = order.paymentMethod || 'N/A';
+
+    // Customer Information
+    document.getElementById('customerName').textContent = order.userId ? `${order.userId.firstName} ${order.userId.lastName}` : 'N/A';
+    document.getElementById('customerEmail').textContent = order.userId ? order.userId.email : 'N/A';
+    document.getElementById('customerPhone').textContent = order.userId ? order.userId.mobile : 'N/A';
+
+    // Shipping Address
+    document.getElementById('shippingAddress').textContent = order.shippingAddress || 'N/A';
+
+    // Render Order Items
+    const orderItemsTableBody = document.getElementById('orderItemsTableBody');
+    orderItemsTableBody.innerHTML = '';
+
+    if (Array.isArray(order.products)) {
+        order.products.forEach(item => {
+            console.log('item:', item);
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.product.name || 'N/A'}</td>
+                <td>${item.quantity || 'N/A'}</td>
+                <td>₹${(item.price).toFixed(2)}</td>
+                <td>₹${((item.quantity * item.price + 25)).toFixed(2)}</td>
+            `;
+            orderItemsTableBody.appendChild(row);
+        });
+    } else {
+        console.error('Order products is not an array:', order.products);
+    }
+};
 </script>
+
 
 <%- include("../partials/admin/footer") %>

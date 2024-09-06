@@ -178,14 +178,18 @@ const createOrder = async (req, res) => {
       savedOrder.razorpayOrderId = razorpayOrder.id;
       await savedOrder.save();
 
+      console.log('payment method saved:', paymentMethod);
+
       return res.json({ 
         success: true, 
         orderId: razorpayOrder.id, 
-        amount: razorpayOrder.amount 
+        amount: razorpayOrder.amount,
+        paymentMethod: paymentMethod
       });
     }
 
-    res.json({ success: true, orderId: randomOrderId });
+    console.log('payment method saved:', paymentMethod);
+    res.json({ success: true, orderId: randomOrderId, paymentMethod: paymentMethod });
   } catch (error) {
     console.error('Error creating order:', error);
     res.status(500).json({ success: false, message: 'Failed to create order' });
@@ -245,7 +249,8 @@ const confirmCODOrder = async (req, res) => {
   try {
     console.log('order id', req.params.orderId);
     console.log('order id next', req.params.orderId._id)
-    const order = await Order.findById(req.params.orderId._id);
+    const order = await Order.findById(req.params.orderId);
+    console.log('order', order);
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Failed to confirm COD order.' });
@@ -274,23 +279,32 @@ const verifyRazorpayPayment = async (req, res) => {
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
-    console.log('Verifying Razorpay payment', process.env.RAZORPAY_KEY_ID);
     const generatedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_SECRET)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
 
-      if (generatedSignature !== razorpay_signature) {
-        return res.status(400).json({ success: false, message: 'Payment verification failed.' });
-      }      
-
     if (generatedSignature === razorpay_signature) {
-      order.status = 'confirmed';
+      order.status = 'Confirmed';
       order.razorpayPaymentId = razorpay_payment_id;
       await order.save();
-
       res.json({ success: true, message: 'Payment verified and order confirmed' });
     } else {
+
+      //PAYMENT FAILED
+      order.status = 'Payment Failed';
+      await order.save();
+
+      for (let item of order.products) {
+        await Product.findByIdAndUpdate(item.product, {
+          $inc: { 'pricingAndAvailability.stockAvailability': item.quantity }
+        });
+      }
+
+      await Order.findByIdAndUpdate(order._id, {
+        $set: { status: 'Payment Failed' }
+      });
+
       res.status(400).json({ success: false, message: 'Invalid payment signature' });
     }
   } catch (error) {
@@ -298,7 +312,6 @@ const verifyRazorpayPayment = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to verify payment' });
   }
 };
-
 
 
 const showOrderConfirmation = async (req, res) => {
@@ -312,13 +325,30 @@ const showOrderConfirmation = async (req, res) => {
       return res.status(404).render('users/pageNotFound', { message: 'Order not found' });
     }
     
-    res.render('users/order-confirmation', { order });
+    const orderDetails = {
+      orderId: order.orderId,
+      status: order.status,
+      total: order.total,
+      paymentMethod: order.paymentMethod,
+      createdAt: order.createdAt,
+      shippingAddress: order.shippingAddress,
+      products: order.products.map(item => ({
+        name: item.product.name,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      user: {
+        name: order.userId.firstName + ' ' + order.userId.lastName,
+        email: order.userId.email
+      }
+    };
+    
+    res.render('users/order-confirmation', { order: orderDetails });
   } catch (error) {
     console.error('Error fetching order:', error);
     res.status(500).render('users/pageNotFound', { message: 'An error occurred while fetching the order' });
   }
 };
-
 
 
 
@@ -381,8 +411,10 @@ const getOrdersList = async (req, res) => {
 const getOrderDetails = async (req, res) => {
   try {
     const orderId = req.params.id;
-    const order = await Order.findById(orderId).populate('userId', 'firstName lastName email shippingAddress');
-    
+    const order = await Order.findById(orderId).populate('userId', 'firstName lastName email shippingAddress mobile').populate('products.product', 'name').populate('shippingAddress', 'street city state country');
+
+    console.log('Order details:', order);
+
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }

@@ -99,6 +99,7 @@ async function handlePlaceOrder() {
     const response = await createOrder(orderData);
 
     if (response.data.success) {
+      console.log('responce data', response.data)
       await handlePaymentMethod(response.data);
     } else {
       showError(response.data.message || ERROR_MESSAGES.ORDER_CREATION_FAILED);
@@ -148,6 +149,7 @@ async function handlePaymentMethod(responseData) {
       await handleCODOrder(orderId);
       break;
     case 'razorpay':
+      console.log('razor pay case reached');
       await handleRazorpayOrder(orderId, amount);
       break;
     case 'wallet':
@@ -173,7 +175,9 @@ async function handleCODOrder(orderId) {
 }
 
 function handleRazorpayOrder(orderId, amount) {
+  console.log('initializing razorpay')
   const razorpayKey = document.querySelector('script[data-razorpay-key]').getAttribute('data-razorpay-key');
+  console.log('rezorpay key', razorpayKey);
 
   if (typeof Razorpay === 'undefined') {
     console.error(ERROR_MESSAGES.RAZORPAY_UNDEFINED);
@@ -188,19 +192,36 @@ function handleRazorpayOrder(orderId, amount) {
     name: "Laptop Store",
     description: "Order Payment",
     order_id: orderId,
-    handler: (response) => verifyPayment(response, orderId),
+    handler: (response) => {
+      console.log('payment succesfulll')
+      verifyPayment(response, orderId);
+    },
     theme: { color: "#3399cc" }
-  };
+  }
+
+  console.log('Razer Pay options', options);
+
+  try {
+    console.log('Attempting to open Razorpay modal');
+    const rzp = new Razorpay(options);
+    rzp.open();
+  } catch (error) {
+    console.error('Error opening Razorpay modal:', error);
+    showError('Failed to open payment gateway');
+  }
 
   const rzp = new Razorpay(options);
   rzp.open();
-}
+};
 
 async function verifyPayment(paymentResponse, orderId) {
+  console.log('verifying payment', paymentResponse, orderId);
   try {
     const response = await axios.post(`${API_ENDPOINTS.VERIFY_PAYMENT}/${orderId}`, paymentResponse);
+    console.log('verification response', response.data);
     if (response.data.success) {
       showSuccess("Payment successful and order placed!");
+      console.log('redirecting to order confirmation page')
       redirectToOrderConfirmation(orderId);
     } else {
       showError(response.data.message || ERROR_MESSAGES.PAYMENT_VERIFICATION_FAILED);
@@ -266,6 +287,7 @@ function showLoading(message) {
     title: message,
     allowOutsideClick: false,
     showConfirmButton: false,
+    timer: 3000,
     willOpen: () => {
       Swal.showLoading();
     }
