@@ -170,6 +170,7 @@
   };
 
   const loadProductListingPage = async (req, res) => {
+    console.log('loading product listing')
     try {
       const brands = await Product.distinct('basicInformation.brand');
       const processors = await Product.distinct('technicalSpecification.processor');
@@ -181,6 +182,8 @@
       const products = await Promise.all((await Product.find()).map(async (product) => {
         return await getProductWithOffers(product._id);
       }));
+
+      console.log('Products with offers:', JSON.stringify(products, null, 2));
       res.render('users/productListing', {
         user: req.session.user,
         brands,
@@ -197,22 +200,22 @@
     }
   }
 
-  const getProductDetails = async (req, res) => {
-    const { productId } = req.params;
-  
-    try {
-      const product = await Product.findById(productId).lean();
-      
-      if (!product) {
-        return res.status(404).render({ success: false, message: "Product not found" });
+    const getProductDetails = async (req, res) => {
+      const { productId } = req.params;
+    
+      try {
+        const product = await Product.findById(productId).lean();
+        
+        if (!product) {
+          return res.status(404).render({ success: false, message: "Product not found" });
+        }
+    
+        res.json({ success: true, product });
+      } catch (error) {
+        console.error("Error fetching product details:", error);
+        res.status(500).json({ success: false, message: "Error fetching product details" });
       }
-  
-      res.json({ success: true, product });
-    } catch (error) {
-      console.error("Error fetching product details:", error);
-      res.status(500).json({ success: false, message: "Error fetching product details" });
-    }
-  };
+    };
 
   const getProductEditPage = async (req, res) => {
     const { productId } = req.params;

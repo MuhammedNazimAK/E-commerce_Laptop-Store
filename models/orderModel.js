@@ -31,15 +31,35 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  couponCode: {
+    type: String,
+    trim: true
+  },
   status: {
     type: String,
     enum: ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Requested'],
     default: 'Pending'
   },
   shippingAddress: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId, 
     ref: 'Address',
     required: true
+  },
+  subtotal: {
+    type: Number,
+    required: true
+  },
+  gst: {
+    type: Number,
+    required: true
+  },
+  shippingCharge: {
+    type: Number,
+    required: true
+  },
+  discountAmount: {
+    type: Number,
+    default: 0
   },
   paymentMethod: {
     type: String,

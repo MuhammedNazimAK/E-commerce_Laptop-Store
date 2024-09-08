@@ -16,7 +16,7 @@ const loadCategoryManagementPage = (req, res) => {
 
 const getAllCategories = async (req, res) => {
     try {
-        const categories = await Category.find({}, '_id name');
+        const categories = await Category.find({}, '_id name ');
         res.status(200).json(categories); 
     } catch (error) {
         console.error("Error fetching categories:", error);

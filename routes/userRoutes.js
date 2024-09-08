@@ -8,6 +8,7 @@ const couponController = require('../controllers/couponController');
 const cartController = require('../controllers/cartController');
 const wishlistController = require('../controllers/wishListController');
 const walletController = require('../controllers/walletController');
+const invoiceController = require('../controllers/user/invoiceController');
 const { requireAuth, requireNoAuth } = require('../middleware/auth');
 const passport = require('passport');
 
@@ -74,7 +75,9 @@ router.get('/order-confirmation/:orderId', orderController.showOrderConfirmation
 router.get('/my-account/orders/:id', requireAuth, orderController.getSingleOrderDetails);
 router.put('/my-account/cancel-order/:id', requireAuth, orderController.cancelOrder);
 router.put('/my-account/return-order/:id', requireAuth, orderController.returnOrder);
-router.post('/use-funds', requireAuth, orderController.useFunds);
+
+//Invoice Controller
+router.get('/download-invoice/:orderId', requireAuth, invoiceController.getInvoice);
 
 
 //wishlist controller

@@ -105,7 +105,7 @@
                                     <p><strong>Order ID:</strong> <span id="orderId"></span></p>
                                     <p><strong>Order Date:</strong> <span id="orderDate"></span></p>
                                     <p><strong>Status:</strong> <span id="orderStatus"></span></p>
-                                    <p><strong>Total:</strong> $<span id="orderTotal"></span></p>
+                                    <p><strong>Total:</strong> ₹<span id="orderTotal"></span></p>
                                     <p><strong>Payment Method:</strong> <span id="orderPayment"></span></p>
                                     <p><strong>Shipping Address:</strong> <span id="orderShippingAddress"></span></p>
                                     </div>
@@ -139,7 +139,7 @@
                         <div class="tab-pane fade" id="wallet">
                             <h4>My Wallet</h4>
                             <div id="walletBalance"></div>
-                            <div id="transactions">
+                            <div id="transactions" class="table_page table-responsive">
                               <h5>Transaction History</h5>
                               <table id="transactionTable">
                                 <thead>
@@ -148,6 +148,7 @@
                                     <th>Type</th>
                                     <th>Amount</th>
                                     <th>Status</th>
+                                    <th>Description</th>
                                   </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -450,9 +451,11 @@
 <script src="/javascript/editUserProfile.js"></script>
 <script src="/javascript/sharedValidation.js"></script>
 <script src="/javascript/address.js"></script>
+<script src="/javascript/checkout.js" data-razorpay-key="<%= process.env.RAZORPAY_KEY_ID %>"></script>
 <script>
     window.ordersData = '<%- ordersData %>';
 </script>  
 <script src="/javascript/myAccount.js"></script>
 <script src="/javascript/wallet.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 

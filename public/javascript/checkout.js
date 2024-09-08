@@ -1,6 +1,10 @@
 function fetchAddresses() {
   const addressListContainer = document.getElementById("addressList");
-  
+
+  if (!addressListContainer) {
+    return;
+  }
+
   axios.get("/my-account/add-address")
     .then((response) => {
       const addresses = response.data.addresses.address;
@@ -92,14 +96,14 @@ function debounce(func, wait) {
 
 async function handlePlaceOrder() {
   try {
-    showLoading('Placing order...');
     const orderData = validateOrderData();
     if (!orderData) return;
 
+    showLoading('Placing order...');
     const response = await createOrder(orderData);
 
     if (response.data.success) {
-      console.log('responce data', response.data)
+      await new Promise(resolve => setTimeout(resolve, 3000));
       await handlePaymentMethod(response.data);
     } else {
       showError(response.data.message || ERROR_MESSAGES.ORDER_CREATION_FAILED);
@@ -118,13 +122,18 @@ function validateOrderData() {
   const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
   const couponCode = document.getElementById("appliedCouponCode")?.value?.trim() || "";
 
+  let errorMessage = '';
+
   if (!selectedAddressId) {
-    showError(ERROR_MESSAGES.NO_ADDRESS);
-    return null;
+    errorMessage += ERROR_MESSAGES.NO_ADDRESS + ' ';
   }
 
   if (!paymentMethod) {
-    showError(ERROR_MESSAGES.NO_PAYMENT_METHOD);
+    errorMessage += ERROR_MESSAGES.NO_PAYMENT_METHOD + ' ';
+  }
+
+  if (errorMessage) {
+    showError(errorMessage.trim());
     return null;
   }
 
@@ -143,14 +152,14 @@ async function createOrder(orderData) {
 }
 
 async function handlePaymentMethod(responseData) {
-  const { paymentMethod, orderId, amount } = responseData;
+  const { paymentMethod, orderId, razorpayOrderId, amount } = responseData;
   switch (paymentMethod) {
     case 'cod':
       await handleCODOrder(orderId);
       break;
     case 'razorpay':
       console.log('razor pay case reached');
-      await handleRazorpayOrder(orderId, amount);
+      await handleRazorpayOrder(razorpayOrderId, orderId, amount);
       break;
     case 'wallet':
       await handleWalletOrder(orderId, amount);
@@ -174,14 +183,15 @@ async function handleCODOrder(orderId) {
   }
 }
 
-function handleRazorpayOrder(orderId, amount) {
-  console.log('initializing razorpay')
+function handleRazorpayOrder(razorpayOrderId, orderId, amount) {
+  console.log('initializing razorpay');
   const razorpayKey = document.querySelector('script[data-razorpay-key]').getAttribute('data-razorpay-key');
-  console.log('rezorpay key', razorpayKey);
+  console.log('razorpay key', razorpayKey);
 
   if (typeof Razorpay === 'undefined') {
     console.error(ERROR_MESSAGES.RAZORPAY_UNDEFINED);
     showError(ERROR_MESSAGES.RAZORPAY_UNDEFINED);
+    redirectToOrderConfirmation(orderId);
     return;
   }
 
@@ -191,15 +201,21 @@ function handleRazorpayOrder(orderId, amount) {
     currency: "INR",
     name: "Laptop Store",
     description: "Order Payment",
-    order_id: orderId,
+    order_id: razorpayOrderId,
     handler: (response) => {
-      console.log('payment succesfulll')
+      console.log('payment successful');
       verifyPayment(response, orderId);
+    },
+    modal: {
+      ondismiss: function() {
+        console.log('Razorpay modal dismissed');
+        redirectToOrderConfirmation(orderId);
+      }
     },
     theme: { color: "#3399cc" }
   }
 
-  console.log('Razer Pay options', options);
+  console.log('Razorpay options', options);
 
   try {
     console.log('Attempting to open Razorpay modal');
@@ -208,77 +224,78 @@ function handleRazorpayOrder(orderId, amount) {
   } catch (error) {
     console.error('Error opening Razorpay modal:', error);
     showError('Failed to open payment gateway');
+    redirectToOrderConfirmation(orderId);
   }
+}
 
-  const rzp = new Razorpay(options);
-  rzp.open();
-};
 
 async function verifyPayment(paymentResponse, orderId) {
   console.log('verifying payment', paymentResponse, orderId);
   try {
     const response = await axios.post(`${API_ENDPOINTS.VERIFY_PAYMENT}/${orderId}`, paymentResponse);
-    console.log('verification response', response.data);
+    
     if (response.data.success) {
       showSuccess("Payment successful and order placed!");
-      console.log('redirecting to order confirmation page')
-      redirectToOrderConfirmation(orderId);
     } else {
-      showError(response.data.message || ERROR_MESSAGES.PAYMENT_VERIFICATION_FAILED);
+      showError(response.data.message || ERROR_MESSAGES.GENERAL_ERROR);
     }
   } catch (error) {
-    handleError(error);
+    console.error('Error verifying payment:', error);
+    showError(ERROR_MESSAGES.PAYMENT_VERIFICATION_FAILED);
+  } finally {
+    console.log('redirecting to order confirmation page');
+    redirectToOrderConfirmation(orderId);
   }
 }
+
 
 async function handleWalletOrder(orderId, amount) {
   try {
     const response = await axios.post(API_ENDPOINTS.USE_FUNDS, { amount, orderId });
     if (response.data.success) {
       showSuccess('Order placed successfully using wallet balance');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      showLoading('Redirecting to order confirmation...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
       redirectToOrderConfirmation(orderId);
     } else {
       showError(response.data.message || ERROR_MESSAGES.GENERAL_ERROR);
     }
   } catch (error) {
+    console.error('Error handling wallet order:', error);
     if (error.response && error.response.status === 400) {
       showError(ERROR_MESSAGES.INSUFFICIENT_BALANCE);
     } else {
       handleError(error);
     }
+    redirectToOrderConfirmation(orderId);
   }
 }
 
+
 function showError(message) {
-  displayMessage('error', message);
-}
-
-function showSuccess(message) {
-  displayMessage('success', message);
-}
-
-function displayMessage(icon, message) {
+  console.log('showing error:', message);
   Swal.fire({
-    icon,
+    icon: "error",
     text: message,
     toast: true,
-    position: 'top-right',
+    position: "top-right",
     showConfirmButton: false,
     timerProgressBar: true,
-    timer: 3000
+    timer: 3000,
   });
 }
 
-function getSelectedAddressId() {
-  const selectedRadio = document.querySelector('input[name="addressSelection"]:checked');
-  return selectedRadio ? selectedRadio.getAttribute("data-address-id") : null;
+function showSuccess(message) {
+  Swal.fire({
+    icon: "success",
+    text: message,
+    toast: true,
+    position: "top-right",
+    showConfirmButton: false,
+    timerProgressBar: true,
+    timer: 3000,
+  })
 }
 
 function handleError(error) {
-  console.error('Error:', error);
   showError(ERROR_MESSAGES.GENERAL_ERROR);
 }
 
@@ -298,15 +315,20 @@ function hideLoading() {
   Swal.close();
 }
 
-function redirectToOrderConfirmation(orderId) {
-    window.location.href = `/order-confirmation/${orderId}`;
-}
-
 function clearErrorMessages() {
   const errorDivs = document.querySelectorAll('.error-message');
   errorDivs.forEach(div => div.textContent = '');
 }
 
+function getSelectedAddressId() {
+  const selectedRadio = document.querySelector('input[name="addressSelection"]:checked');
+  return selectedRadio ? selectedRadio.getAttribute("data-address-id") : null;
+}
+
+function redirectToOrderConfirmation(orderId) {
+  console.log('redirecting to order confirmation page');
+  window.location.href = `/order-confirmation/${orderId}`;
+}
 
 // Add address form initialization
 function initializeAddAddress() {

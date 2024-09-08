@@ -246,16 +246,26 @@ class ProductData {
     }
   }
 
-   updateProductContainer(products) {
+  updateProductContainer(products) {
     const container = document.getElementById('product-container');
     if (!container) return;
     container.innerHTML = '';
     
+    console.log('products', products)
     products.forEach(product => {
+      console.log('Processing product:', product.basicInformation.name);
+      console.log('Original price:', product.pricingAndAvailability.regularPrice);
+      console.log('Discounted price:', product.pricingAndAvailability.salesPrice);
+      console.log('Offer:', product.offerName);
+      
       const productElement = document.createElement('div');
       productElement.classList.add('product-list-single', 'product-color--golden', 'fade-in-element');
       const truncatedDescription = truncateString(product.basicInformation.description, 150);
       const isUnavailable = product.status === false;
+      
+      const originalPrice = product.pricingAndAvailability.regularPrice;
+      const discountedPrice = product.pricingAndAvailability.salesPrice || originalPrice;
+      const discountPercentage = product.discount || (originalPrice > discountedPrice ? ((originalPrice - discountedPrice) / originalPrice * 100).toFixed(0) : 0);
       
       productElement.innerHTML = `
         <a href="/productDetails/${product._id}" class="product-list-img-link">
@@ -270,11 +280,14 @@ class ProductData {
           ${isUnavailable ?
             '<span class="product-unavailable">Currently Unavailable</span>' :
             `<span class="product-list-price">
-              ${product.pricingAndAvailability.salesPrice ?
-                `<del>₹${product.pricingAndAvailability.regularPrice}</del> ₹${product.pricingAndAvailability.salesPrice}` :
-                `₹${product.pricingAndAvailability.regularPrice}`}
+              ${discountedPrice < originalPrice ?
+                `<del>₹${originalPrice.toFixed(2)}</del> ₹${discountedPrice.toFixed(2)}
+                 <span class="discount-percentage">(${discountPercentage}% off)</span>` :
+                `₹${originalPrice.toFixed(2)}`
+              }
              </span>`
           }
+          ${product.offerName ? `<p class="offer-name">${product.offerName}</p>` : ''}
           <p>${truncatedDescription}</p>
           <div class="product-action-icon-link-list">
             ${isUnavailable ? '' : `
@@ -284,6 +297,7 @@ class ProductData {
           </div>
         </div>
       `;
+      
       const addToCartButton = productElement.querySelector('.btn-black-default-hover');
       if (addToCartButton) {
         addToCartButton.addEventListener('click', (e) => {
@@ -292,14 +306,13 @@ class ProductData {
           addToCart(productId);
         });
       }
-
+  
       container.appendChild(productElement);
     });
   
-  
     const event = new CustomEvent('productsUpdated', { detail: products });
     document.dispatchEvent(event);
-  }
+  }  
 }
   function generateRatingStars() {
     return `

@@ -1,7 +1,64 @@
 const Cart = require('../models/cartModel');
 const Address = require('../models/addressModel');
 const Product = require('../models/productModel');
+const ProductOffer = require('../models/productOfferModel');
+const CategoryOffer = require('../models/categoryOfferModel');
 const mongoose = require('mongoose');
+
+
+async function getProductWithOffers(productId) {
+  const product = await Product.findById(productId).populate('category');
+
+  const currentDate = new Date();
+
+  // Get product-specific offers
+  const productOffers = await ProductOffer.find({
+    product: productId,
+    isActive: true,
+    startDate: { $lte: currentDate },
+    endDate: { $gte: currentDate }
+  });
+
+
+  // Get category offers
+  const categoryOffers = await CategoryOffer.find({
+    category: product.category._id,
+    isActive: true,
+    startDate: { $lte: currentDate },
+    endDate: { $gte: currentDate }
+  });
+
+
+  // Get default offers (product offers with isDefault set to true)
+  const defaultOffers = await ProductOffer.find({
+    isDefault: true,
+    isActive: true,
+    startDate: { $lte: currentDate },
+    endDate: { $gte: currentDate }
+  });
+
+
+  const allOffers = [...productOffers, ...categoryOffers, ...defaultOffers];
+
+  let bestOffer = { discountPercentage: 0, offerName: '' };
+  let discountedPrice = product.pricingAndAvailability.salesPrice;
+
+  if (allOffers.length > 0) {
+    bestOffer = allOffers.reduce((best, current) =>
+      current.discountPercentage > best.discountPercentage ? current : best
+    , { discountPercentage: 0, offerName: '' });
+
+    discountedPrice = product.pricingAndAvailability.regularPrice * (1 - bestOffer.discountPercentage / 100);
+  }
+
+  return {
+    ...product.toObject(),
+    originalPrice: product.pricingAndAvailability.regularPrice,
+    discountedPrice: discountedPrice,
+    discount: bestOffer.discountPercentage,
+    offerName: bestOffer.offerName
+  };
+}
 
 
 
@@ -36,6 +93,10 @@ const addToCart = async (req, res) => {
       cart = new Cart({ user: userId, items: [] });
     }
 
+    const productWithOffers = await getProductWithOffers(productId);
+
+    const price = productWithOffers.discountedPrice;
+
     // Check if the product is already in the cart
     const cartItemIndex = cart.items.findIndex(item => item.product.toString() === productId);
     if (cartItemIndex !== -1) {
@@ -48,7 +109,7 @@ const addToCart = async (req, res) => {
       if (quantity > 5) {
         return res.status(400).json({ success: false, message: 'Maximum quantity per item is 5' });
       }
-      cart.items.push({ product: productId, quantity: quantity });
+      cart.items.push({ product: productId, quantity: quantity, price: price });
     }
 
     try {
@@ -161,16 +222,17 @@ const getCart = async (req, res) => {
     let subtotal = 0;
     let shipping = 25;
 
-    const items = cart[0].items.map(item => {
-      const price = item.product.pricingAndAvailability.salesPrice || item.product.pricingAndAvailability.regularPrice;
+    const items = await Promise.all(cart[0].items.map(async (item) => {
+      const productWithOffers = await getProductWithOffers(item.product._id);
+      const price = productWithOffers.discountedPrice;
       const total = price * item.quantity;
       subtotal += total;
       return {
-        ...item.product,
+        ...productWithOffers,
         quantity: item.quantity,
         total,
       };
-    });
+    }));
 
     const total = subtotal + shipping;
 
@@ -201,12 +263,21 @@ const updateCart = async (req, res) => {
     const itemIndex = cart.items.findIndex(item => item.product.toString() === productId);
     if (itemIndex > -1) {
 
+
       if (quantity > 5) {
         return res.status(400).json({ success: false, message: 'Quantity cannot exceed 5 for this item', quantity: cart.items[itemIndex].quantity });
       }
+
+      const productWithOffers = await getProductWithOffers(productId);
+
       cart.items[itemIndex].quantity = quantity;
+      cart.items[itemIndex].price = productWithOffers.discountedPrice;
+
       await cart.save();
-      return res.status(200).json({ success: true, message: 'Product quantity updated successfully' });
+      return res.status(200).json({ success: true,
+        message: 'Product quantity updated successfully',
+        updatedPrice: productWithOffers.discountedPrice,
+        updatedTotal: productWithOffers.discountedPrice * quantity });
     } else {
       
       if (quantity > 5) {
@@ -228,7 +299,6 @@ const checkout = async (req, res) => {
   try {
     let userId = req.session.user?._id;
     const addressId = await Address.findOne({ userId: userId });
-    console.log('addressId dsihi aushdifhsid', addressId);  
   
     if (!userId) {
       userId = req.session.guestCartId || (req.session.guestCartId = new mongoose.Types.ObjectId());
@@ -237,23 +307,20 @@ const checkout = async (req, res) => {
     
     const cart = await Cart.findOne({ user: userId }).populate('items.product');
     if (!cart || cart.items.length === 0) {
-      console.log('cart not found or empty'); 
       return res.render('users/checkout', { items: [], priceDetails: {} });
     }
 
-    console.log('passed cart', cart);
-
-    const items = cart.items.map(item => {
-      const product = item.product;
-      const price = product.pricingAndAvailability?.salesPrice || product.pricingAndAvailability?.regularPrice || 0;
+    const items = await Promise.all(cart.items.map(async (item) => {
+      const productWithOffers = await getProductWithOffers(item.product._id);
+      const price = productWithOffers.discountedPrice;
       const total = price * item.quantity;
       return {
-        ...product._doc,
+        ...productWithOffers,
         quantity: item.quantity,
         total,
         addressId,
       };
-    });
+    }));
 
     // Calculate price details
     const subtotal = items.reduce((sum, item) => sum + item.total, 0);
@@ -275,9 +342,8 @@ const checkout = async (req, res) => {
       couponCode: req.session.appliedCoupon?.code || null
     };
 
-    console.log('items', items);
-    
     console.log('priceDetails', priceDetails);
+
     return res.render('users/checkout', { items, priceDetails, addressId });
   } catch (error) {
     console.error('Error in checkout:', error);

@@ -81,12 +81,20 @@
                                     <td class="product_name">
                                       <a href="/productDetails/<%= item._id %>"><%= item.basicInformation.name %></a>
                                     </td>
-                                    <td class="product-price">₹<%= item.pricingAndAvailability.salesPrice.toFixed(2) || item.pricingAndAvailability.regularPrice.toFixed(2) %></td>
+                                    <td class="product-price">
+                                      <% if (item.discountedPrice < item.originalPrice) { %>
+                                        <del>₹<%= item.originalPrice.toFixed(2) %></del>
+                                        ₹<%= item.discountedPrice.toFixed(2) %>
+                                        <span class="discount">(<%= item.discount %>% off)</span>
+                                      <% } else { %>
+                                        ₹<%= item.originalPrice.toFixed(2) %>
+                                      <% } %>
+                                    </td>
                                     <td class="product_quantity">
                                       <label>Quantity</label>
                                       <input type="number" class="quantity-input" value="<%= item.quantity %>" min="1" max="<%= item.pricingAndAvailability.stockAvailability %>" data-product-id="<%= item._id %>">
                                     </td>
-                                    <td class="product_total">₹<%= (item.pricingAndAvailability.salesPrice || item.pricingAndAvailability.regularPrice) * item.quantity %></td>
+                                    <td class="product_total">₹<%= (item.discountedPrice * item.quantity).toFixed(2) %></td>
                                   </tr>
                                 <% }); %>
                               </tbody>                              
@@ -122,12 +130,12 @@
                 <div class="coupon_code right" data-aos="fade-up" data-aos-delay="400">
                     <h3>Cart Totals</h3>
                     <div class="coupon_inner">
-                        <div id="applied-coupon" style="display: none;">
-                            <div class="applied-coupon-info">
+                        <div id="applied-coupon">
+                            <div class="applied-coupon-info" id="discount-row" style="display: none;">
                               <p>Applied Coupon: <span id="applied-coupon-code"></span></p>
                               <p>Discount: ₹<span id="applied-coupon-discount"></span></p>
                             </div>
-                            <button type="button" id="remove-coupon" class="btn btn-md btn-golden">Remove Coupon</button>
+                            <button style="display: none;" type="button" id="remove-coupon" class="btn btn-md btn-golden">Remove Coupon</button>
                           </div>
                       <div class="cart_subtotal">
                           <p>Subtotal</p>
@@ -137,12 +145,10 @@
                           <p>Shipping</p>
                           <p class="cart_amount">₹<span id="shipping"><%= shipping.toFixed(2) %></span></p>
                       </div>
-                      <div class="cart_subtotal" id="discount-row" style="display: none;">
+                      <div style="display: none;" class="cart_subtotal" id="discount-row">
                           <p>Discount</p>
-                          <p class="cart_amount">-₹<span id="discount">0.00</span></p>
+                          <p class="cart_amount">₹<span id="discount"></span></p>
                       </div>
-                      <a href="#">Calculate shipping</a>
-                  
                       <div class="cart_subtotal">
                           <p>Total</p>
                           <p class="cart_amount total">₹<span id="total"><%= total.toFixed(2) %></span></p>

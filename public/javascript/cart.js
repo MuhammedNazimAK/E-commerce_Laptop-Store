@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let subtotal = 0;
   
     if (cartTotal === null) {
-      // Calculate subtotal from product totals if cartTotal is not provided
+      // Calculate subtotal from product totals
       const productTotalCells = document.querySelectorAll('.product_total');
       
       productTotalCells.forEach(cell => {

@@ -257,11 +257,15 @@
                                 <tbody>
                                     <% items.forEach(item => { %>
                                     <tr>
-                                        <td><%= item.basicInformation.name %> <strong> × <%= item.quantity %></strong></td>
-                                        <td>₹<%= item.total.toFixed(2) %></td>
+                                      <td>
+                                        <%= item.basicInformation.name %> <strong> × <%= item.quantity %></strong>
+                                        <% if (item.discountedPrice < item.originalPrice) { %>
+                                        <% } %>
+                                      </td>
+                                      <td>₹<%= (item.discountedPrice * item.quantity).toFixed(2) %></td>
                                     </tr>
                                     <% }); %>
-                                </tbody>
+                                  </tbody>                                  
                                 <tfoot>
                                     <tr>
                                         <th>Subtotal</th>
@@ -314,6 +318,10 @@
                                 <span>Total Amount:</span>
                                 <span>₹<%= parseFloat(priceDetails.total).toFixed(2) %></span>
                             </div>
+                            <div class="price-item">
+                                <span>Total Savings:</span>
+                                <span>₹<%= (items.reduce((sum, item) => sum + (item.originalPrice - item.discountedPrice) * item.quantity, 0)).toFixed(2) %></span>
+                              </div>
                         </div>
 
                             <!-- Payment Method -->
