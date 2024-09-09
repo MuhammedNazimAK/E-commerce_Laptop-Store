@@ -2,6 +2,7 @@ const User = require("../../models/userModel");
 const Product = require('../../models/productModel');
 const Address = require('../../models/addressModel');
 const Order = require('../../models/orderModel');
+const Category = require('../../models/categoryModel');
 const ProductOffer = require('../../models/productOfferModel');
 const CategoryOffer = require('../../models/categoryOfferModel');
 const sendEmail = require('../../utils/sendEmail');
@@ -65,6 +66,7 @@ async function getProductWithOffers(productId) {
 
 const renderHomePage = async (req, res) => {
   try {
+
     const products = await Promise.all(
       (await Product.find().limit(8)).map(async (product) => {
         const productWithOffers = await getProductWithOffers(product._id);
@@ -72,12 +74,28 @@ const renderHomePage = async (req, res) => {
       })
     );
 
-    return res.render("users/home", { products });
+    const topProducts = await Promise.all(
+      (await Product.find().sort({ salesCount: -1 }).limit(8)).map(async (product) => {
+        const productWithOffers = await getProductWithOffers(product._id);
+        return productWithOffers;
+      })
+    );
+
+    const topBrands = await Product.aggregate([
+      { $group: { _id: "$basicInformation.brand", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 3 }
+    ]);
+
+    const categories = await Category.find().limit(4);
+
+    return res.render("users/home", { products, topProducts, topBrands, categories });
   } catch (error) {
-    console.error("Error fetching products:", error);
-    res.status(500).render("error", { message: "Error loading products" });
+    console.error("Error fetching data:", error);
+    res.status(500).render("users/pageNotFound", { message: "Error loading home page" });
   }
 };
+
 
 const renderLoginPage = (req, res) => {
   const message = req.session.message || req.flash('success') || req.flash('error') || '';

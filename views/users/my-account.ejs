@@ -448,14 +448,14 @@
     
 
 <%- include("../partials/user/footer") %>
-<script src="/javascript/editUserProfile.js"></script>
-<script src="/javascript/sharedValidation.js"></script>
-<script src="/javascript/address.js"></script>
+<script src="/javascript/editUserProfile.js" defer></script>
+<script src="/javascript/sharedValidation.js" defer></script>
+<script src="/javascript/address.js" defer></script>
 <script src="/javascript/checkout.js" data-razorpay-key="<%= process.env.RAZORPAY_KEY_ID %>"></script>
 <script>
     window.ordersData = '<%- ordersData %>';
 </script>  
-<script src="/javascript/myAccount.js"></script>
-<script src="/javascript/wallet.js"></script>
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="/javascript/myAccount.js" defer></script>
+<script src="/javascript/wallet.js" defer></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
 
