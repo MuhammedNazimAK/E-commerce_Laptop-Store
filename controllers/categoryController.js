@@ -98,7 +98,7 @@ const softDeleteCategory = async (req, res) => {
     }
 };
 
-
+ 
 // Category Offer controller
 const categoryOfferController = {
 

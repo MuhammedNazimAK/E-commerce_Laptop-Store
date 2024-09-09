@@ -151,6 +151,10 @@
     .product-default-single-item .action-link a:hover {
         color: #ff0000;
     }
+    .add-to-wishlist.added-to-wishlist {
+  color: red;
+}
+
 </style>
     <!-- Start Header Area -->
 
@@ -414,8 +418,10 @@
                                         <% } %>
                                     </div>
                                     <div class="action-link-right">
-                                        <a href="#" class="btn btn-black-default-hover add-to-wishlist <%= product.inWishlist ? 'added-to-wishlist' : ''%>" data-product-id="<%= product._id %>"><i class="icon-heart"></i></a>
-                                    </div>
+                                        <a href="#" class="btn btn-black-default-hover add-to-wishlist <%= product.inWishlist ? 'added-to-wishlist' : '' %>" data-product-id="<%= product._id %>">
+                                          <i class="icon-heart"></i>
+                                        </a>
+                                      </div>                                      
                                 </div>
                             </div>
                         </div>

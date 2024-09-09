@@ -67,6 +67,7 @@ router.post('/remove-coupon', couponController.removeCoupon);
 
 //order controller
 router.get('/checkout', cartController.checkout);
+router.get('/retry-checkout/:orderId', requireAuth, orderController.getRetryCheckoutPage);
 router.post('/create-order', requireAuth, orderController.createOrder);
 router.get('/get-cart-status', requireAuth, orderController.getCartStatus);
 router.post('/confirm-cod-order/:orderId', requireAuth, orderController.confirmCODOrder);
@@ -88,7 +89,7 @@ router.put('/remove-from-wishlist', requireAuth, wishlistController.removeFromWi
 
 
 //wallet controller
-router.get('/balance', walletController.getBalance);
+router.get('/balance', requireAuth,walletController.getBalance);
 router.post('/use-funds', requireAuth, walletController.useFunds);
 router.get('/transactions', requireAuth, walletController.getTransactions);
 

@@ -11,6 +11,10 @@
     border-color: #cccccc;
 }
 
+.add-to-wishlist.added-to-wishlist {
+  color: red;
+}
+
     </style>
 
     <!-- ...:::: Start Breadcrumb Section:::... -->
@@ -138,7 +142,10 @@
                         </div>
                         <!-- Start  Product Details Meta Area-->
                         <div class="product-details-meta mb-20">
-                            <a href="#" class="icon-space-right add-to-wishlist <%= product.inWishlist ? 'added-to-wishlist' : ''%>" data-product-id="<%= product._id %>"><i class="icon-heart"></i>Add to wishlist</a>
+                            <a href="#" class="icon-space-right add-to-wishlist <%= product.inWishlist ? 'added-to-wishlist' : '' %>" data-product-id="<%= product._id %>">
+                                <i class="icon-heart"></i>
+                                <span class="wishlist-text"><%= product.inWishlist ? 'Remove from wishlist' : 'Add to wishlist' %></span>
+                              </a>                              
                             <a href="#" id="view-coupons" class="icon-space-right"><i class="icon-tag"></i>Available Coupons</a>
                         </div> <!-- End  Product Details Meta Area-->
                     </div> <!-- End Product Variable Area -->
