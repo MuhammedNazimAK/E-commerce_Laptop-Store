@@ -1,7 +1,7 @@
 <%- include("../partials/user/header") %>
 <%- include("../partials/user/right") %>
 
-
+<!-- 
 <style>
 
     .image-box {
@@ -18,25 +18,6 @@
 
     .offer-text {
     font-size: 14px;
-    }
-
-    .view-all-button {
-        display: block;
-        width: 200px;
-        margin: 20px auto;
-        padding: 10px;
-        text-align: center;
-        background-color: #fff;
-        color: #ff0000;
-        border: 2px solid #ff0000;
-        text-decoration: none;
-        font-weight: bold;
-        transition: all 0.3s ease;
-    }
-
-    .view-all-button:hover {
-        background-color: #ff0000;
-        color: #fff;
     }
 
     .product-default-single-item {
@@ -155,6 +136,27 @@
   color: red;
 }
 
+</style> -->
+
+<style>
+    .view-all-button {
+        display: block;
+        width: 200px;
+        margin: 20px auto;
+        padding: 10px;
+        text-align: center;
+        background-color: #fff;
+        color: #ff0000;
+        border: 2px solid #ff0000;
+        text-decoration: none;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+
+    .view-all-button:hover {
+        background-color: #ff0000;
+        color: #fff;
+    }
 </style>
     <!-- Start Header Area -->
 
@@ -225,7 +227,8 @@
  <a href="productListing" class="view-all-button" data-aos="fade-up" data-aos-delay="0">VIEW ALL LAPTOPS</a>
 
  <!-- Top Products Section -->
-<div class="product-default-slider-section section-top-gap-100 section-fluid">
+<div class="product-default-slider-section section-top-gap-100 section-fluid section-inner-bg">
+    <!-- Start Section Content Text Area -->
     <div class="section-title-wrapper" data-aos="fade-up" data-aos-delay="0">
         <div class="container">
             <div class="row">
@@ -233,43 +236,73 @@
                     <div class="section-content-gap">
                         <div class="secton-content">
                             <h3 class="section-title">Top Products</h3>
+                            <p>Add our top products to your weekly lineup.</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    <!-- Start Product Slider -->
     <div class="product-wrapper" data-aos="fade-up" data-aos-delay="200">
         <div class="container">
             <div class="row">
                 <div class="col-12">
-                    <div class="product-slider-default-2rows default-slider-nav-arrow">
+                    <div class="product-slider-default-1row default-slider-nav-arrow">
                         <!-- Slider main container -->
-                        <div class="swiper-container product-default-slider-4grid-2row">
+                        <div class="swiper-container product-default-slider-4grid-1row">
+                            <!-- Additional required wrapper -->
                             <div class="swiper-wrapper">
                                 <% topProducts.forEach(product => { %>
                                     <!-- Start Product Default Single Item -->
                                     <div class="product-default-single-item product-color--golden swiper-slide">
                                         <div class="image-box">
-                                            <a href="/product/<%= product._id %>" class="image-link">
+                                            <a href="/productDetails/<%= product._id %>" class="image-link">
                                                 <img src="<%= product.images.highResolutionPhotos[0] %>" alt="<%= product.basicInformation.name %>">
                                             </a>
+                                            <div class="action-link">
+                                                <div class="action-link-left">
+                                                    <a href="#" data-bs-toggle="modal" data-bs-target="#modalAddcart">Add to Cart</a>
+                                                </div>
+                                                <div class="action-link-right">
+                                                    <a href=""><i class="icon-heart"></i></a>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div class="content">
-                                            <h6 class="title"><a href="/product/<%= product._id %>"><%= product.basicInformation.name %></a></h6>
-                                            <span class="price">₹<%= product.pricingAndAvailability.salesPrice || product.pricingAndAvailability.regularPrice %></span>
+                                            <div class="content-left">
+                                                <h6 class="title">
+                                                    <a href="/product/<%= product._id %>"><%= product.basicInformation.name %></a>
+                                                </h6>
+                                                <!-- Default Rating -->
+                                                <ul class="review-star">
+                                                    <li class="fill"><i class="ion-android-star"></i></li>
+                                                    <li class="fill"><i class="ion-android-star"></i></li>
+                                                    <li class="fill"><i class="ion-android-star"></i></li>
+                                                    <li class="fill"><i class="ion-android-star"></i></li>
+                                                    <li class="empty"><i class="ion-android-star"></i></li>
+                                                </ul>
+                                            </div>
+                                            <div class="content-right">
+                                                <span class="price">₹<%= product.pricingAndAvailability.salesPrice || product.pricingAndAvailability.regularPrice %></span>
+                                            </div>
                                         </div>
                                     </div>
                                     <!-- End Product Default Single Item -->
                                 <% }); %>
                             </div>
                         </div>
+                        <!-- If we need navigation buttons -->
+                        <div class="swiper-button-prev"></div>
+                        <div class="swiper-button-next"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    <!-- End Product Default Slider Section -->
 </div>
+
 
 <!-- Top Brands Section -->
 <div class="banner-section section-top-gap-100">
@@ -322,7 +355,7 @@
         <% categories.forEach((category, index) => { %>
             <div class="banner-single-item banner-style-4 banner-animation banner-color--golden float-left img-responsive" data-aos="fade-up" data-aos-delay="<%= index * 200 %>">
                 <div class="image">
-                    <img class="img-fluid" src="/assets/images/categories/<%= category.name.toLowerCase().replace(' ', '-') %>.jpg" alt="<%= category.name %>">
+                    <img class="img-fluid" src="/assets/images/Brands/Remake/Apple_upscayl_3x_realesrgan-x4plus.webp" alt="<%= category.name %>">
                 </div>
                 <a href="/products?category=<%= category._id %>" class="content">
                     <div class="inner">
@@ -391,12 +424,6 @@
                                 </ul>
                                 <h6 class="title"><a href="/productDetails/<%= product._id %>"><%= product.basicInformation.name %></a></h6>
                                 <div class="content">
-                                    <p class="laptop-specs">
-                                      <%= product.technicalSpecification.processor %> | 
-                                      <%= product.technicalSpecification.ram %> RAM | 
-                                      <%= product.technicalSpecification.storage %> | 
-                                      <%= product.technicalSpecification.graphicsCard %>
-                                    </p>
                                     <div class="price">
                                         <% if (product.status) { %>
                                           <span class="sale-price">₹<%= product.discountedPrice.toFixed(2) %></span>

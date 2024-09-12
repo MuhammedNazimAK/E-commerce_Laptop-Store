@@ -77,9 +77,6 @@ router.get('/my-account/orders/:id', requireAuth, orderController.getSingleOrder
 router.put('/my-account/cancel-order/:id', requireAuth, orderController.cancelOrder);
 router.put('/my-account/return-order/:id', requireAuth, orderController.returnOrder);
 
-//Invoice Controller
-router.get('/download-invoice/:orderId', requireAuth, invoiceController.getInvoice);
-
 
 //wishlist controller
 router.get('/wishlist', requireAuth, wishlistController.getWishList);
@@ -94,12 +91,15 @@ router.post('/use-funds', requireAuth, walletController.useFunds);
 router.get('/transactions', requireAuth, walletController.getTransactions);
 
 
+//Invoice Controller
+router.get('/download-invoice/:orderId', requireAuth, invoiceController.getInvoice);
+
+
 //passport authentication google
 router.get('/auth/google', passport.authenticate('google', {scope: ['profile', 'email']}));
-
 router.get('/auth/google/callback', passport.authenticate('google', {failureRedirect: '/signup'}), (req, res) => {
   res.redirect('/home')
-}); 
+});
 
 
 module.exports = router;

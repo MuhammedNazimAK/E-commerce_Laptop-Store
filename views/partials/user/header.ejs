@@ -10,11 +10,11 @@
 
     <title>Laptop Store</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <link rel="stylesheet" href="/assets/css/skeleton.css">
+    <link rel="stylesheet" href="/assets/css/loading-screen.css">
 
     <style>
         .add-to-wishlist.added-to-wishlist {
-        color: red; /* or any other style to indicate it's in the wishlist */
+        color: red;
     }
     </style>
 
@@ -50,6 +50,11 @@
 </head>
 
 <body>
+    <div class="loading-screen">
+        <div class="spinner"></div>
+        <div class="loading-text">Loading...</div>
+      </div>      
+      
     <!-- Start Header Area -->
     <header class="header-section d-none d-xl-block">
         <div class="header-wrapper">
@@ -140,3 +145,20 @@
             </div>
         </div>
     </header>
+
+    <script>
+        // public/javascript/loading-screen.js
+        document.addEventListener('DOMContentLoaded', function() {
+        const loadingScreen = document.querySelector('.loading-screen');
+        
+        // Show loading screen
+        loadingScreen.style.display = 'flex';
+        
+        setTimeout(() => {
+            loadingScreen.classList.add('hide');
+            setTimeout(() => {
+            loadingScreen.style.display = 'none';
+            }, 500);
+        }, 500);
+        });
+    </script>
