@@ -230,21 +230,19 @@ function handleRazorpayOrder(razorpayOrderId, orderId, amount) {
 
 
 async function verifyPayment(paymentResponse, orderId) {
-  console.log('verifying payment', paymentResponse, orderId);
   try {
     const response = await axios.post(`${API_ENDPOINTS.VERIFY_PAYMENT}/${orderId}`, paymentResponse);
-    
+       
     if (response.data.success) {
-      showSuccess("Payment successful and order placed!");
+      showSuccess("Payment successful! Order placed.");
     } else {
-      showError(response.data.message || ERROR_MESSAGES.GENERAL_ERROR);
+      showError(response.data.message || "Payment failed. Order status: Pending");
     }
   } catch (error) {
     console.error('Error verifying payment:', error);
-    showError(ERROR_MESSAGES.PAYMENT_VERIFICATION_FAILED);
+    showError("Payment verification failed. Order status: Pending");
   } finally {
-    console.log('redirecting to order confirmation page');
-    redirectToOrderConfirmation(orderId);
+    setTimeout(() => redirectToOrderConfirmation(orderId), 3000);
   }
 }
 

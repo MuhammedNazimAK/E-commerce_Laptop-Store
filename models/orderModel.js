@@ -65,6 +65,11 @@ const orderSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  razorpayOrderId: {
+    type: String,
+    unique: true,
+    sparse: true  // This allows the field to be unique but also optional
+  },
   paymentResult: {
     id: String,
     status: String,

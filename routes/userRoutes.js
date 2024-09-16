@@ -71,7 +71,7 @@ router.get('/retry-checkout/:orderId', requireAuth, orderController.getRetryChec
 router.post('/create-order', requireAuth, orderController.createOrder);
 router.get('/get-cart-status', requireAuth, orderController.getCartStatus);
 router.post('/confirm-cod-order/:orderId', requireAuth, orderController.confirmCODOrder);
-router.post('/verify-payment/:orderId', requireAuth, orderController.verifyRazorpayPayment);
+router.post('/verify-payment/:orderId', orderController.verifyRazorpayPayment);
 router.get('/order-confirmation/:orderId', orderController.showOrderConfirmation);
 router.get('/my-account/orders/:id', requireAuth, orderController.getSingleOrderDetails);
 router.put('/my-account/cancel-order/:id', requireAuth, orderController.cancelOrder);
