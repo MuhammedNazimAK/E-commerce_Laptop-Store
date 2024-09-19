@@ -89,18 +89,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
           const formData = new FormData(addAddressForm);
           const data = Object.fromEntries(formData);
-          console.log('data', data)
           try {
               const response = await axios.post('/my-account/add-address', data);
               if (response.data.success) {
                 if (response.data.address) {
-                    console.log('response.data.address', response.data.address)
                   createAddressCard(response.data.address);
                   $('#addAddressModal').modal('hide');
                   showSuccess(response.data.message || 'Address added successfully');
                   addAddressForm.reset();
               } else {
-                console.log('error', response.data.message || 'Failed to add address');
                 console.error('Error:', response.data.message || 'Failed to add address');
               }
             }
@@ -119,7 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
   addressList.addEventListener('click', async (e) => {
       if (e.target.classList.contains('delete-address')) {
           const addressId = e.target.getAttribute('data-id');
-          console.log('addressId for delete', addressId)
           const result = await Swal.fire({
               title: 'Are you sure?',
               text: "You won't be able to revert this!",
@@ -253,7 +249,6 @@ const createAddressCard = (address) => {
   }
 
   const addressId = address.addressId || address._id;
-  console.log('using addressId', addressId)
 
   const addressCard = document.createElement('div');
   addressCard.classList.add('col-md-6', 'mb-4');

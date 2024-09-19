@@ -63,7 +63,6 @@ async function getProductWithOffers(productId) {
 
 
 const addToCart = async (req, res) => {
-  console.log('came to add to cart')
   try {
     const { productId, quantity } = req.body;
     let userId = req.session.user?._id;
@@ -250,7 +249,6 @@ const getCart = async (req, res) => {
 
 
 const updateCart = async (req, res) => {
-  console.log('came to update cart')
   try {
     const { productId, quantity } = req.body;
     const userId = req.session.user?._id || req.session.guestCartId;
@@ -295,7 +293,6 @@ const updateCart = async (req, res) => {
 
 
 const checkout = async (req, res) => {
-  console.log('came to checkout');
   try {
     let userId = req.session.user?._id;
     const addressId = await Address.findOne({ userId: userId });
@@ -303,7 +300,6 @@ const checkout = async (req, res) => {
     if (!userId) {
       userId = req.session.guestCartId || (req.session.guestCartId = new mongoose.Types.ObjectId());
     }
-    console.log('userId', userId);
     
     const cart = await Cart.findOne({ user: userId }).populate('items.product');
     if (!cart || cart.items.length === 0) {
@@ -341,8 +337,6 @@ const checkout = async (req, res) => {
       total: total.toFixed(2),
       couponCode: req.session.appliedCoupon?.code || null
     };
-
-    console.log('priceDetails', priceDetails);
 
     return res.render('users/checkout', { items, priceDetails, addressId });
   } catch (error) {

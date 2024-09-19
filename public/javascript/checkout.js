@@ -158,7 +158,6 @@ async function handlePaymentMethod(responseData) {
       await handleCODOrder(orderId);
       break;
     case 'razorpay':
-      console.log('razor pay case reached');
       await handleRazorpayOrder(razorpayOrderId, orderId, amount);
       break;
     case 'wallet':
@@ -184,9 +183,7 @@ async function handleCODOrder(orderId) {
 }
 
 function handleRazorpayOrder(razorpayOrderId, orderId, amount) {
-  console.log('initializing razorpay');
   const razorpayKey = document.querySelector('script[data-razorpay-key]').getAttribute('data-razorpay-key');
-  console.log('razorpay key', razorpayKey);
 
   if (typeof Razorpay === 'undefined') {
     console.error(ERROR_MESSAGES.RAZORPAY_UNDEFINED);
@@ -203,22 +200,18 @@ function handleRazorpayOrder(razorpayOrderId, orderId, amount) {
     description: "Order Payment",
     order_id: razorpayOrderId,
     handler: (response) => {
-      console.log('payment successful');
       verifyPayment(response, orderId);
     },
     modal: {
       ondismiss: function() {
-        console.log('Razorpay modal dismissed');
         redirectToOrderConfirmation(orderId);
       }
     },
     theme: { color: "#3399cc" }
   }
 
-  console.log('Razorpay options', options);
 
   try {
-    console.log('Attempting to open Razorpay modal');
     const rzp = new Razorpay(options);
     rzp.open();
   } catch (error) {
@@ -269,7 +262,6 @@ async function handleWalletOrder(orderId, amount) {
 
 
 function showError(message) {
-  console.log('showing error:', message);
   Swal.fire({
     icon: "error",
     text: message,
@@ -324,7 +316,6 @@ function getSelectedAddressId() {
 }
 
 function redirectToOrderConfirmation(orderId) {
-  console.log('redirecting to order confirmation page');
   window.location.href = `/order-confirmation/${orderId}`;
 }
 

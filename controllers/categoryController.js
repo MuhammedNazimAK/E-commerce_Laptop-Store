@@ -243,7 +243,6 @@ const loadAddCategoryOfferPage = async (req, res) => {
 };
 
 const loadCategoryOfferPage = async (req, res) => {
-  console.log('reached here loading category offer`')
     try {
       const offers = await CategoryOffer.find().populate('category', 'name');
         res.status(200).json({offers: offers});

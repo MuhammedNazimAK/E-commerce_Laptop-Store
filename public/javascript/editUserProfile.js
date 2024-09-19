@@ -57,7 +57,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const submitButton = this.querySelector('button[type="submit"]');
         submitButton.disabled = true;
         submitButton.textContent = 'Saving...';
-        console.log('Form Data:', formData);
 
         try {
             const response = await axios.post('/update-profile', Object.fromEntries(formData), {
@@ -208,7 +207,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function validateProfileInputs() {
         const isFirstNameValid = validateNameInput('firstName', 'firstNameError');
-        console.log('isFirstNameValid:', isFirstNameValid);
         const isLastNameValid = validateNameInput('lastName', 'lastNameError');
         const isMobileValid = validateMobileInput('mobileForProfile', 'mobileError');
         return isFirstNameValid && isLastNameValid && isMobileValid;

@@ -6,7 +6,6 @@ function gatherProductData() {
     const designAndBuild = {};
     const pricingAndAvailability = {};
     const categories = Array.from(document.querySelectorAll('input[name="categories"]:checked')).map(checkbox => checkbox.value);
-    console.log("selected categories", categories);
 
     for (const field of fields) {
         const element = document.getElementById(`product_${field}`);
@@ -63,9 +62,7 @@ async function prepareFormData() {
             const file = blob.file instanceof File ? blob.file : new File([blob.file], `image_${index}.jpg`, { type: 'image/jpeg' });
             formData.append('images', file);
         });
-    } else {
-        console.log('No images to append.');
-    }
+    } 
 
     //append existing images
     const existingImages = document.querySelectorAll('.existing-image');
@@ -99,7 +96,6 @@ async function handleUpdateClick(event) {
 
         if (response.data.success) {
             showSuccessMessage('Product updated successfully.');
-            console.log('Product updated successfully:', response.data);
         } else {
             showErrorMessage(response.data.message || 'There was an error updating the product.');
         }
@@ -134,7 +130,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const cropAndSave = document.getElementById("cropAndSave");
     const cropperModalElement = document.getElementById("cropperModal");
     const formSubmitButton = document.getElementById("update");
-    console.log( "formSubmitButton", formSubmitButton );
     const fileAccessError = document.getElementById("fileAccessError");
     
     let cropper; // hold the Cropper.js instance
@@ -253,9 +248,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (event.target.classList.contains("img-thumbnail")) {
             currentImage = event.target;
 
-            console.log("currentImage", currentImage);
-            console.log('data attributes', currentImage.dataset);
-
             let imgSrc;
             if (currentImage.dataset.originalSrc) {
                 // Always use the original source for editing
@@ -265,7 +257,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 imgSrc = currentImage.dataset.imgSrc || currentImage.src;
             }
 
-        console.log('image source for cropper', imgSrc);
 
         if (!imgSrc) {
             console.error('No image source found for cropper.');
@@ -283,14 +274,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialize cropper.js on modal show
     $(cropperModalElement).on('shown.bs.modal', () => {
         try {
-            console.log("imageToCrop", imageToCrop);
         cropper = new Cropper(imageToCrop, {
-            aspectRatio: 4 / 3,
-            viewMode: 2,
-            autoCropArea: 1,
+            aspectRatio: 1,
+                autoCropArea: 1,
+                zoomable: true,
             preview: ".cropper-preview",
             ready() {
-                console.log("cropper ready");
                 cropper.reset();
             },
         });

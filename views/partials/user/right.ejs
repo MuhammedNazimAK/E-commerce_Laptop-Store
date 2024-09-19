@@ -148,7 +148,7 @@
           </li>
       </ul>
       <ul class="offcanvas-wishlist-action-button">
-          <li><a href="#" class="btn btn-block btn-golden">View wishlist</a></li>
+          <li><a href="wishList" class="btn btn-block btn-golden">View wishlist</a></li>
       </ul>
   </div> <!-- End Offcanvas Mobile Menu Wrapper -->
 
@@ -236,7 +236,6 @@ continueShoppingbtn.addEventListener('click', (e) => {
 });
 
 function addToCart(productId) {
-    console.log('productId', productId);
     fetch('/add-to-cart', {
         method: 'POST',
         headers: {
@@ -260,7 +259,6 @@ function addToCart(productId) {
 }
 
 function updateCartModal(data) {
-    console.log('data', data)
     const product = data.product;
     const images = product.images;
     document.getElementById('modalProductImage').src = images.highResolutionPhotos;

@@ -2,13 +2,16 @@ const User = require("../../models/userModel");
 const Product = require('../../models/productModel');
 const Address = require('../../models/addressModel');
 const Order = require('../../models/orderModel');
+const Wallet = require('../../models/walletModel');
 const Category = require('../../models/categoryModel');
 const ProductOffer = require('../../models/productOfferModel');
 const CategoryOffer = require('../../models/categoryOfferModel');
+const { applyReferralReward } = require('../../public/javascript/referralService');
 const sendEmail = require('../../utils/sendEmail');
 const nodeMailer = require('nodemailer');
 const bcrypt = require("bcrypt");
 const crypto = require('crypto');
+const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 
 
@@ -63,12 +66,16 @@ async function getProductWithOffers(productId) {
   };
 }
 
+function generateUniqueReferralCode() {
+  return uuidv4().substring(0, 8).toUpperCase();
+}
+
 
 const renderHomePage = async (req, res) => {
   try {
 
     const products = await Promise.all(
-      (await Product.find().limit(8)).map(async (product) => {
+      (await Product.find().limit(16)).map(async (product) => {
         const productWithOffers = await getProductWithOffers(product._id);
         return productWithOffers;
       })
@@ -172,7 +179,7 @@ const sendVerificationEmail = async (email, otp) => {
 
 const registerUser = async (req, res) => {
   try {
-    const { firstName, lastName, email, password, mobile } = req.body;
+    const { firstName, lastName, email, password, mobile, referralCode } = req.body;
 
     if (!email) {
       return sendError(req, res, "Email is required");
@@ -191,6 +198,14 @@ const registerUser = async (req, res) => {
       return res.status(500).send("Failed to send verification email");
     }
 
+    let referredBy = null;
+    if (referralCode) {
+      referredBy = await User.findOne({ referralCode });
+      if (!referredBy) {
+        return sendError(req, res, "Invalid referral code");
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     req.session.userOtp = otp.toString();
@@ -199,7 +214,9 @@ const registerUser = async (req, res) => {
       lastName,
       email: email.toLowerCase(),
       password: hashedPassword,
-      mobile
+      mobile,
+      referredBy: referredBy ? referredBy._id : null,
+      referralCode: generateUniqueReferralCode()
     };
 
     console.log('Stored session data:', req.session.userData); 
@@ -212,8 +229,8 @@ const registerUser = async (req, res) => {
   }
 };
 
+
 const verifyOtpAndCreateUser = async (req, res) => {
-  console.log("HHHHHeeelllooo therer")
   try {
     let userOtp = req.body.otp;
     if (Array.isArray(userOtp)) {
@@ -222,18 +239,20 @@ const verifyOtpAndCreateUser = async (req, res) => {
 
     console.log('Stored OTP:', req.session.userOtp); 
     console.log('User provided OTP:', userOtp); 
-    console.log(' comparison:', userOtp.toString() == req.session.userOtp.toString());
+    console.log('comparison:', userOtp.toString() == req.session.userOtp.toString());
 
     
     if (userOtp.toString() != req.session.userOtp.toString()) {
       return res.render('users/enter-otp', { error: 'Invalid OTP' });
     }
-
-    console.log('reached inside');
     
     const userData = req.session.userData;
     const newUser = new User(userData);
     await newUser.save();
+
+    if (newUser.referredBy) {
+      await applyReferralReward(newUser, newUser.referredBy);
+    }
     
     delete req.session.userOtp;
     delete req.session.userData;
@@ -243,8 +262,6 @@ const verifyOtpAndCreateUser = async (req, res) => {
       email: newUser.email,
       name: `${newUser.firstName} ${newUser.lastName}`,
     };
-
-    console.log('req.sesion userrrrrrrrrrrrrrr', req.session.user);
     
     return res.json({ success: true});
   } catch (error) {
@@ -252,6 +269,7 @@ const verifyOtpAndCreateUser = async (req, res) => {
     return res.redirect('/users/pageNotFound');
   }
 };
+
 
 const resendOtp = async(req, res) => {
   console.log('resend otp');
@@ -292,7 +310,7 @@ const renderRegisterPage = (req, res) => {
 };
 
 const renderMyAccount = async (req, res) => {
-  console.log('reached render my account');
+
   try {
     let user = null;
     let orders = [];
@@ -340,10 +358,13 @@ const renderMyAccount = async (req, res) => {
       };
     });
 
-    console.log('Transformed orders:', JSON.stringify(transformedOrders, null, 2));
-
     const successMessage = req.flash('success');
     const errorMessage = req.flash('error');
+
+    const referralLink = `${process.env.SITE_URL}/signup?ref=${user.referralCode}`;
+
+    const referralCount = user?.referrals?.length || 0;
+    const wallet = await Wallet.findOne({ userId: user._id }) || { balance: 0 };
 
     res.render("users/my-account", { 
       user: user,
@@ -355,11 +376,14 @@ const renderMyAccount = async (req, res) => {
         success: successMessage[0],
         error: errorMessage[0]
       },
+      referralLink, //GENERATE REFERRAL LINK FOR THE USER
+      referralCount,  
+      wallet: wallet ? wallet.balance : 0,  //GET USER WALLET BALANCE
       userLoggedIn: req.session && req.session.user ? req.session.user : null 
     });
   } catch (error) {
     console.error("Error in renderMyAccount:", error);
-    res.status(500).send('An error occurred while loading the account page');
+    res.status(500).json({ success: false, message: 'An error occurred while loading the account page' });
   }
 };
 
@@ -421,59 +445,43 @@ const changePassword = async (req, res) => {
     try {
         const userId = req.session.user._id;
         const { currentPassword, newPassword, confirmNewPassword } = req.body;
-        console.log('User ID:', userId);
-        console.log('Current Password:', currentPassword);
-        console.log('New Password:', newPassword);
-        console.log('Confirm New Password:', confirmNewPassword);
 
-        // Input validation
         if (!currentPassword || !newPassword || !confirmNewPassword) {
-            console.log('Validation failed: All fields are required');
             return res.status(400).json({ success: false, msg: 'All fields are required' });
         }
 
-        // Password complexity check
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/;
         if (!passwordRegex.test(newPassword)) {
-            console.log('Validation failed: Password complexity requirements not met');
             return res.status(400).json({
                 success: false,
                 msg: 'New password must be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, and one number'
             });
         }
 
-        // Check if new password matches confirm password
         if (newPassword !== confirmNewPassword) {
-            console.log('Validation failed: New passwords do not match');
             return res.status(400).json({ success: false, msg: 'New passwords do not match' });
         }
 
-        // Verify current password
         const user = await User.findById(userId);
         if (!user) {
-            console.log('User not found');
             return res.status(404).json({ success: false, msg: 'User not found' });
         }
 
         const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
-            console.log('Validation failed: Current password is incorrect');
             return res.status(400).json({ success: false, msg: 'Current password is incorrect' });
         }
 
         // Check if new password is different from the current password
         const isSamePassword = await bcrypt.compare(newPassword, user.password);
         if (isSamePassword) {
-            console.log('Validation failed: New password must be different from the current password');
             return res.status(400).json({ success: false, msg: 'New password must be different from the current password' });
         }
 
-        // Hash and save new password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         user.password = hashedPassword;
         await user.save();
 
-        console.log('Password changed successfully');
         res.status(200).json({ success: true, msg: 'Password changed successfully' });
     } catch (error) {
         console.error('Error in changePassword:', error);
@@ -525,11 +533,7 @@ const resetPassword = async (req, res) => {
     const { token } = req.params;
     const { password } = req.body;
 
-    console.log('token', token);
-
     const user = await User.findOne({ resetPasswordToken: token, resetPasswordExpires: { $gt: Date.now() } });
-
-    console.log('user found', user ? 'yes' : 'no');
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'Password reset token not found' });
@@ -551,6 +555,7 @@ const resetPassword = async (req, res) => {
 const loadResetPasswordPage = (req, res) => {
   res.render('users/resetPassword');
 }
+
 
 
 

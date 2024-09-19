@@ -99,7 +99,6 @@ adminRoute.put('/update-referral-offer/:id', adminAuth.requireAuth, referralOffe
 adminRoute.delete('/delete-referral-offer/:id', adminAuth.requireAuth, referralOfferController.deleteReferralOffer);
 
 
-
 // Inventory management
 adminRoute.get('/inventory', adminAuth.requireAuth, inventoryController.getInventoryPage);
 adminRoute.put('/inventory/:productId', adminAuth.requireAuth, inventoryController.updateInventory);

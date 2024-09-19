@@ -89,12 +89,10 @@
       let imageUrls = [];
         if (req.files && req.files.images) {
             let imagesToUpload = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
-            console.log('Number of new images to upload:', imagesToUpload.length);
 
             if (imagesToUpload.length > 0) {
                 try {
                     const newImageUrls = await uploadImages(imagesToUpload);
-                    console.log('Uploaded new images:', newImageUrls);
                     imageUrls = [...newImageUrls];
                 } catch (error) {
                     console.error('Error uploading new images:', error);
@@ -108,15 +106,12 @@
           let existingImages;
           try {
               existingImages = JSON.parse(req.body.existingImages);
-              console.log('Existing images:', existingImages);
               imageUrls = [...existingImages, ...imageUrls];
           } catch (error) {
               console.error("Error parsing existing images:", error);
               return res.status(400).json({ success: false, message: "Invalid existing images data" });
           }
       }
-
-      console.log('Final imageUrls:', imageUrls);
 
       const parsedCategories = Array.isArray(categories)
       ? categories
@@ -160,8 +155,6 @@
       const products = await Product.find().lean();
       const categories = await Category.find().lean();
 
-      console.log("Number of products fetched:", products.length);
-
       res.render("admin/productList", { products, categories });
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -170,7 +163,6 @@
   };
 
   const loadProductListingPage = async (req, res) => {
-    console.log('loading product listing')
     try {
       const brands = await Product.distinct('basicInformation.brand');
       const processors = await Product.distinct('technicalSpecification.processor');
@@ -183,7 +175,6 @@
         return await getProductWithOffers(product._id);
       }));
 
-      console.log('Products with offers:', JSON.stringify(products, null, 2));
       res.render('users/productListing', {
         user: req.session.user,
         brands,
@@ -238,9 +229,7 @@
     }
   };
 
-  const updateProduct = async (req, res) => {
-    console.log('Update Product');
-    
+  const updateProduct = async (req, res) => {    
     try {
       const { productId } = req.params;
   
@@ -249,26 +238,21 @@
         updatedData = JSON.parse(req.body.productData);
       } catch (error) {
         console.error("Error parsing product data:", error);
-        console.log('req.body.productData:', req.body.productData);
         return res.status(400).json({ success: false, message: "Invalid product data" });
       }
-      console.log('Updated Data:', updatedData);
   
       const existingProduct = await Product.findById(productId);
       if (!existingProduct) {
         return res.status(404).json({ success: false, message: "Product not found" });
       }
-      console.log('Existing Product:', existingProduct);
   
       let imageUrls = [];
       if (req.files && req.files.images) {
         let imagesToUpload = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
-        console.log('Number of new images to upload:', imagesToUpload.length);
 
         if (imagesToUpload.length > 0) {
             try {
                 const newImageUrls = await uploadImages(imagesToUpload);
-                console.log('Uploaded new images:', newImageUrls);
                 imageUrls = [...newImageUrls];
             } catch (error) {
                 console.error('Error uploading new images:', error);
@@ -282,17 +266,13 @@
       let existingImages;
       try {
           existingImages = JSON.parse(req.body.existingImages);
-          console.log('Existing images:', existingImages);
           imageUrls = [...existingImages, ...imageUrls];
       } catch (error) {
           console.error("Error parsing existing images:", error);
           return res.status(400).json({ success: false, message: "Invalid existing images data" });
       }
   }
-  
-
-    console.log('Final imageUrls:', imageUrls);
-  
+    
       let parsedCategories = [];
       if (req.body.categories && req.body.categories.length > 0) {
         try {
@@ -329,7 +309,6 @@
         return res.status(404).json({ success: false, message: "Product not found" });
       }
   
-      console.log('Updated Product:', updatedProduct.toJSON());
       res.json({ success: true, product: updatedProduct });
     } catch (error) {
       console.error("Error updating product:", error);
@@ -507,8 +486,6 @@ const getProductDetailsViewOnUserPage = async (req, res) => {
           console.log('default case');
           aggregationPipeline.push({ $sort: { createdAt: -1 } });
       }
-
-      console.log('aggregationPipeline after matchStagesorting:', JSON.stringify(aggregationPipeline));
   
       // Count total products
       const countPipeline = [...aggregationPipeline, { $count: "total" }];
@@ -523,7 +500,6 @@ const getProductDetailsViewOnUserPage = async (req, res) => {
   
       // Execute the aggregation
       const products = await Product.aggregate(aggregationPipeline);
-      console.log('first few sorted  products:', products.slice(0, 2));
   
       res.json({
         products,
@@ -755,7 +731,6 @@ const productOfferController = {
     try {
       const offers = await ProductOffer.find().populate({ path: 'product', select: 'basicInformation' });
 
-      console.log('offers', JSON.stringify(offers, null, 2));
       // Sort offers: default offer first, then by start date
       offers.sort((a, b) => {
         if (a.isDefault && !b.isDefault) return -1;

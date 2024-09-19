@@ -50,7 +50,7 @@
 
     .default-form-box {
       flex: 0 0 48%;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       position: relative;
     }
 
@@ -70,7 +70,7 @@
 
     .default-form-box .error-message {
       color: red;
-      font-size: 0.8em;
+      font-size: 0.7em;
       margin-top: 5px;
       height: 20px;
       position: relative;
@@ -156,7 +156,7 @@
       bottom: 0;
       background: rgba(0, 0, 0, 0.3);
     }
-
+    
     .right-side .content {
       color: #fff;
       z-index: 1;
@@ -220,6 +220,9 @@
           <div class="default-form-box">
             <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password" />
             <div id="confirmPasswordError" class="error-message"></div>
+          </div>
+          <div class="default-form-box">
+            <input type="text" id="referralCode" name="referralCode" placeholder="Referral Code (Optional)" />
           </div>
         </div>
         <button type="submit">Register</button>

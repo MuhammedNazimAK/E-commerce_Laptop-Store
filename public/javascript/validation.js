@@ -191,7 +191,6 @@ function validateConfirmPassword() {
 
 function isNotEmpty(value) {
   const result = value.trim() !== "";
-  console.log(`isNotEmpty(${value}) = ${result}`);
   return result;
 }
 
@@ -211,7 +210,6 @@ function isValidMobile(value) {
 }
 
 function handleServerError(errors) {
-  console.log("Server errors:", errors);
   for (const field in errors) {
     const errorElement = document.getElementById(`${field}Error`);
     if (errorElement) {

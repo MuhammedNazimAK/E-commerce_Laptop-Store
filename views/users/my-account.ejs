@@ -49,7 +49,6 @@
                         <li><a href="#dashboard" data-bs-toggle="tab" class="nav-link btn btn-block btn-md btn-black-default-hover active">Dashboard</a></li>
                         <li><a href="#orders" data-bs-toggle="tab" class="nav-link btn btn-block btn-md btn-black-default-hover">Orders</a></li>
                         <li><a href="#wallet" data-bs-toggle="tab" class="nav-link btn btn-block btn-md btn-black-default-hover">Wallet</a></li>
-                        <li><a href="#downloads" data-bs-toggle="tab" class="nav-link btn btn-block btn-md btn-black-default-hover">Downloads</a></li>
                         <li><a href="#address" data-bs-toggle="tab" class="nav-link btn btn-block btn-md btn-black-default-hover">Addresses</a></li>
                         <li><a href="#account-details" data-bs-toggle="tab" class="nav-link btn btn-block btn-md btn-black-default-hover">Account details</a></li>
                         
@@ -66,10 +65,99 @@
             <div class="col-sm-12 col-md-9 col-lg-9">
                 <!-- Tab panes -->
                 <div class="tab-content dashboard_content" data-aos="fade-up" data-aos-delay="200">
+                    
                     <div class="tab-pane fade show active" id="dashboard">
-                        <h4>Dashboard</h4>
-                        <p>From your account dashboard, you can easily check &amp; view your <a href="#">recent orders</a>, manage your <a href="#">shipping and billing addresses</a> and <a href="#">edit your password and account details.</a></p>
-                    </div>
+                        <h4>Welcome to Your Dashboard</h4>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Account Information</h5>
+                                        <p><strong>Name:</strong> <span id="userFullName"></span></p>
+                                        <p><strong>Email:</strong> <span id="userEmail"></span></p>
+                                        <p><strong>Mobile:</strong> <span id="userMobile"></span></p>
+                                        <a href="#" class="btn btn-md btn-black-default-hover">Edit Profile</a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Wallet Balance</h5>
+                                        <h3 class="text-success mb-3">₹<span id="walletBalance">0.00</span></h3>
+                                        <a href="#" class="btn btn-md btn-black-default-hover">View Transactions</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <div class="row">
+                            <div class="col-md-4 mb-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Recent Orders</h5>
+                                        <p class="card-text">Check your recent order status and details.</p>
+                                        <a href="#" class="btn btn-md btn-black-default-hover">View Orders</a>
+                                    </div>
+                                </div>
+                            </div>
+                    
+                            <div class="col-md-4 mb-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Wishlist</h5>
+                                        <p class="card-text">Manage your wishlist items.</p>
+                                        <a href="wishList" class="btn btn-md btn-black-default-hover">View Wishlist</a>
+                                    </div>
+                                </div>
+                            </div>
+                    
+                            <div class="col-md-4 mb-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Addresses</h5>
+                                        <p class="card-text">Manage your shipping and billing addresses.</p>
+                                        <a href="#" class="btn btn-md btn-black-default-hover">Manage Addresses</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Referral Program</h5>
+                                        <p>
+                                            <strong>Your Referral Code:</strong> 
+                                            <span id="referralCode"><%= user.referralCode %></span>
+                                            <button class="btn btn-sm btn-outline-secondary ml-2" id="copyReferralCode">
+                                                <i class="fas fa-copy"></i> Copy
+                                            </button>
+                                        </p>
+                                        <p><strong>Referrals:</strong> <span id="referralCount"><%= referralCount %></span></p>
+                                        <a href="#" class="btn btn-md btn-black-default-hover" id="shareReferralCode">Share Referral Code</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>                        
+                    
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Recent Searches</h5>
+                                        <ul class="list-unstyled" id="recentSearches">
+                                            <!-- Recent searches will be populated here -->
+                                        </ul>
+                                        <a href="#" class="btn btn-md btn-black-default-hover">View All Searches</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>                      
+
                     <div class="tab-pane fade" id="orders">
                         <h4>Orders</h4>
                         <div class="table_page table-responsive">
@@ -457,3 +545,30 @@
 <script src="/javascript/myAccount.js" defer></script>
 <script src="/javascript/wallet.js" defer></script>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const copyButton = document.getElementById('copyReferralCode');
+        const referralCode = document.getElementById('referralCode');
+        const shareButton = document.getElementById('shareReferralCode');
+    
+        copyButton.addEventListener('click', function() {
+            navigator.clipboard.writeText(referralCode.textContent).then(function() {
+                alert('Referral code copied to clipboard!');
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        });
+    
+        shareButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            const referralLink = `${window.location.origin}/signup?ref=${referralCode.textContent}`;
+            navigator.share({
+                title: 'Join me on Our Platform!',
+                text: 'Use my referral code to sign up and get a bonus!',
+                url: referralLink
+            }).then(() => console.log('Successful share'))
+            .catch((error) => console.log('Error sharing:', error));
+        });
+    });
+    </script>
+    

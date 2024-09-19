@@ -3,11 +3,9 @@ const User = require('../models/userModel');
 const mongoose = require('mongoose');
 
 const getAddresses = async (req, res) => {
-  console.log('came to address');
   try {
     
     const userId = req.session.user._id;
-    console.log('userId', userId);
     const addresses = await Address.findOne({ userId: userId });
 
     res.json({ success: true, addresses });
@@ -19,7 +17,6 @@ const getAddresses = async (req, res) => {
 }
 
 const addAddress = async (req, res) => {
-  console.log('came to address');
   try {
     if (!req.session || !req.session.user) {
       console.error('User session not found');
@@ -32,22 +29,12 @@ const addAddress = async (req, res) => {
       return res.status(401).send('User not authenticated');
     }
 
-    console.log('userId', userId);
     const { name, addressType, city, landMark, state, pinCode, mobile } = req.body;
 
     const pinCodeNumber = Number(pinCode);
     if (isNaN(pinCodeNumber)) {
       return res.status(400).send('Invalid pincode');
     }
-
-    console.log('req.body', req.body);
-    console.log('name', name);
-    console.log('addressType', addressType);
-    console.log('city', city);  
-    console.log('landMark', landMark);  
-    console.log('state', state);  
-    console.log('pinCode', pinCode);  
-    console.log('mobile', typeof mobile, mobile);  
 
     const newAddressData = {
       _id: new mongoose.Types.ObjectId(),
@@ -74,8 +61,6 @@ const addAddress = async (req, res) => {
     }
 
     await userAddress.save();
-    console.log('userAddress', userAddress._id);
-    console.log('Address added successfully');
 
     return res.json({ success: true, message: 'Address added successfully', address: newAddressData });
 
@@ -113,7 +98,6 @@ const editAddress = async (req, res) => {
     }
     const updatedAddress = await Address.findOne({ userId, "address._id": addressId }, { "address.$": 1 });
     const addressData = updatedAddress.address[0];
-    console.log('address updated', updatedAddress);
     res.status(200).json({ success: true, message: 'Address updated successfully', address: addressData, addressId });
   } catch (error) {
     console.error(error);

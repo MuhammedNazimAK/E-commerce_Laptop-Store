@@ -296,9 +296,8 @@ async function handleProductImages(event) {
         formData.append('images', files[i]);
     }
 
-    // const existingImages = JSON.parse(document.getElementById('existingImages').value || '[]');
-    // console.log('existingImages:', existingImages);
-    // formData.append('existingImages', JSON.stringify(existingImages));  
+    const existingImages = JSON.parse(document.getElementById('existingImages').value || '[]');
+    formData.append('existingImages', JSON.stringify(existingImages));  
 
     return formData;
 }
@@ -336,10 +335,9 @@ document.addEventListener('DOMContentLoaded', () => {
         modal._element.addEventListener('shown.bs.modal', () => {
             cropper = new Cropper(imageToCrop, {
                 aspectRatio: 1,
-                viewMode: 1,
+                viewMode: 2,
                 autoCropArea: 1,
                 guides: true,
-                background: false,
                 zoomable: true
             });
         });
@@ -520,7 +518,6 @@ const resetForm = () => {
 
     const errorMessages = document.querySelectorAll('.form-error');
     errorMessages.forEach(errorMessage => errorMessage.textContent = '');
-    console.log('form reset successfully');
 } else {
     console.error('Form not found');
 }

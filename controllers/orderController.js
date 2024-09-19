@@ -1,10 +1,10 @@
 const Order = require('../models/orderModel');
 const User = require('../models/userModel');
 const Cart = require('../models/cartModel');
+const Address = require('../models/addressModel');
 const Product = require('../models/productModel');  
 /** @type {import('../models/walletModel').IWalletDocument} */
 const Wallet = require('../models/walletModel');
-const Address = require('../models/addressModel');
 const { razorpay } = require('../config/razorpay');
 const ProductOffer = require('../models/productOfferModel');
 const CategoryOffer = require('../models/categoryOfferModel');
@@ -70,11 +70,22 @@ const getSingleOrderDetails = async (req, res) => {
   try {
     const order = await Order.findOne({ _id: req.params.id, userId: req.session.user._id })
       .populate('products.product')
-      .populate('shippingAddress')
-      .populate('userId', 'name email phone');
-    
+      .populate('userId', 'name email phone')
+      .lean();
+
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (order.shippingAddress) {
+      const address = await Address.findOne(
+        { 'address._id': order.shippingAddress },
+        { 'address.$': 1 }
+      );
+      
+      if (address && address.address.length > 0) {
+        order.shippingAddress = address.address[0];
+      }
     }
     
     res.json(order);
@@ -170,7 +181,6 @@ const returnOrder = async (req, res) => {
 
 
 const createOrder = async (req, res) => {
-  console.log('Initiating order creation');
   
   try {
     const { addressId, paymentMethod, couponCode } = req.body;
@@ -309,12 +319,10 @@ const createOrder = async (req, res) => {
 
 
 const getCartStatus = async (req, res) => {
-  console.log('Getting cart status');
   try {
     const user = await User.findById(req.session.user._id).populate('cart.product');
 
     const isEmpty = !user.cart || user.cart.length === 0;
-    console.log('Cart is empty:', isEmpty);
     res.json({ isEmpty });
   } catch (error) {
     console.error('Error getting cart status:', error);
@@ -325,10 +333,8 @@ const getCartStatus = async (req, res) => {
 
 // Confirm COD order
 const confirmCODOrder = async (req, res) => {
-  console.log('Confirming COD order');
   try {
     const order = await Order.findOne({ orderId: req.params.orderId });
-    console.log('order', order);
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Failed to confirm COD order.' });
@@ -337,7 +343,6 @@ const confirmCODOrder = async (req, res) => {
     order.status = 'Confirmed';
     await order.save();
 
-    console.log('COD order confirmed:', order);
     res.json({ success: true, message: 'COD order confirmed' });
   } catch (error) {
     console.error('Error confirming COD order:', error);
@@ -348,7 +353,6 @@ const confirmCODOrder = async (req, res) => {
 
 // verify Razorpay payment
 const verifyRazorpayPayment = async (req, res) => {
-  console.log('Verifying Razorpay payment');
   try {
     const order = await Order.findOne({ orderId: req.params.orderId });
     if (!order) {
@@ -356,10 +360,6 @@ const verifyRazorpayPayment = async (req, res) => {
     }
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-
-    console.log('razorpay_order_id:', razorpay_order_id);
-    console.log('razorpay_payment_id:', razorpay_payment_id);
-    console.log('razorpay_signature:', razorpay_signature);
 
     const generatedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_SECRET)
@@ -406,7 +406,6 @@ const verifyRazorpayPayment = async (req, res) => {
 
 const getRetryCheckoutPage = async (req, res) => {
   try {
-    console.log('Getting retry checkout page');
       const order = await Order.findById(req.params.orderId)
           .populate('userId', 'firstName lastName email mobile')
           .populate('products.product', 'basicInformation');
@@ -414,8 +413,6 @@ const getRetryCheckoutPage = async (req, res) => {
       if (!order) {
           return res.status(404).send('Order not found');
       }
-
-      console.log('order', order);
 
       res.render('users/retry-checkout', { order });
   } catch (error) {
@@ -427,18 +424,26 @@ const getRetryCheckoutPage = async (req, res) => {
 
 
 const showOrderConfirmation = async (req, res) => {
-  console.log('Show Order Confirmation');
   try {
 
-    const order = await Order.findOne({ orderId: req.params.orderId });
+    const order = await Order.findOne({ orderId: req.params.orderId })
+      .populate('userId')
+      .populate({ path: 'products.product', select: 'basicInformation.name pricingAndAvailability' }).lean();
+
+      if (order) {
+        const address = await Address.findOne(
+          { 'address._id': order.shippingAddress },
+          { 'address.$': 1 }
+        );
+        
+        if (address && address.address.length > 0) {
+          order.shippingAddress = address.address[0];
+        }
+      }
     
     if (!order) {
       return res.status(404).render('users/pageNotFound', { message: 'Order not found' });
     }
-    
-    await order.populate('userId');
-    await order.populate({ path: 'products.product', select: 'basicInformation.name pricingAndAvailability' });
-    await order.populate({ path: 'shippingAddress', select: 'name landMark city state pinCode mobile' });
     
     const orderDetails = {
       orderId: order.orderId,
@@ -451,14 +456,7 @@ const showOrderConfirmation = async (req, res) => {
       paymentMethod: order.paymentMethod,
       razorpayOrderId: order.razorpayOrderId,
       createdAt: order.createdAt,
-      shippingAddress: order.shippingAddress ? {
-        name: order.shippingAddress.name,
-        landMark: order.shippingAddress.landMark,
-        city: order.shippingAddress.city,
-        state: order.shippingAddress.state,
-        pinCode: order.shippingAddress.pinCode,
-        mobile: order.shippingAddress.mobile
-      } : null,      
+      shippingAddress: order.shippingAddress,    
       coupon: order.couponCode,
       products: order.products.map(item => ({
         name: item.product.basicInformation.name,
@@ -471,8 +469,6 @@ const showOrderConfirmation = async (req, res) => {
         email: order.userId.email
       }
     };
-
-    console.log('orderDetails', orderDetails);
     
     res.render('users/order-confirmation', { order: orderDetails, showRetryPayment: order.status === 'Pending' && order.paymentMethod === 'razorpay' });
   } catch (error) {
@@ -542,8 +538,6 @@ const getOrderDetails = async (req, res) => {
   try {
     const orderId = req.params.id;
     const order = await Order.findById(orderId).populate('userId', 'firstName lastName email shippingAddress mobile').populate('products.product', 'name').populate('shippingAddress', 'street city state country');
-
-    console.log('Order details:', order);
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });

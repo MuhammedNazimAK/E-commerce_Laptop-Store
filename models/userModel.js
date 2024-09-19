@@ -61,21 +61,19 @@ const userSchema = new Schema({
     type: Date,
     default: Date.now,
   },
-  referalCode: {
+  referralCode: {
     type: String,
-    // required: true,
+    unique: true,
+    default: () => uuidv4().substring(0, 8).toUpperCase()
   },
-  radeemed: {
-    type: Boolean,
-    default: false,
+  referredBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   },
-  radeemedUsers: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      // required: true,
-    },
-  ],
+  referrals: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   searchHistory: [
     {
       category: {
@@ -99,6 +97,26 @@ const userSchema = new Schema({
     type: Date,
   },
 });
+
+userSchema.pre('save', async function(next) {
+  if (this.isNew && !this.referralCode) {
+    this.referralCode = await generateUniqueReferralCode(this.constructor);
+  }
+  next();
+});
+
+async function generateUniqueReferralCode(model) {
+  let code;
+  let isUnique = false;
+  while (!isUnique) {
+    code = uuidv4().substring(0, 8).toUpperCase();
+    const existingUser = await model.findOne({ referralCode: code });
+    if (!existingUser) {
+      isUnique = true;
+    }
+  }
+  return code;
+}
 
 module.exports = mongoose.model("User", userSchema);
 

@@ -12,7 +12,6 @@ const loadAdminLoginPage = async (req, res) => {
         res.render('admin/adminLogin', { message: req.session.message || null });
         delete req.session.message; // Clear the message after rendering
     } catch (error) {
-        console.log(error.message);
         res.render('admin/adminLogin', { message: 'An error occurred' });
     }
 };
@@ -87,11 +86,9 @@ const loadCustomersList = async (req, res) => {
 
 // Toggle user block status
 const toggleUserBlockStatus = async (req, res) => {
-    console.log('came to the block button');
     const userId = req.query.userId;
 
     try {
-        console.log(`Attempting to toggle block status for user ID: ${userId}`);
         const user = await User.findById(userId);
         if (!user) {
             console.error(`User not found: ${userId}`);
@@ -101,7 +98,6 @@ const toggleUserBlockStatus = async (req, res) => {
         user.isBlocked = !user.isBlocked;
         await user.save();
 
-        console.log(`User block status successfully toggled for user ID: ${userId}`);
         const message = user.isBlocked ? "User successfully blocked" : "User successfully unblocked";
         return res.status(200).json({ success: true, message, user });
     } catch (error) {

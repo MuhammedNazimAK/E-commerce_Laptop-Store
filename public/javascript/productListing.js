@@ -43,7 +43,6 @@ class ProductData {
     const sortSelect = document.getElementById('sort-select');
     if (sortSelect) {
       sortSelect.addEventListener('change', (e) => {
-        console.log('sortSelect.value:', e.target.value);
         this.sortOption = e.target.value;
         this.currentPage = 1;
         this.fetchProducts();
@@ -251,13 +250,8 @@ class ProductData {
     if (!container) return;
     container.innerHTML = '';
     
-    console.log('products', products)
     products.forEach(product => {
-      console.log('Processing product:', product.basicInformation.name);
-      console.log('Original price:', product.pricingAndAvailability.regularPrice);
-      console.log('Discounted price:', product.pricingAndAvailability.salesPrice);
-      console.log('Offer:', product.offerName);
-      
+     
       const productElement = document.createElement('div');
       productElement.classList.add('product-list-single', 'product-color--golden', 'fade-in-element');
       const truncatedDescription = truncateString(product.basicInformation.description, 150);

@@ -1,8 +1,6 @@
 <%- include('../partials/admin/header') %>
 <%- include('../partials/admin/search') %>  
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 
 <style>
     /* Container for images with remove button */
@@ -19,13 +17,13 @@
 
     /* Thumbnail images */
     .img-thumbnail {
-        max-height: 180px !important;
+        max-height: 180px;
         border: 1px solid #ddd;
         padding: 4px;
         border-radius: 4px;
         display: block;
         width: auto;
-        max-width: 100% !important;
+        max-width: 100%;
         margin-right: 10px;
     }
 
@@ -64,12 +62,13 @@
         align-items: center;
         height: 60vh; /* Adjust height as needed */
         width: 100%;
+        overflow: hidden;
     }
 
     /* Modal image settings */
     .modal-body img {
         max-width: 100%;
-        max-height: 60vh; /* Ensures image does not exceed 60% of viewport height */
+        max-height: 60vh;
         object-fit: contain;
         display: block; /* Centers the image horizontally */
         margin: auto; /* Centers the image horizontally */
@@ -229,3 +228,5 @@
 </div>
 
 <script src="/javascript/editProduct.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

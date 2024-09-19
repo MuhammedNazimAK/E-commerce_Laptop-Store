@@ -44,8 +44,6 @@ const uploadVideos = async (videos) => {
 
 const uploadImages = async (images) => {
   try {
-  console.log('uploading images:', images);
-  console.log('images.length:', images.length);
   if (!images || images.length === 0) {
     throw new Error('No valid images provided for upload');
   }
@@ -57,14 +55,12 @@ const uploadImages = async (images) => {
     }
 
     try {
-      console.log('Uploading image:', image.tempFilePath);
       const result = await cloudinary.uploader.upload(image.tempFilePath, {
          resource_type: 'auto',
          quality: 'auto:best',
          fetch_format: 'auto',
          flags: 'preserve_transparency',
         });
-      console.log('Upload result:', result);
       return result.secure_url;
     } catch (error) {
       console.error('Error during image upload:', image.name, error, error.stack);
@@ -73,7 +69,7 @@ const uploadImages = async (images) => {
   });
 
   const results = await Promise.all(uploadPromises);
-  console.log('Upload results:', results);
+  console.log('Upload results from cloudinary:', results);
   const successfulUploads = results.filter(result => result !== null);
 
   if (successfulUploads.length === 0) {

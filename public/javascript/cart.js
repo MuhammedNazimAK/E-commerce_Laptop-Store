@@ -85,9 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const couponCode = document.getElementById('coupon-input').value;
     try {
       const response = await axios.post('/apply-coupon', { couponCode }, { withCredentials: true });
-      console.log('response', response);
       if (response.data.success) {
-        console.log('response.data', response.data);
         const discountedAmount = response.data.discountAmount;
         const cartTotal = response.data.cartTotal;
         updateCartTotals(discountedAmount, cartTotal);

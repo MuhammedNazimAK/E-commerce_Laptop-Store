@@ -68,7 +68,6 @@
                 return response.json();
             })
             .then(data => {
-                console.log('Categories data:', data);
                 const categoriesTbody = document.getElementById("categoriesTbody");
                 categoriesTbody.innerHTML = ""; // Clear existing data
                 data.forEach((category, index) => {

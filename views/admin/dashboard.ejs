@@ -48,7 +48,8 @@
                         <h6 class="mb-1 card-title">Products</h6>
                         <span id="totalProducts">Loading...</span>
                         <span class="text-sm">
-                            In <span id="totalCategories">Loading...</span> Categories
+                            In multiple categories
+                            <!-- In <span id="totalCategories">Loading...</span> Categories -->
                         </span>
                     </div>
                 </article>
@@ -129,13 +130,13 @@
     <div class="card mb-4">
         <header class="card-header">
             <h4 class="card-title">Latest orders</h4>
-            <div class="row align-items-center">
-                <div class="col-md-3 col-12 me-auto mb-md-0 mb-3">
+            <!-- <div class="row align-items-center"> -->
+                <!-- <div class="col-md-3 col-12 me-auto mb-md-0 mb-3">
                     <select id="categoryFilter" class="form-select select-nice">
                         <option value="">All Categories</option>
                     </select>
-                </div>
-                <div class="col-md-2 col-6">
+                </div> -->
+                <!-- <div class="col-md-2 col-6">
                     <input type="date" id="dateFilter" class="form-control">
                 </div>
                 <div class="col-md-2 col-6">
@@ -149,8 +150,8 @@
                         <option value="Cancelled">Cancelled</option>
                         <option value="Return Requested">Return Requested</option>
                     </select>
-                </div>
-            </div>
+                </div> -->
+            <!-- </div> -->
         </header>
         <div class="card-body">
             <div class="table-responsive">
@@ -400,7 +401,7 @@
             }
         });
 
-        displayAdditionalStats(salesData);
+        // displayAdditionalStats(salesData);
     }   
 
     function displayAdditionalStats(salesData) {
@@ -411,7 +412,11 @@
         const previousWeekData = salesData[salesData.length - 2] || { totalRevenue: 0, orderCount: 0, avgOrderValue: 0 };
 
         const calculateChange = (current, previous) => {
+            if (previous === 0) return 'N/A';
             const change = ((current - previous) / previous) * 100;
+            if (!isFinite(change) || Math.abs(change) > 1000) {
+            return change > 0 ? '>1000%' : '<1000%';
+            }
             return change.toFixed(2);
         };
 
@@ -458,7 +463,6 @@
     function fetchTopLists() {
         axios.get('/admin/top-lists')
             .then(function(response) {
-                console.log(response.data);
                 updateTopLists(response.data.topLists);
             })
             .catch(function(error) {
@@ -589,7 +593,6 @@
 };
 
 const renderOrderDetails = (order) => {
-    console.log('Rendering order details:', JSON.stringify(order, null, 2));
     if (!order) {
         console.error('Order object is undefined');
         return;
@@ -616,7 +619,6 @@ const renderOrderDetails = (order) => {
 
     if (Array.isArray(order.products)) {
         order.products.forEach(item => {
-            console.log('item:', item);
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${item.product.name || 'N/A'}</td>
