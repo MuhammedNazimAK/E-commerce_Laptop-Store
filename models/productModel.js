@@ -80,6 +80,10 @@ const productSchema = new Schema(
       lastRestocked: { type: Date },
       supplierInfo: { type: String },
     },
+    views: {
+      count: { type: Number, default: 0 },
+      lastViewedAt: { type: Date }
+    },
   },
   {
     timestamps: true,

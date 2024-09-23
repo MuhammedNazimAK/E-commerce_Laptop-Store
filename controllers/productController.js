@@ -4,6 +4,7 @@
   const CategoryOffer = require('../models/categoryOfferModel');
   const { validationResult } = require('express-validator');
   const { uploadImages, cloudinary } = require("../config/cloudinary");
+  const { incrementProductView } = require("../utils/viewCounter");
   const mongoose = require("mongoose");
 
   async function getProductWithOffers(productId) {
@@ -193,7 +194,7 @@
 
     const getProductDetails = async (req, res) => {
       const { productId } = req.params;
-    
+      
       try {
         const product = await Product.findById(productId).lean();
         
@@ -388,6 +389,9 @@ const getProductDetailsViewOnUserPage = async (req, res) => {
     if (!product) {
       return res.status(404).render({ success: false, message: "Product not found" });
     }
+    
+    incrementProductView(productId, req.session.user?._id);
+
     res.render("users/productDetails", { product, relatedProducts, relatedProductsWithOffers });
   } catch (error) {
     console.error("Error fetching product details:", error);
@@ -483,7 +487,6 @@ const getProductDetailsViewOnUserPage = async (req, res) => {
           aggregationPipeline.push({ $sort: { "basicInformation.name": -1 } });
           break;
         default:
-          console.log('default case');
           aggregationPipeline.push({ $sort: { createdAt: -1 } });
       }
   

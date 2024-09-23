@@ -66,6 +66,37 @@ async function getProductWithOffers(productId) {
 
 
 //user side
+const getOrders = async (req, res) => {
+  console.log('getOrders called', req.session.user);
+  const userId = req.session.user?._id;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+
+  try {
+    const totalOrders = await Order.countDocuments({ userId });
+    const totalPages = Math.ceil(totalOrders / limit);
+
+    const orders = await Order.find({ userId })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate('products.product')
+      .lean();
+
+    res.json({
+      orders,
+      currentPage: page,
+      totalPages,
+      totalOrders
+    });
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ message: "Error fetching orders", error: error.message });
+  }
+};
+
+
+
 const getSingleOrderDetails = async (req, res) => {
   try {
     const order = await Order.findOne({ _id: req.params.id, userId: req.session.user._id })
@@ -574,6 +605,7 @@ const editOrderAdmin = async (req, res) => {
 
 
 module.exports = {
+  getOrders,
   getSingleOrderDetails,
   cancelOrder,
   returnOrder,

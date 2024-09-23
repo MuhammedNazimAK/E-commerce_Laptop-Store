@@ -80,8 +80,6 @@ document.addEventListener('DOMContentLoaded', function() {
             submitButton.disabled = false;
             submitButton.textContent = 'Save Changes';
         }
-    } else {
-        console.log('validateProfileInputs returned false');
     }
 }
 

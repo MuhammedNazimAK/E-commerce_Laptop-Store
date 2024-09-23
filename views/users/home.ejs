@@ -260,7 +260,7 @@
                                                         <a class="disabled">Unavailable</a>
                                                     <% } %>
                                                 <div class="action-link-right">
-                                                    <a href="#"><i class="icon-heart add-to-wishlist <%= product.inWishlist ? 'added-to-wishlist' : '' %>" data-product-id="<%= product._id %>"></i></a>
+                                                    <a href="#"><i class="icon-heart add-to-wishlist <%= product.inWishlist %>" data-product-id="<%= product._id %>"></i></a>
                                                 </div>
                                               </div>
                                             </div>
@@ -268,7 +268,7 @@
                                         <div class="content">
                                             <div class="content-left">
                                                 <h6 class="title">
-                                                    <a href="/product/<%= product._id %>"><%= product.basicInformation.name %></a>
+                                                    <a href="/productDetails/<%= product._id %>"><%= product.basicInformation.name %></a>
                                                 </h6>
                                                 <!-- Default Rating -->
                                                 <ul class="review-star">

@@ -112,15 +112,16 @@ const renderLoginPage = (req, res) => {
 };
 
 const authenticateUser = async (req, res) => {
+  console.log('Authenticating user')
   try {
     const { email, password } = req.body;
-    console.log(email, password);
     if (!email) {
       return sendError(req, res, "Email is required");
     }
 
     const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    console.log('user', user);
+    if (!user || !(bcrypt.compare(password, user.password))) {
       return sendError(req, res, "Invalid email or password");
     }
 
@@ -180,6 +181,8 @@ const sendVerificationEmail = async (email, otp) => {
 const registerUser = async (req, res) => {
   try {
     const { firstName, lastName, email, password, mobile, referralCode } = req.body;
+
+    console.log('registerUser', req.body);
 
     if (!email) {
       return sendError(req, res, "Email is required");
@@ -250,6 +253,8 @@ const verifyOtpAndCreateUser = async (req, res) => {
     const newUser = new User(userData);
     await newUser.save();
 
+    console.log('User saved:', newUser);
+
     if (newUser.referredBy) {
       await applyReferralReward(newUser, newUser.referredBy);
     }
@@ -258,9 +263,11 @@ const verifyOtpAndCreateUser = async (req, res) => {
     delete req.session.userData;
     
     req.session.user = {
-      id: newUser._id,
+      _id: newUser._id,
       email: newUser.email,
       name: `${newUser.firstName} ${newUser.lastName}`,
+      referredBy: newUser.referredBy,
+      referralCode: newUser.referralCode,
     };
     
     return res.json({ success: true});
@@ -310,17 +317,27 @@ const renderRegisterPage = (req, res) => {
 };
 
 const renderMyAccount = async (req, res) => {
-
+  
   try {
     let user = null;
     let orders = [];
     let addresses = [];
+    let referralLink = '';
+    let referralCount = 0;
+    let wallet = { balance: 0 };
 
     if (req.session && req.session.user && req.session.user._id) {
       const userId = req.session.user._id;
       user = await User.findById(userId);
 
-      if (user) {
+      if (!user) {
+        console.error(`User not found in database for id: ${userId}`);
+        // Use session data as fallback
+        user = {
+          ...req.session.user,
+          referralCode: req.session.user.referralCode
+        };
+      } else {
         orders = await Order.find({ userId })
           .sort({ createdAt: -1 })
           .populate({
@@ -331,6 +348,13 @@ const renderMyAccount = async (req, res) => {
           .populate('products.product');
 
         addresses = await Address.find({ userId });
+        
+        if (user.referralCode) {
+          referralLink = `${process.env.SITE_URL}/signup?ref=${user.referralCode}`;
+        }
+        
+        referralCount = user.referrals?.length || 0;
+        wallet = await Wallet.findOne({ userId: user._id }) || { balance: 0 };
       }
     }
 
@@ -361,13 +385,8 @@ const renderMyAccount = async (req, res) => {
     const successMessage = req.flash('success');
     const errorMessage = req.flash('error');
 
-    const referralLink = `${process.env.SITE_URL}/signup?ref=${user.referralCode}`;
-
-    const referralCount = user?.referrals?.length || 0;
-    const wallet = await Wallet.findOne({ userId: user._id }) || { balance: 0 };
-
     res.render("users/my-account", { 
-      user: user,
+      user: user || {},
       ordersData: JSON.stringify(transformedOrders),
       addresses, 
       success: successMessage.length > 0,
@@ -376,9 +395,10 @@ const renderMyAccount = async (req, res) => {
         success: successMessage[0],
         error: errorMessage[0]
       },
-      referralLink, //GENERATE REFERRAL LINK FOR THE USER
+      referralLink,
       referralCount,  
-      wallet: wallet ? wallet.balance : 0,  //GET USER WALLET BALANCE
+      referralCode: user ? user.referralCode : null,
+      wallet: wallet.balance,
       userLoggedIn: req.session && req.session.user ? req.session.user : null 
     });
   } catch (error) {
@@ -488,7 +508,6 @@ const changePassword = async (req, res) => {
         res.status(500).json({ success: false, msg: 'Server error while changing password' });
     }
 };
-
 
 
 

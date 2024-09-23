@@ -148,11 +148,33 @@ const getAddressDetails = async (req, res) => {
   }
 };
 
+const getAddressById = async (req, res) => {
+  try {
+    const addressId = req.params.addressId;
+    const userId = req.session.user._id;
+    const address = await Address.findOne(
+      { userId, "address._id": addressId },
+      { "address.$": 1 }
+    );
+
+    if (!address || !address.address[0]) {
+      return res.status(404).json({ error: 'Address not found' });
+    }
+
+    res.json(address.address[0]);
+  } catch (error) {
+    console.error('Error fetching address details:', error);
+    res.status(500).json({ error: 'Server error while fetching address details' });
+  }
+};
+
+
 
 module.exports = {
   getAddresses,
   addAddress,
   editAddress,
   deleteAddress,
-  getAddressDetails
+  getAddressDetails,
+  getAddressById
 };

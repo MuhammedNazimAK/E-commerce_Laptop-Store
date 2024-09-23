@@ -82,7 +82,7 @@
                                 </div>
                             </div>
                             
-                            <div class="col-md-6 mb-4">
+                            <!-- <div class="col-md-6 mb-4">
                                 <div class="card">
                                     <div class="card-body">
                                         <h5 class="card-title">Wallet Balance</h5>
@@ -90,11 +90,11 @@
                                         <a href="#" class="btn btn-md btn-black-default-hover">View Transactions</a>
                                     </div>
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
                     
                         <div class="row">
-                            <div class="col-md-4 mb-4">
+                            <!-- <div class="col-md-4 mb-4">
                                 <div class="card">
                                     <div class="card-body">
                                         <h5 class="card-title">Recent Orders</h5>
@@ -102,7 +102,7 @@
                                         <a href="#" class="btn btn-md btn-black-default-hover">View Orders</a>
                                     </div>
                                 </div>
-                            </div>
+                            </div> -->
                     
                             <div class="col-md-4 mb-4">
                                 <div class="card">
@@ -113,8 +113,45 @@
                                     </div>
                                 </div>
                             </div>
-                    
+
                             <div class="col-md-4 mb-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Cart</h5>
+                                        <p class="card-text">View your cart items.</p>
+                                        <a href="cart" class="btn btn-md btn-black-default-hover">View Cart</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Referral Program</h5>
+                                            <p>
+                                                <% if (user.referralCode) { %>
+                                                    <strong>Your Referral Code:</strong> 
+                                                    <span id="referralCode"><%= user.referralCode %></span>
+                                                    <button class="btn btn-sm btn-outline-secondary ml-2" id="copyReferralCode">
+                                                        <i class="fas fa-copy"></i> Copy
+                                                    </button>
+                                                <% } else { %>
+                                                    <strong>Your Referral Code:</strong> 
+                                                    <span id="referralCode">None</span>
+                                                    <button class="btn btn-sm btn-outline-secondary ml-2" id="copyReferralCode" disabled>
+                                                        <i class="fas fa-copy"></i> Copy
+                                                    </button>
+                                                <% } %>
+                                            </p>
+                                            <p><strong>Referrals:</strong> <span id="referralCount"><%= referralCount %></span></p>
+                                            <a href="#" class="btn btn-md btn-black-default-hover" id="shareReferralCode">Share Referral Code</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>                        
+
+                            <!-- <div class="col-md-4 mb-4">
                                 <div class="card">
                                     <div class="card-body">
                                         <h5 class="card-title">Addresses</h5>
@@ -122,41 +159,21 @@
                                         <a href="#" class="btn btn-md btn-black-default-hover">Manage Addresses</a>
                                     </div>
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
                     
-                        <div class="row">
-                            <div class="col-md-6 mb-4">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Referral Program</h5>
-                                        <p>
-                                            <strong>Your Referral Code:</strong> 
-                                            <span id="referralCode"><%= user.referralCode %></span>
-                                            <button class="btn btn-sm btn-outline-secondary ml-2" id="copyReferralCode">
-                                                <i class="fas fa-copy"></i> Copy
-                                            </button>
-                                        </p>
-                                        <p><strong>Referrals:</strong> <span id="referralCount"><%= referralCount %></span></p>
-                                        <a href="#" class="btn btn-md btn-black-default-hover" id="shareReferralCode">Share Referral Code</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>                        
-                    
-                            <div class="col-md-6 mb-4">
+                            <!-- <div class="col-md-6 mb-4">
                                 <div class="card">
                                     <div class="card-body">
                                         <h5 class="card-title">Recent Searches</h5>
                                         <ul class="list-unstyled" id="recentSearches">
                                             <!-- Recent searches will be populated here -->
-                                        </ul>
+                                        <!-- </ul>
                                         <a href="#" class="btn btn-md btn-black-default-hover">View All Searches</a>
                                     </div>
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
-                    </div>                      
 
                     <div class="tab-pane fade" id="orders">
                         <h4>Orders</h4>
@@ -176,6 +193,11 @@
                             </tbody>
                           </table>
                         </div>
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center mt-4" id="ordersPagination">
+                              <!-- Pagination will be dynamically inserted here -->
+                            </ul>
+                          </nav>
                       </div>
 
                       <!-- Order Details Modal -->
@@ -226,7 +248,7 @@
 
                         <div class="tab-pane fade" id="wallet">
                             <h4>My Wallet</h4>
-                            <div id="walletBalance"></div>
+                            <div id="walletBalance" style="font-size: 24px; font-weight: bold;"></div>
                             <div id="transactions" class="table_page table-responsive">
                               <h5>Transaction History</h5>
                               <table id="transactionTable">
@@ -242,6 +264,11 @@
                                 <tbody></tbody>
                               </table>
                             </div>
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center mt-4" id="walletPagination">
+                                  <!-- Pagination will be dynamically inserted here -->
+                                </ul>
+                              </nav>
                           </div>
                           
                     <div class="tab-pane fade" id="downloads">
@@ -562,13 +589,65 @@
         shareButton.addEventListener('click', function(e) {
             e.preventDefault();
             const referralLink = `${window.location.origin}/signup?ref=${referralCode.textContent}`;
-            navigator.share({
-                title: 'Join me on Our Platform!',
-                text: 'Use my referral code to sign up and get a bonus!',
-                url: referralLink
-            }).then(() => console.log('Successful share'))
-            .catch((error) => console.log('Error sharing:', error));
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Join me on Our Platform!',
+                    text: 'Use my referral code to sign up and get a bonus!',
+                    url: referralLink
+                })
+                .catch((error) => error);
+            } else {
+                alert(`Share this link: ${referralLink}`);
+            }
         });
+    
+        function createPagination(totalPages, currentPage, containerId, callback) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+
+        for (let i = 1; i <= totalPages; i++) {
+            const li = document.createElement('li');
+            li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+            
+            const a = document.createElement('a');
+            a.className = 'page-link';
+            a.href = '#';
+            a.textContent = i;
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                callback(i);
+            });
+
+            li.appendChild(a);
+            container.appendChild(li);
+        }
+    }
+
+    async function loadOrdersPage(page) {
+        try {
+            const response = await fetch(`/orders?page=${page}`);
+            const data = await response.json();
+            // Update the orders table with data.orders
+            createPagination(data.totalPages, data.currentPage, 'ordersPagination', loadOrdersPage);
+        } catch (error) {
+            console.error('Error loading orders:', error);
+        }
+    }
+
+    async function loadWalletPage(page) {
+        try {
+            const response = await fetch(`/transactions?page=${page}`);
+            const data = await response.json();
+            // Update the transactions table with data.transactions
+            createPagination(data.totalPages, data.currentPage, 'walletPagination', loadWalletPage);
+        } catch (error) {
+            console.error('Error loading wallet transactions:', error);
+        }
+    }
+
+    // Initial load
+    loadOrdersPage(1);
+    loadWalletPage(1);
     });
-    </script>
+</script>    
     
