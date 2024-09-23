@@ -24,6 +24,7 @@ adminRoute.get("/logout", adminAuth.requireAuth, adminController.logoutAdmin);
 
 // Admin dashboard and customer management
 adminRoute.get("/dashboard", adminAuth.requireAuth, adminController.loadAdminDashboard);
+adminRoute.get("/customerlist", adminAuth.requireAuth, adminController.loadCustomersListPage);
 adminRoute.get("/customers", adminAuth.requireAuth, adminController.loadCustomersList);
 adminRoute.patch("/customers", adminAuth.requireAuth, adminController.toggleUserBlockStatus);
 adminRoute.get('/dashboard-data', adminAuth.requireAuth, adminController.getDashboardData);

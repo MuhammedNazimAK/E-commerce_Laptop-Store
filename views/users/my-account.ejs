@@ -68,8 +68,38 @@
                     
                     <div class="tab-pane fade show active" id="dashboard">
                         <h4>Welcome to Your Dashboard</h4>
-                        
+
                         <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Referral Program</h5>
+                                        <% if (referralCode) { %>
+                                            <p>
+                                                <strong>Your Referral Code:</strong> 
+                                                <span id="referralCode"><%= referralCode %></span>
+                                                <button class="btn btn-sm btn-outline-secondary ml-2" id="copyReferralCode">
+                                                    <i class="fas fa-copy"></i> Copy Code
+                                                </button>
+                                            </p>
+                                            <p>
+                                                <strong>Your Referral Link:</strong> 
+                                                <span id="referralLink"><%= referralLink %></span>
+                                                <button class="btn btn-sm btn-outline-secondary ml-2" id="copyReferralLink">
+                                                    <i class="fas fa-copy"></i> Copy Link
+                                                </button>
+                                            </p>
+                                        <% } else { %>
+                                            <p><strong>Referral Program:</strong> Not available</p>
+                                        <% } %>
+                                        <p><strong>Referrals:</strong> <span id="referralCount"><%= referralCount %></span></p>
+                                        <a href="#" class="btn btn-md btn-black-default-hover" id="shareReferralLink">Share Referral Link</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- <div class="row">
                             <div class="col-md-6 mb-4">
                                 <div class="card">
                                     <div class="card-body">
@@ -80,7 +110,7 @@
                                         <a href="#" class="btn btn-md btn-black-default-hover">Edit Profile</a>
                                     </div>
                                 </div>
-                            </div>
+                            </div> -->
                             
                             <!-- <div class="col-md-6 mb-4">
                                 <div class="card">
@@ -91,7 +121,7 @@
                                     </div>
                                 </div>
                             </div> -->
-                        </div>
+                        <!-- </div> -->
                     
                         <div class="row">
                             <!-- <div class="col-md-4 mb-4">
@@ -122,34 +152,7 @@
                                         <a href="cart" class="btn btn-md btn-black-default-hover">View Cart</a>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-4">
-                                    <div class="card">
-                                        <div class="card-body">
-                                            <h5 class="card-title">Referral Program</h5>
-                                            <p>
-                                                <% if (user.referralCode) { %>
-                                                    <strong>Your Referral Code:</strong> 
-                                                    <span id="referralCode"><%= user.referralCode %></span>
-                                                    <button class="btn btn-sm btn-outline-secondary ml-2" id="copyReferralCode">
-                                                        <i class="fas fa-copy"></i> Copy
-                                                    </button>
-                                                <% } else { %>
-                                                    <strong>Your Referral Code:</strong> 
-                                                    <span id="referralCode">None</span>
-                                                    <button class="btn btn-sm btn-outline-secondary ml-2" id="copyReferralCode" disabled>
-                                                        <i class="fas fa-copy"></i> Copy
-                                                    </button>
-                                                <% } %>
-                                            </p>
-                                            <p><strong>Referrals:</strong> <span id="referralCount"><%= referralCount %></span></p>
-                                            <a href="#" class="btn btn-md btn-black-default-hover" id="shareReferralCode">Share Referral Code</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>                        
+                            </div>                                                            
 
                             <!-- <div class="col-md-4 mb-4">
                                 <div class="card">
@@ -574,32 +577,48 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const copyButton = document.getElementById('copyReferralCode');
-        const referralCode = document.getElementById('referralCode');
-        const shareButton = document.getElementById('shareReferralCode');
-    
-        copyButton.addEventListener('click', function() {
-            navigator.clipboard.writeText(referralCode.textContent).then(function() {
-                alert('Referral code copied to clipboard!');
-            }, function(err) {
-                console.error('Could not copy text: ', err);
-            });
+    const copyCodeButton = document.getElementById('copyReferralCode');
+    const copyLinkButton = document.getElementById('copyReferralLink');
+    const referralCode = document.getElementById('referralCode');
+    const referralLink = document.getElementById('referralLink');
+    const shareButton = document.getElementById('shareReferralLink');
+
+    function copyToClipboard(text, successMessage) {
+        navigator.clipboard.writeText(text).then(function() {
+            showSuccess(successMessage);
+        }, function(err) {
+            console.error('Could not copy text: ', err);
         });
-    
+    }
+
+    if (copyCodeButton && referralCode) {
+        copyCodeButton.addEventListener('click', function() {
+            copyToClipboard(referralCode.textContent, 'Referral code copied to clipboard!');
+        });
+    }
+
+    if (copyLinkButton && referralLink) {
+        copyLinkButton.addEventListener('click', function() {
+            copyToClipboard(referralLink.textContent, 'Referral link copied to clipboard!');
+        });
+    }
+
+    if (shareButton && referralLink) {
         shareButton.addEventListener('click', function(e) {
             e.preventDefault();
-            const referralLink = `${window.location.origin}/signup?ref=${referralCode.textContent}`;
             if (navigator.share) {
                 navigator.share({
                     title: 'Join me on Our Platform!',
-                    text: 'Use my referral code to sign up and get a bonus!',
-                    url: referralLink
+                    text: 'Use my referral link to sign up and get a bonus!',
+                    url: referralLink.textContent
                 })
-                .catch((error) => error);
+                .catch((error) => console.error('Error sharing:', error));
             } else {
-                alert(`Share this link: ${referralLink}`);
+                showSuccess(`Share this link: ${referralLink.textContent}`);
             }
         });
+    }
+
     
         function createPagination(totalPages, currentPage, containerId, callback) {
         const container = document.getElementById(containerId);
@@ -643,6 +662,30 @@
         } catch (error) {
             console.error('Error loading wallet transactions:', error);
         }
+    }
+
+    function showError(message) {
+    Swal.fire({
+        icon: "error",
+        text: message,
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timerProgressBar: true,
+        timer: 3000,
+        });
+    }
+
+    function showSuccess(message) {
+    Swal.fire({
+        icon: "success",
+        text: message,
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timerProgressBar: true,
+        timer: 3000,
+        })
     }
 
     // Initial load

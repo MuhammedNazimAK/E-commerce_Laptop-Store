@@ -302,6 +302,7 @@ const resendOtp = async(req, res) => {
   }
 };
 
+
 const renderOtpPage = (req, res) => {
   if (req.session.userOtp && req.session.userData) {
     res.render('users/enter-otp', { error: '' });
@@ -310,11 +311,14 @@ const renderOtpPage = (req, res) => {
   }
 };
 
+
 const renderRegisterPage = (req, res) => {
   const error = req.session.message || "";
   delete req.session.message;
-  res.render("users/signup", { error });
+  const referralCode = req.query.ref || "";
+  res.render("users/signup", { error, referralCode });
 };
+
 
 const renderMyAccount = async (req, res) => {
   

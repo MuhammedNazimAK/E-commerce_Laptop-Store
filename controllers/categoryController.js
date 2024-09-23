@@ -15,13 +15,28 @@ const loadCategoryManagementPage = (req, res) => {
 
 
 const getAllCategories = async (req, res) => {
-    try {
-        const categories = await Category.find({}, '_id name ');
-        res.status(200).json(categories); 
-    } catch (error) {
-        console.error("Error fetching categories:", error);
-        res.status(500).json({ error: 'Server error' });
-    }
+  try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      const totalCategories = await Category.countDocuments();
+      const totalPages = Math.ceil(totalCategories / limit);
+
+      const categories = await Category.find({}, '_id name description')
+          .skip(skip)
+          .limit(limit);
+
+      res.status(200).json({
+          categories,
+          currentPage: page,
+          totalPages,
+          totalCategories
+      });
+  } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ error: 'Server error' });
+  }
 };
 
 

@@ -139,7 +139,7 @@
 
     .right-side {
       flex: 1;
-      background: url("/mnt/data/original-748ee27f4db4329a85a8fc2690403eed.png") no-repeat center center;
+      background: url("/assets/images/thumbnail/4k-laptop-razer-galaxy-logo-80bblfo9bcd5jx8a_upscayl_4x_realesrgan-x4plus.webp") no-repeat center center;
       background-size: cover;
       position: relative;
       display: flex;
@@ -154,7 +154,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.3);
+      /* background: rgba(0, 0, 0, 0.3); */
     }
     
     .right-side .content {
@@ -222,8 +222,11 @@
             <div id="confirmPasswordError" class="error-message"></div>
           </div>
           <div class="default-form-box">
-            <input type="text" id="referralCode" name="referralCode" placeholder="Referral Code (Optional)" />
-          </div>
+          <input type="text" id="referralCode" name="referralCode" placeholder="Referral Code (Optional)" value="<%= referralCode %>" />
+          <% if (referralCode) { %>
+            <div class="referral-message">You're signing up with a referral code!</div>
+          <% } %>
+        </div>
         </div>
         <button type="submit">Register</button>
       </form>

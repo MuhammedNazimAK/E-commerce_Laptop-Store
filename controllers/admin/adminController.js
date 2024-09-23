@@ -7,6 +7,7 @@ const Product = require('../../models/productModel');
 const Category = require('../../models/categoryModel');
 
 
+
 const loadAdminLoginPage = async (req, res) => {
     try {
         res.render('admin/adminLogin', { message: req.session.message || null });
@@ -54,7 +55,7 @@ const   verifyAdminCredentials = async (req, res) => {
     }
 };
 
-// Load the admin dashboard
+
 const loadAdminDashboard = (req, res) => {
     try {
         return res.status(200).render('admin/dashboard');
@@ -64,27 +65,62 @@ const loadAdminDashboard = (req, res) => {
     }
 };
 
-// Load the list of users
-const loadCustomersList = async (req, res) => {
-    const pageNumber = parseInt(req.query.page || 1);
-    const perPageData = 20; 
-
+const loadCustomersListPage = async (req, res) => {
+    console.log('Loading customers list page');
     try {
-        const totalUsers = await User.countDocuments();
-        const userData = await User.find({})
-            .skip((pageNumber - 1) * perPageData)
-            .limit(perPageData)
-            .exec();
-        const totalPages = Math.ceil(totalUsers / perPageData);
-
-        return res.status(200).render('admin/customers', { userData, totalPages, currentPage: pageNumber });
+        res.render('admin/customers', {
+            search: '',
+            status: '',
+            limit: 20
+        });
     } catch (error) {
-        console.error("Error while loading users:", error.message);
+        console.error("Error while loading customers list page:", error.message);
         return res.status(500).send("Internal server Error");
     }
 };
 
-// Toggle user block status
+
+const loadCustomersList = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const search = req.query.search || '';
+        const status = req.query.status || '';
+
+        const query = {};
+        if (search) {
+            query.$or = [
+                { firstName: { $regex: search, $options: 'i' } },
+                { lastName: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } }
+            ];
+        }
+        if (status) {
+            query.isBlocked = status === 'Disabled';
+        }
+
+        const totalUsers = await User.countDocuments(query);
+        const totalPages = Math.ceil(totalUsers / limit);
+
+        const userData = await User.find(query)
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .select('firstName lastName email mobile isBlocked createdAt')
+            .lean();
+
+        res.json({
+            userData,
+            currentPage: page,
+            totalPages,
+            totalUsers,
+        });
+    } catch (error) {
+        console.error("Error while loading users:", error.message);
+        res.status(500).json({ error: "Internal server Error" });
+    }
+};
+
+
 const toggleUserBlockStatus = async (req, res) => {
     const userId = req.query.userId;
 
@@ -234,6 +270,7 @@ module.exports = {
     loadAdminLoginPage,
     verifyAdminCredentials,
     loadAdminDashboard,
+    loadCustomersListPage,
     loadCustomersList,
     toggleUserBlockStatus,
     logoutAdmin,

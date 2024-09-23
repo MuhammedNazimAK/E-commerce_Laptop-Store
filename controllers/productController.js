@@ -153,10 +153,28 @@
 
   const getProductsList = async (req, res) => {
     try {
-      const products = await Product.find().lean();
+
+      const page = parseInt(req.query.page, 10);
+      const limit = 10;
+      const skip = (page - 1) * limit;
+
+      const totalProducts = await Product.countDocuments();
+      const totalPages = Math.ceil(totalProducts / limit);
+
+      const products = await Product.find().skip(skip).limit(limit).lean();
       const categories = await Category.find().lean();
 
-      res.render("admin/productList", { products, categories });
+      res.render("admin/productList", {
+        products,
+        categories,
+        currentPage: page,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+        nextPage: page + 1,
+        prevPage: page - 1,
+        lastPage: totalPages
+      });
     } catch (error) {
       console.error("Error fetching products:", error);
       res.status(500).json({ success: false, message: "Error fetching products" });
@@ -192,7 +210,7 @@
     }
   }
 
-    const getProductDetails = async (req, res) => {
+  const getProductDetails = async (req, res) => {
       const { productId } = req.params;
       
       try {
@@ -207,7 +225,7 @@
         console.error("Error fetching product details:", error);
         res.status(500).json({ success: false, message: "Error fetching product details" });
       }
-    };
+  };
 
   const getProductEditPage = async (req, res) => {
     const { productId } = req.params;
@@ -342,7 +360,7 @@
         console.error("Error deleting image:", error);
         res.status(500).json({ success: false, message: "Error deleting image" });
     }
-};
+  };
 
 
   const softDeleteProduct = async (req, res) => {
