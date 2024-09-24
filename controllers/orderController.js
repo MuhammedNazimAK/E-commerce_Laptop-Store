@@ -519,6 +519,7 @@ const getOrderManagementPage = (req, res) => {
   }
 }
 
+
 const getOrdersList = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -564,22 +565,44 @@ const getOrdersList = async (req, res) => {
     res.status(500).json({ message: 'Error fetching orders' });
   }
 };
+
       
 const getOrderDetails = async (req, res) => {
   try {
     const orderId = req.params.id;
-    const order = await Order.findById(orderId).populate('userId', 'firstName lastName email shippingAddress mobile').populate('products.product', 'name').populate('shippingAddress', 'street city state country');
+    const order = await Order.findById(orderId)
+      .populate('userId', 'firstName lastName email mobile')
+      .populate({
+        path: 'products.product',
+        select: 'basicInformation.name'
+      })
+      .lean();
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
-    
+
+    if (order.shippingAddress) {
+      const address = await Address.findOne(
+        { 'address._id': order.shippingAddress },
+        { 'address.$': 1 }
+      ).lean();
+
+      if (address && address.address && address.address.length > 0) {
+        order.shippingAddress = address.address[0];
+      } else {
+        order.shippingAddress = null;
+      }
+    }
+
+    console.log('order', order);
     res.json(order);
   } catch (error) {
     console.error('Error fetching order details:', error);
     res.status(500).json({ message: 'Error fetching order details' });
   }
 };
+
 
 const editOrderAdmin = async (req, res) => {
   try {

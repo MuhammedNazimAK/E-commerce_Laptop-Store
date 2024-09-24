@@ -183,6 +183,17 @@
 
   const loadProductListingPage = async (req, res) => {
     try {
+
+      const { brand, category } = req.params;
+
+      let filter = {};
+      if (brand) {
+        filter['basicInformation.brand'] = brand;
+      }
+      if (category) {
+        filter.category = category;
+      }
+
       const brands = await Product.distinct('basicInformation.brand');
       const processors = await Product.distinct('technicalSpecification.processor');
       const rams = await Product.distinct('technicalSpecification.ram');
@@ -190,9 +201,10 @@
       const graphicsCards = await Product.distinct('technicalSpecification.graphicsCard');
       const categoryIds = await Product.distinct('category');
       const categories = await Category.find({ _id: { $in: categoryIds } }).select('name');
-      const products = await Promise.all((await Product.find()).map(async (product) => {
+      const products = await Promise.all((await Product.find(filter)).map(async (product) => {
         return await getProductWithOffers(product._id);
       }));
+
 
       res.render('users/productListing', {
         user: req.session.user,
@@ -202,7 +214,9 @@
         storages,
         graphicsCards,
         categories: categories.map(cat => ({ _id: cat._id, name: cat.name })),
-        products
+        products,
+        selectedBrand: brand,
+        selectedCategory: category
       });
     } catch (error) {
       console.error('Error loading product listing page:', error);

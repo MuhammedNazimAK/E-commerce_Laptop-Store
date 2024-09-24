@@ -102,6 +102,9 @@
                         <% brands.forEach(brand => { %>
                         <li>
                           <label class="checkbox-default" for="brand-<%= brand %>">
+                            <% if (selectedBrand) { %>
+                              <input type="checkbox" name="brand" value="<%= selectedBrand %>" checked>
+                            <% } %>
                             <input type="checkbox" id="brand-<%= brand %>" value="<%= brand %>" class="brand-filter">
                             <span><%= brand %></span>
                           </label>
@@ -119,6 +122,9 @@
                         <% categories.forEach(category => { %>
                         <li>
                           <label class="checkbox-default" for="category-<%= category._id %>">
+                            <% if (selectedCategory) { %>
+                              <input type="checkbox" name="category" value="<%= selectedCategory %>" checked>
+                            <% } %>
                             <input type="checkbox" id="category-<%= category._id %>" value="<%= category._id %>" class="category-filter">
                             <span><%= category.name %></span>
                           </label>
@@ -279,4 +285,22 @@
       <%- include("../partials/user/footer") %> 
       <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.js"></script>
       <script src="/javascript/productListing.js"></script>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedBrand = urlParams.get('brand');
+        const selectedCategory = urlParams.get('category');
+
+        if (selectedBrand) {
+          document.querySelector(`input[name="brand"][value="${selectedBrand}"]`).checked = true;
+        }
+
+        if (selectedCategory) {
+          document.querySelector(`input[name="category"][value="${selectedCategory}"]`).checked = true;
+        }
+
+        // Trigger your existing filter function here if needed
+        applyFilters();
+      });
+      </script>
       <script src="/javascript/wishlist.js" defer></script>

@@ -538,20 +538,14 @@
     }
 
     function applyFilters() {
-        const category = document.getElementById('categoryFilter').value;
-        const date = document.getElementById('dateFilter').value;
-        const status = document.getElementById('statusFilter').value;
-        fetchLatestOrders(1, category, date, status);
+        fetchLatestOrders(1);
     }
 
     function handlePaginationClick(event) {
         event.preventDefault();
         if (event.target.tagName === 'A') {
             const page = event.target.getAttribute('data-page');
-            const category = document.getElementById('categoryFilter').value;
-            const date = document.getElementById('dateFilter').value;
-            const status = document.getElementById('statusFilter').value;
-            fetchLatestOrders(page, category, date, status);
+            fetchLatestOrders(page);
         }
     }
 
@@ -611,25 +605,37 @@ const renderOrderDetails = (order) => {
     document.getElementById('customerPhone').textContent = order.userId ? order.userId.mobile : 'N/A';
 
     // Shipping Address
-    document.getElementById('shippingAddress').textContent = order.shippingAddress || 'N/A';
+    const shippingAddressElement = document.getElementById('shippingAddress');
+    if (order.shippingAddress) {
+      shippingAddressElement.textContent = `
+        ${order.shippingAddress.name}, 
+        ${order.shippingAddress.addressType}, 
+        ${order.shippingAddress.landMark}, 
+        ${order.shippingAddress.city}, 
+        ${order.shippingAddress.state} - ${order.shippingAddress.pinCode}, 
+        Mobile: ${order.shippingAddress.mobile}
+      `;
+    } else {
+      shippingAddressElement.textContent = 'N/A';
+    }
 
     // Render Order Items
     const orderItemsTableBody = document.getElementById('orderItemsTableBody');
     orderItemsTableBody.innerHTML = '';
 
     if (Array.isArray(order.products)) {
-        order.products.forEach(item => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${item.product.name || 'N/A'}</td>
-                <td>${item.quantity || 'N/A'}</td>
-                <td>₹${(item.price).toFixed(2)}</td>
-                <td>₹${((item.quantity * item.price + 25)).toFixed(2)}</td>
-            `;
-            orderItemsTableBody.appendChild(row);
-        });
+      order.products.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${item.product.basicInformation?.name || 'N/A'}</td>
+          <td>${item.quantity || 'N/A'}</td>
+          <td>₹${(item.price).toFixed(2)}</td>
+          <td>₹${((item.quantity * item.price)).toFixed(2)}</td>
+        `;
+        orderItemsTableBody.appendChild(row);
+      });
     } else {
-        console.error('Order products is not an array:', order.products);
+      console.error('Order products is not an array:', order.products);
     }
 };
 </script>

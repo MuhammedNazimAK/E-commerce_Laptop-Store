@@ -7,7 +7,7 @@ function fetchAddresses() {
 
   axios.get("/my-account/add-address")
     .then((response) => {
-      const addresses = response.data.addresses.address;
+      const addresses = response.data.addresses?.address;
       if (addresses && addresses.length > 0) {
         addressListContainer.innerHTML = addresses
           .map(
@@ -68,7 +68,8 @@ const ERROR_MESSAGES = {
   PAYMENT_VERIFICATION_FAILED: 'Payment verification failed.',
   INSUFFICIENT_BALANCE: 'Insufficient wallet balance. Choose another payment method.',
   GENERAL_ERROR: 'An error occurred. Please try again.',
-  RAZORPAY_UNDEFINED: 'Payment gateway is not available. Please try again later.'
+  RAZORPAY_UNDEFINED: 'Payment gateway is not available. Please try again later.',
+  COD_NOT_AVAILABLE: 'COD is not available for orders above Rs 1000.'
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -79,20 +80,9 @@ document.addEventListener("DOMContentLoaded", () => {
   addAddressModal.addEventListener('hidden.bs.modal', clearErrorMessages);
 
   const placeOrderButton = document.getElementById("placeOrder");
-  placeOrderButton.addEventListener("click", debounce(handlePlaceOrder, 300));
+  placeOrderButton.addEventListener("click", handlePlaceOrder);
 });
 
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
 
 async function handlePlaceOrder() {
   try {
@@ -112,8 +102,6 @@ async function handlePlaceOrder() {
   } catch (error) {
     handleError(error);
     throw error;
-  } finally {
-    hideLoading();
   }
 }
 
@@ -121,6 +109,7 @@ function validateOrderData() {
   const selectedAddressId = getSelectedAddressId();
   const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
   const couponCode = document.getElementById("appliedCouponCode")?.value?.trim() || "";
+  const total = parseFloat(document.querySelector('.order_total strong').textContent.replace('₹', ''));
 
   let errorMessage = '';
 
@@ -132,12 +121,16 @@ function validateOrderData() {
     errorMessage += ERROR_MESSAGES.NO_PAYMENT_METHOD + ' ';
   }
 
+  if (paymentMethod === 'cod' && total > 1000) {
+    errorMessage += 'COD is not available for orders above Rs 1000. ';
+  }
+
   if (errorMessage) {
     showError(errorMessage.trim());
     return null;
   }
 
-  return { addressId: selectedAddressId, paymentMethod, couponCode };
+  return { addressId: selectedAddressId, paymentMethod, couponCode, total };
 }
 
 async function createOrder(orderData) {
@@ -172,7 +165,7 @@ async function handleCODOrder(orderId) {
   try {
     const response = await axios.post(`${API_ENDPOINTS.CONFIRM_COD_ORDER}/${orderId}`);
     if (response.data.success) {
-      showSuccess("Order placed successfully!");
+      showSuccess("Order placed successfully! You'll pay at the time of delivery.");
       redirectToOrderConfirmation(orderId);
     } else {
       showError(response.data.message || ERROR_MESSAGES.COD_CONFIRMATION_FAILED);
@@ -209,7 +202,6 @@ function handleRazorpayOrder(razorpayOrderId, orderId, amount) {
     },
     theme: { color: "#3399cc" }
   }
-
 
   try {
     const rzp = new Razorpay(options);
@@ -299,11 +291,7 @@ function showLoading(message) {
       Swal.showLoading();
     }
   });
-}
-
-function hideLoading() {
-  Swal.close();
-}
+} 
 
 function clearErrorMessages() {
   const errorDivs = document.querySelectorAll('.error-message');

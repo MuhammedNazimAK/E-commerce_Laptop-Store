@@ -326,12 +326,12 @@
                 <div class="image">
                     <img class="img-fluid" src="/assets/images/Brands/<%= brand._id.toLowerCase() %>.webp" alt="<%= brand._id %>">
                 </div>
-                <a href="/products?brand=<%= brand._id %>" class="content">
+                <a href="/productListing?brand=<%= brand._id %>" class="content">
                     <div class="inner">
-                        <h4 class="title"><%= brand._id %></h4>
-                        <h6 class="sub-title"><%= brand.count %> products</h6>
+                      <h4 class="title"><%= brand._id %></h4>
+                      <h6 class="sub-title"><%= brand.count %> products</h6>
                     </div>
-                </a>
+                  </a>                  
             </div>
         <% }); %>
     </div>
@@ -358,13 +358,9 @@
                 <div class="image">
                     <img class="img-fluid" src="/assets/images/Category/<%= category.name.toLowerCase() %>.webp" alt="<%= category.name %>">
                 </div>
-                <a href="/products?category=<%= category._id %>" class="content">
-                    <!-- <div class="inner">
-                        <h4 class="title"><%= category.name %></h4>
-                        <h6 class="sub-title"><%= category.productCount %> products</h6>
-                    </div> -->
+                <a href="/productListing?category=<%= category._id %>" class="content">
                     <span class="round-btn"><i class="ion-ios-arrow-thin-right"></i></span>
-                </a>
+                  </a>                  
             </div>
         <% }); %>
     </div>
