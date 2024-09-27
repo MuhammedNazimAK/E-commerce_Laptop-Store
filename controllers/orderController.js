@@ -67,7 +67,6 @@ async function getProductWithOffers(productId) {
 
 //user side
 const getOrders = async (req, res) => {
-  console.log('getOrders called', req.session.user);
   const userId = req.session.user?._id;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -94,7 +93,6 @@ const getOrders = async (req, res) => {
     res.status(500).json({ message: "Error fetching orders", error: error.message });
   }
 };
-
 
 
 const getSingleOrderDetails = async (req, res) => {
@@ -453,7 +451,6 @@ const getRetryCheckoutPage = async (req, res) => {
 }
 
 
-
 const showOrderConfirmation = async (req, res) => {
   try {
 
@@ -595,7 +592,6 @@ const getOrderDetails = async (req, res) => {
       }
     }
 
-    console.log('order', order);
     res.json(order);
   } catch (error) {
     console.error('Error fetching order details:', error);

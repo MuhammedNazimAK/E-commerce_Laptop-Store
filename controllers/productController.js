@@ -391,45 +391,45 @@
         console.error("Error updating product:", error);
         res.status(500).json({ success: false, message: "Error updating product" });
     }
-};
+  };
 
-const getRelatedProducts = async (product) => {
-  const relatedProducts = await Product.find({
-    $and: [
-      { _id: { $ne: product._id } }, // Exclude the current product
-      {
-        $or: [
-          { 'basicInformation.brand': product.basicInformation.brand },
-          { 'category': { $in: product.category } }
-        ]
+  const getRelatedProducts = async (product) => {
+    const relatedProducts = await Product.find({
+      $and: [
+        { _id: { $ne: product._id } }, // Exclude the current product
+        {
+          $or: [
+            { 'basicInformation.brand': product.basicInformation.brand },
+            { 'category': { $in: product.category } }
+          ]
+        }
+      ]
+    }).limit(8).lean();
+
+    return relatedProducts;
+  };
+
+
+  const getProductDetailsViewOnUserPage = async (req, res) => {
+    const { productId } = req.params;
+    try {
+      const product = await getProductWithOffers(productId);
+      const relatedProducts = await getRelatedProducts(product);
+      const relatedProductsWithOffers = await Promise.all(relatedProducts.map(async (relatedProduct) => {
+        return await getProductWithOffers(relatedProduct._id);
+      }));
+      if (!product) {
+        return res.status(404).render({ success: false, message: "Product not found" });
       }
-    ]
-  }).limit(8).lean();
+      
+      incrementProductView(productId, req.session.user?._id);
 
-  return relatedProducts;
-};
-
-
-const getProductDetailsViewOnUserPage = async (req, res) => {
-  const { productId } = req.params;
-  try {
-    const product = await getProductWithOffers(productId);
-    const relatedProducts = await getRelatedProducts(product);
-    const relatedProductsWithOffers = await Promise.all(relatedProducts.map(async (relatedProduct) => {
-      return await getProductWithOffers(relatedProduct._id);
-    }));
-    if (!product) {
-      return res.status(404).render({ success: false, message: "Product not found" });
+      res.render("users/productDetails", { product, relatedProducts, relatedProductsWithOffers });
+    } catch (error) {
+      console.error("Error fetching product details:", error);
+      res.status(500).json({ success: false, message: "Error fetching product details" });
     }
-    
-    incrementProductView(productId, req.session.user?._id);
-
-    res.render("users/productDetails", { product, relatedProducts, relatedProductsWithOffers });
-  } catch (error) {
-    console.error("Error fetching product details:", error);
-    res.status(500).json({ success: false, message: "Error fetching product details" });
-  }
-};
+  };
 
 
   const searchAndSortProducts = async (req, res) => {
@@ -550,272 +550,272 @@ const getProductDetailsViewOnUserPage = async (req, res) => {
 
 
   //product offer controller
-const productOfferController = {
-  getProductOffersPage: async (req, res) => {
-    try {
-      res.render('admin/product-offer-list');
-    } catch (error) {
-      console.error("Error loading product offer page:", error);
-      res.status(500).render('users/pageNotFound', { message: "Internal server error" });
-    }
-  },
+  const productOfferController = {
+    getProductOffersPage: async (req, res) => {
+      try {
+        res.render('admin/product-offer-list');
+      } catch (error) {
+        console.error("Error loading product offer page:", error);
+        res.status(500).render('users/pageNotFound', { message: "Internal server error" });
+      }
+    },
 
-  createProductOffer: async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    try {
-      const { offerName, product, discountPercentage, startDate, endDate } = req.body;
-      const isDefault = req.body.isDefault === true || req.body.isDefault === 'on';
-
-      const existingOffer = await ProductOffer.findOne({ offerName: offerName });
-      if (existingOffer) {
-        return res.status(400).json({ message: 'An offer with this name already exists' });
+    createProductOffer: async (req, res) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
       }
 
+      try {
+        const { offerName, product, discountPercentage, startDate, endDate } = req.body;
+        const isDefault = req.body.isDefault === true || req.body.isDefault === 'on';
 
-      // Validate discount percentage
-      if (discountPercentage < 0 || discountPercentage > 100) {
-        return res.status(400).json({ message: 'Discount percentage must be between 0 and 100' });
-      }
-
-      if (isDefault) {
-        const existingDefault = await ProductOffer.findOne({ isDefault: true });
-        if (existingDefault) {
-          // Create a new inactive offer
-          const newOffer = new ProductOffer({
-            offerName,
-            discountPercentage,
-            startDate,
-            endDate,
-            isDefault: true,
-            isActive: false
-          });
-          await newOffer.save();
-          return res.status(201).json({ 
-            success: true, 
-            message: 'A default offer already exists. New offer created as inactive.',
-            offer: newOffer 
-          });
-        }
-      } else {
-        if (!product) {
-          return res.status(400).json({ message: 'Product ID is required for non-default offers' });
-        }
-        const productExists = await Product.findById(product);
-        if (!productExists) {
-          return res.status(400).json({ message: 'Product not found' });
+        const existingOffer = await ProductOffer.findOne({ offerName: offerName });
+        if (existingOffer) {
+          return res.status(400).json({ message: 'An offer with this name already exists' });
         }
 
-        const overlappingOffer = await ProductOffer.findOne({
-          product,
-          $or: [
-            { startDate: { $lte: endDate }, endDate: { $gte: startDate } },
-            { startDate: { $gte: startDate, $lte: endDate } },
-            { endDate: { $gte: startDate, $lte: endDate } }
-          ]
-        });
 
-        if (overlappingOffer) {
-          return res.status(400).json({ message: 'An overlapping offer already exists for this product' });
-        }
-      }
-
-      const newOffer = new ProductOffer({
-        offerName,
-        product: isDefault ? null : product,
-        discountPercentage,
-        startDate,
-        endDate,
-        isDefault,
-        isActive: true // Set as active by default
-      });
-
-      await newOffer.save();
-      return res.status(201).json({ success: true, message: 'Product offer created successfully', offer: newOffer });
-    } catch (error) {
-      console.error('Error creating product offer:', error);
-      return res.status(500).json({ success: false, message: 'Error error: error.message' });
-    }
-  },
-
-  updateProductOffer: async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    try {
-      const { offerName, product, discountPercentage, startDate, endDate, isActive, isDefault } = req.body;
-
-      const offer = await ProductOffer.findById(req.params.id);
-      if (!offer) {
-        return res.status(404).json({ message: 'Product offer not found' });
-      }
-
-      // Validate discount percentage
-      if (discountPercentage && (discountPercentage < 0 || discountPercentage > 100)) {
-        return res.status(400).json({ message: 'Discount percentage must be between 0 and 100' });
-      }
-
-      if (isDefault !== undefined && isDefault !== offer.isDefault) {
-        const confirmResult = await Swal.fire({
-          title: 'Confirm Change',
-          text: 'Are you sure you want to change the default status of this offer?',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
-          confirmButtonText: 'Yes, change it!'
-        });
-
-        if (!confirmResult.isConfirmed) {
-          return res.status(400).json({ message: 'Default status change cancelled' });
+        // Validate discount percentage
+        if (discountPercentage < 0 || discountPercentage > 100) {
+          return res.status(400).json({ message: 'Discount percentage must be between 0 and 100' });
         }
 
         if (isDefault) {
-          const existingDefault = await ProductOffer.findOne({ isDefault: true, _id: { $ne: req.params.id } });
+          const existingDefault = await ProductOffer.findOne({ isDefault: true });
           if (existingDefault) {
-            return res.status(400).json({ message: 'Another default offer already exists' });
+            // Create a new inactive offer
+            const newOffer = new ProductOffer({
+              offerName,
+              discountPercentage,
+              startDate,
+              endDate,
+              isDefault: true,
+              isActive: false
+            });
+            await newOffer.save();
+            return res.status(201).json({ 
+              success: true, 
+              message: 'A default offer already exists. New offer created as inactive.',
+              offer: newOffer 
+            });
+          }
+        } else {
+          if (!product) {
+            return res.status(400).json({ message: 'Product ID is required for non-default offers' });
+          }
+          const productExists = await Product.findById(product);
+          if (!productExists) {
+            return res.status(400).json({ message: 'Product not found' });
+          }
+
+          const overlappingOffer = await ProductOffer.findOne({
+            product,
+            $or: [
+              { startDate: { $lte: endDate }, endDate: { $gte: startDate } },
+              { startDate: { $gte: startDate, $lte: endDate } },
+              { endDate: { $gte: startDate, $lte: endDate } }
+            ]
+          });
+
+          if (overlappingOffer) {
+            return res.status(400).json({ message: 'An overlapping offer already exists for this product' });
           }
         }
-      }
 
-      if (!isDefault && product) {
-        const productExists = await Product.findById(product);
-        if (!productExists) {
-          return res.status(404).json({ message: 'Product not found' });
-        }
-
-        const overlappingOffer = await ProductOffer.findOne({
-          _id: { $ne: req.params.id },
-          product: product,
-          $or: [
-            { startDate: { $lte: endDate || offer.endDate }, endDate: { $gte: startDate || offer.startDate } },
-            { startDate: { $gte: startDate || offer.startDate, $lte: endDate || offer.endDate } },
-            { endDate: { $gte: startDate || offer.startDate, $lte: endDate || offer.endDate } }
-          ]
+        const newOffer = new ProductOffer({
+          offerName,
+          product: isDefault ? null : product,
+          discountPercentage,
+          startDate,
+          endDate,
+          isDefault,
+          isActive: true // Set as active by default
         });
 
-        if (overlappingOffer) {
-          return res.status(400).json({ message: 'An overlapping offer already exists for this product' });
-        }
+        await newOffer.save();
+        return res.status(201).json({ success: true, message: 'Product offer created successfully', offer: newOffer });
+      } catch (error) {
+        console.error('Error creating product offer:', error);
+        return res.status(500).json({ success: false, message: 'Error error: error.message' });
+      }
+    },
+
+    updateProductOffer: async (req, res) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
       }
 
-      // Handle default offer changes
-      if (isDefault !== undefined && isDefault !== offer.isDefault) {
-        if (isDefault) {
-          // If setting this offer as default, deactivate all other default offers
+      try {
+        const { offerName, product, discountPercentage, startDate, endDate, isActive, isDefault } = req.body;
+
+        const offer = await ProductOffer.findById(req.params.id);
+        if (!offer) {
+          return res.status(404).json({ message: 'Product offer not found' });
+        }
+
+        // Validate discount percentage
+        if (discountPercentage && (discountPercentage < 0 || discountPercentage > 100)) {
+          return res.status(400).json({ message: 'Discount percentage must be between 0 and 100' });
+        }
+
+        if (isDefault !== undefined && isDefault !== offer.isDefault) {
+          const confirmResult = await Swal.fire({
+            title: 'Confirm Change',
+            text: 'Are you sure you want to change the default status of this offer?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, change it!'
+          });
+
+          if (!confirmResult.isConfirmed) {
+            return res.status(400).json({ message: 'Default status change cancelled' });
+          }
+
+          if (isDefault) {
+            const existingDefault = await ProductOffer.findOne({ isDefault: true, _id: { $ne: req.params.id } });
+            if (existingDefault) {
+              return res.status(400).json({ message: 'Another default offer already exists' });
+            }
+          }
+        }
+
+        if (!isDefault && product) {
+          const productExists = await Product.findById(product);
+          if (!productExists) {
+            return res.status(404).json({ message: 'Product not found' });
+          }
+
+          const overlappingOffer = await ProductOffer.findOne({
+            _id: { $ne: req.params.id },
+            product: product,
+            $or: [
+              { startDate: { $lte: endDate || offer.endDate }, endDate: { $gte: startDate || offer.startDate } },
+              { startDate: { $gte: startDate || offer.startDate, $lte: endDate || offer.endDate } },
+              { endDate: { $gte: startDate || offer.startDate, $lte: endDate || offer.endDate } }
+            ]
+          });
+
+          if (overlappingOffer) {
+            return res.status(400).json({ message: 'An overlapping offer already exists for this product' });
+          }
+        }
+
+        // Handle default offer changes
+        if (isDefault !== undefined && isDefault !== offer.isDefault) {
+          if (isDefault) {
+            // If setting this offer as default, deactivate all other default offers
+            await ProductOffer.updateMany(
+              { isDefault: true, _id: { $ne: req.params.id } },
+              { $set: { isDefault: false, isActive: false } }
+            );
+          }
+        }
+
+        // Handle activation of default offer
+        if (isActive && isDefault) {
+          // If activating a default offer, deactivate all other default offers
           await ProductOffer.updateMany(
-            { isDefault: true, _id: { $ne: req.params.id } },
-            { $set: { isDefault: false, isActive: false } }
+            { isDefault: true, isActive: true, _id: { $ne: req.params.id } },
+            { $set: { isActive: false } }
           );
+        }  
+
+        offer.offerName = offerName || offer.offerName;
+        offer.product = isDefault ? null : (product || offer.product);
+        offer.discountPercentage = discountPercentage || offer.discountPercentage;
+        offer.startDate = startDate || offer.startDate;
+        offer.endDate = endDate || offer.endDate;
+        offer.isActive = isActive !== undefined ? isActive : offer.isActive;
+        offer.isDefault = isDefault !== undefined ? isDefault : offer.isDefault;
+        offer.product = product || offer.product;
+
+        await offer.save();
+        res.json({ message: 'Product offer updated successfully', offer });
+      } catch (error) {
+        res.status(500).json({ message: 'Error updating product offer', error: error.message });
+      }
+    },
+
+    deleteProductOffer: async (req, res) => {
+      try {
+        const offer = await ProductOffer.findByIdAndDelete(req.params.id);
+        if (!offer) {
+          return res.status(404).json({ message: 'Product offer not found' });
+        }
+        res.json({ message: 'Product offer deleted successfully' });
+      } catch (error) {
+        res.status(500).json({ message: 'Error deleting product offer', error: error.message });
+      }
+    },
+
+    loadAddProductOfferPage: async (req, res) => {
+      try {
+        const products = await Product.find({});
+        res.status(200).render('admin/product-offer-add', { products });
+      } catch (error) {
+        console.error("Error loading add product offer page:", error);
+        res.status(500).render('users/pageNotFound', { message: "Internal server error" });
+      }
+    },
+
+    loadProductOfferPage: async (req, res) => {
+      try {
+        const offers = await ProductOffer.find().populate({ path: 'product', select: 'basicInformation' });
+
+        // Sort offers: default offer first, then by start date
+        offers.sort((a, b) => {
+          if (a.isDefault && !b.isDefault) return -1;
+          if (!a.isDefault && b.isDefault) return 1;
+          return new Date(a.startDate) - new Date(b.startDate);
+        });
+
+        // Automatically deactivate expired offers
+        const currentDate = new Date();
+        for (const offer of offers) {
+        if (offer.isActive && new Date(offer.endDate) < currentDate) {
+          offer.isActive = false;
+          await offer.save();
         }
       }
 
-      // Handle activation of default offer
-      if (isActive && isDefault) {
-        // If activating a default offer, deactivate all other default offers
-        await ProductOffer.updateMany(
-          { isDefault: true, isActive: true, _id: { $ne: req.params.id } },
-          { $set: { isActive: false } }
-        );
-      }  
-
-      offer.offerName = offerName || offer.offerName;
-      offer.product = isDefault ? null : (product || offer.product);
-      offer.discountPercentage = discountPercentage || offer.discountPercentage;
-      offer.startDate = startDate || offer.startDate;
-      offer.endDate = endDate || offer.endDate;
-      offer.isActive = isActive !== undefined ? isActive : offer.isActive;
-      offer.isDefault = isDefault !== undefined ? isDefault : offer.isDefault;
-      offer.product = product || offer.product;
-
-      await offer.save();
-      res.json({ message: 'Product offer updated successfully', offer });
-    } catch (error) {
-      res.status(500).json({ message: 'Error updating product offer', error: error.message });
-    }
-  },
-
-  deleteProductOffer: async (req, res) => {
-    try {
-      const offer = await ProductOffer.findByIdAndDelete(req.params.id);
-      if (!offer) {
-        return res.status(404).json({ message: 'Product offer not found' });
+        res.json({ offers });
+      } catch (error) {
+        console.error("Error fetching product offers:", error);
+        res.status(500).json({ message: "Internal server error" });
       }
-      res.json({ message: 'Product offer deleted successfully' });
-    } catch (error) {
-      res.status(500).json({ message: 'Error deleting product offer', error: error.message });
-    }
-  },
+    },
 
-  loadAddProductOfferPage: async (req, res) => {
-    try {
-      const products = await Product.find({});
-      res.status(200).render('admin/product-offer-add', { products });
-    } catch (error) {
-      console.error("Error loading add product offer page:", error);
-      res.status(500).render('users/pageNotFound', { message: "Internal server error" });
-    }
-  },
-
-  loadProductOfferPage: async (req, res) => {
-    try {
-      const offers = await ProductOffer.find().populate({ path: 'product', select: 'basicInformation' });
-
-      // Sort offers: default offer first, then by start date
-      offers.sort((a, b) => {
-        if (a.isDefault && !b.isDefault) return -1;
-        if (!a.isDefault && b.isDefault) return 1;
-        return new Date(a.startDate) - new Date(b.startDate);
-      });
-
-      // Automatically deactivate expired offers
-      const currentDate = new Date();
-      for (const offer of offers) {
-      if (offer.isActive && new Date(offer.endDate) < currentDate) {
-        offer.isActive = false;
-        await offer.save();
+    loadEditProductOfferPage: async (req, res) => {
+      try {
+        const offer = await ProductOffer.findById(req.params.id).populate('product');
+        if (!offer) {
+          return res.status(404).render('users/pageNotFound', { message: "Product offer not found" });
+        }
+        const products = await Product.find({});
+        res.json({ offer, products });
+      } catch (error) {
+        console.error("Error loading edit product offer page:", error);
+        res.status(500).render('users/pageNotFound', { message: "Internal server error" });
       }
-    }
+    },
 
-      res.json({ offers });
-    } catch (error) {
-      console.error("Error fetching product offers:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  },
-
-  loadEditProductOfferPage: async (req, res) => {
-    try {
-      const offer = await ProductOffer.findById(req.params.id).populate('product');
-      if (!offer) {
-        return res.status(404).render('users/pageNotFound', { message: "Product offer not found" });
-      }
-      const products = await Product.find({});
-      res.json({ offer, products });
-    } catch (error) {
-      console.error("Error loading edit product offer page:", error);
-      res.status(500).render('users/pageNotFound', { message: "Internal server error" });
-    }
-  },
-
-  // getProductOfferDetails: async (req, res) => {
-  //   try {
-  //     const offer = await ProductOffer.findById(req.params.id).populate('product');
-  //     if (!offer) {
-  //       return res.status(404).json({ message: "Product offer not found" });
-  //     }
-  //     res.json({ offer });
-  //   } catch (error) {
-  //     console.error("Error fetching product offer details:", error);
-  //     res.status(500).json({ message: "Internal server error" });
-  //   }
-  // }
-};
+    // getProductOfferDetails: async (req, res) => {
+    //   try {
+    //     const offer = await ProductOffer.findById(req.params.id).populate('product');
+    //     if (!offer) {
+    //       return res.status(404).json({ message: "Product offer not found" });
+    //     }
+    //     res.json({ offer });
+    //   } catch (error) {
+    //     console.error("Error fetching product offer details:", error);
+    //     res.status(500).json({ message: "Internal server error" });
+    //   }
+    // }
+  };
 
   
   

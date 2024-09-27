@@ -66,7 +66,6 @@ const loadAdminDashboard = (req, res) => {
 };
 
 const loadCustomersListPage = async (req, res) => {
-    console.log('Loading customers list page');
     try {
         res.render('admin/customers', {
             search: '',

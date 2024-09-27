@@ -379,9 +379,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     imageInput.addEventListener('change', (event) => {
         handleProductImages(event)
-        .then(() => {
-            console.log('All images have been uploaded.');
-        })
         .catch((error) => {
             console.error('Error:', error);
             Swal.fire({

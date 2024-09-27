@@ -112,7 +112,6 @@ const renderLoginPage = (req, res) => {
 };
 
 const authenticateUser = async (req, res) => {
-  console.log('Authenticating user')
   try {
     const { email, password } = req.body;
     if (!email) {
@@ -120,7 +119,6 @@ const authenticateUser = async (req, res) => {
     }
 
     const user = await User.findOne({ email: email.toLowerCase() });
-    console.log('user', user);
     if (!user || !(bcrypt.compare(password, user.password))) {
       return sendError(req, res, "Invalid email or password");
     }
@@ -149,7 +147,6 @@ const generateOtp = () => {
 
 const sendVerificationEmail = async (email, otp) => {
   try {
-    console.log('Sending email to:', email); 
     const transporter = nodeMailer.createTransport({
       service: "gmail",
       port: 587,
@@ -169,7 +166,6 @@ const sendVerificationEmail = async (email, otp) => {
       html: `<b>Your OTP: ${otp}</b>`,
     });
 
-    console.log('Email sent:', info.accepted); 
     return info.accepted.length > 0;
   } catch (error) {
     console.error('Error sending email', error);
@@ -182,8 +178,6 @@ const registerUser = async (req, res) => {
   try {
     const { firstName, lastName, email, password, mobile, referralCode } = req.body;
 
-    console.log('registerUser', req.body);
-
     if (!email) {
       return sendError(req, res, "Email is required");
     }
@@ -195,7 +189,6 @@ const registerUser = async (req, res) => {
 
     const otp = generateOtp();
     const emailSent = await sendVerificationEmail(email, otp);
-    console.log('Generated OTP:', otp); 
 
     if (!emailSent) {
       return res.status(500).send("Failed to send verification email");
@@ -222,7 +215,6 @@ const registerUser = async (req, res) => {
       referralCode: generateUniqueReferralCode()
     };
 
-    console.log('Stored session data:', req.session.userData); 
     console.log('Stored session OTP:', req.session.userOtp);  
 
     return res.redirect('/enter-otp');
@@ -239,11 +231,6 @@ const verifyOtpAndCreateUser = async (req, res) => {
     if (Array.isArray(userOtp)) {
       userOtp = userOtp.join('');
     }
-
-    console.log('Stored OTP:', req.session.userOtp); 
-    console.log('User provided OTP:', userOtp); 
-    console.log('comparison:', userOtp.toString() == req.session.userOtp.toString());
-
     
     if (userOtp.toString() != req.session.userOtp.toString()) {
       return res.render('users/enter-otp', { error: 'Invalid OTP' });
@@ -252,8 +239,6 @@ const verifyOtpAndCreateUser = async (req, res) => {
     const userData = req.session.userData;
     const newUser = new User(userData);
     await newUser.save();
-
-    console.log('User saved:', newUser);
 
     if (newUser.referredBy) {
       await applyReferralReward(newUser, newUser.referredBy);
@@ -279,7 +264,6 @@ const verifyOtpAndCreateUser = async (req, res) => {
 
 
 const resendOtp = async(req, res) => {
-  console.log('resend otp');
   try {
     if(!req.session.userData || !req.session.userData.email) {
       return res.redirect('/signup');
@@ -428,7 +412,6 @@ const updateProfile = async (req, res) => {
     const userId = req.session.user._id;
 
     const user = await User.findById(userId);
-    console.log('user', user);
 
     if(!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
@@ -465,7 +448,6 @@ const getChangePasswordPage = (req, res) => {
 
 
 const changePassword = async (req, res) => {
-    console.log('Change password request received');
     try {
         const userId = req.session.user._id;
         const { currentPassword, newPassword, confirmNewPassword } = req.body;
@@ -518,10 +500,8 @@ const changePassword = async (req, res) => {
 const forgotPassword = async (req, res) => {
   try {
      const { email } = req.body;
-     console.log('email', email);
      
      const user = await User.findOne({ email: email.toLowerCase() });
-     console.log('user', user);
 
      if (!user) {
        return res.json({ success: false, message: 'User not found' });

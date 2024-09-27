@@ -69,7 +69,6 @@ const uploadImages = async (images) => {
   });
 
   const results = await Promise.all(uploadPromises);
-  console.log('Upload results from cloudinary:', results);
   const successfulUploads = results.filter(result => result !== null);
 
   if (successfulUploads.length === 0) {

@@ -13,15 +13,7 @@ const requireAuth = (req, res, next) => {
   }
 };
 
-const requireNoAuth = (req, res, next) => {
-  if (req.session && req.session.admin) {
-    return res.redirect("/admin/dashboard");
-  } else {
-    return next();
-  }
-};
 
 module.exports = {
   requireAuth,
-  requireNoAuth,
 };

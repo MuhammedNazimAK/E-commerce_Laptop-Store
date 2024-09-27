@@ -9,20 +9,20 @@ const cartController = require('../controllers/cartController');
 const wishlistController = require('../controllers/wishListController');
 const walletController = require('../controllers/walletController');
 const invoiceController = require('../controllers/user/invoiceController');
-const { requireAuth, requireNoAuth } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
 const passport = require('passport');
 
 
 //user authentication
 router.get('/', userController.renderHomePage);
 router.get('/home', userController.renderHomePage);
-router.get('/login', requireNoAuth, userController.renderLoginPage);
-router.post('/login', requireNoAuth, userController.authenticateUser);
-router.get('/signup', requireNoAuth, userController.renderRegisterPage);
-router.post('/signup', requireNoAuth, userController.registerUser);
-router.get('/enter-otp', requireNoAuth, userController.renderOtpPage);
-router.post('/enter-otp', requireNoAuth, userController.verifyOtpAndCreateUser);
-router.post('/resend-otp', requireNoAuth, userController.resendOtp);
+router.get('/login', userController.renderLoginPage);
+router.post('/login', userController.authenticateUser);
+router.get('/signup', userController.renderRegisterPage);
+router.post('/signup', userController.registerUser);
+router.get('/enter-otp', userController.renderOtpPage);
+router.post('/enter-otp', userController.verifyOtpAndCreateUser);
+router.post('/resend-otp', userController.resendOtp);
 
 
 //user account
@@ -39,7 +39,7 @@ router.post('/change-password', requireAuth, userController.changePassword);
 //address controller
 router.get('/my-account/add-address', requireAuth, addressController.getAddresses);
 router.post('/my-account/add-address', requireAuth, addressController.addAddress);
-router.post('/checkout/add-address', requireNoAuth, addressController.addAddress);
+router.post('/checkout/add-address', addressController.addAddress);
 router.get('/my-account/edit-address/:addressId', requireAuth, addressController.getAddressDetails);
 router.post('/my-account/edit-address/:addressId', requireAuth, addressController.editAddress);
 router.delete('/my-account/delete-address/:addressId', requireAuth, addressController.deleteAddress);

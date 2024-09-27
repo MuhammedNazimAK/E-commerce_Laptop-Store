@@ -17,8 +17,8 @@ const { categoryOfferValidationRules } = require('../middleware/categoryOfferVal
 
 
 // Admin authentication
-adminRoute.get("/login", adminAuth.requireNoAuth, adminController.loadAdminLoginPage);
-adminRoute.post("/login", adminAuth.requireNoAuth, adminController.verifyAdminCredentials);
+adminRoute.get("/login", adminController.loadAdminLoginPage);
+adminRoute.post("/login", adminController.verifyAdminCredentials);
 adminRoute.get("/logout", adminAuth.requireAuth, adminController.logoutAdmin);
 
 
