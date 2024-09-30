@@ -1,0 +1,173 @@
+<%- include("../partials/user/header") %>
+
+<div class="checkout-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="mb-4">Retry Payment</h2>
+            </div>
+            
+            <!-- Left Column: Order Details -->
+            <div class="col-lg-6 col-md-6">
+                <h3>Order Details</h3>
+                <table class="table table-bordered">
+                    <tr>
+                        <th>Order ID</th>
+                        <td><%= order.orderId %></td>
+                    </tr>
+                    <tr>
+                        <th>Order Date</th>
+                        <td><%= new Date(order.createdAt).toLocaleString() %></td>
+                    </tr>
+                    <tr>
+                        <th>Status</th>
+                        <td><%= order.status %></td>
+                    </tr>
+                </table>
+
+                <h3 class="mt-4">Products</h3>
+                <div class="order_table table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% order.products.forEach(item => { %>
+                            <tr>
+                                <td><%= item.product.basicInformation.name %></td>
+                                <td><%= item.quantity %></td>
+                                <td>₹<%= (item.price * item.quantity).toFixed(2) %></td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Right Column: Price Details and Payment Button -->
+            <div class="col-lg-6 col-md-6">
+                <h3>Price Details</h3>
+                <table class="table table-bordered">
+                    <tr>
+                        <th>Subtotal</th>
+                        <td>₹<%= order.subtotal.toFixed(2) %></td>
+                    </tr>
+                    <tr>
+                        <th>GST (18%)</th>
+                        <td>₹<%= order.gst.toFixed(2) %></td>
+                    </tr>
+                    <tr>
+                        <th>Shipping</th>
+                        <td>₹<%= order.shippingCharge.toFixed(2) %></td>
+                    </tr>
+                    <% if (order.discountAmount > 0) { %>
+                    <tr>
+                        <th>Discount</th>
+                        <td>-₹<%= order.discountAmount.toFixed(2) %></td>
+                    </tr>
+                    <% } %>
+                    <tr class="table-active">
+                        <th>Total Amount</th>
+                        <td>₹<%= order.total.toFixed(2) %></td>
+                    </tr>
+                </table>
+
+                <div class="payment_method mt-4">
+                  <h3>Payment Status</h3>
+                  <p id="paymentStatus">
+                      <% if (order.status === 'Pending') { %>
+                          Please click the button below to retry your payment with Razorpay.
+                      <% } else if (order.status === 'Confirmed') { %>
+                          Your order has been placed successfully!
+                      <% } %>
+                  </p>
+                  <div class="order_button mt-3">
+                      <% if (order.status === 'Pending') { %>
+                          <button id="retryPayment" class="btn btn-md btn-black-default-hover" type="button">Retry Payment</button>
+                      <% } else if (order.status === 'Confirmed') { %>
+                          <button id="viewOrder" class="btn btn-md btn-success" type="button">View Order Details</button>
+                      <% } %>
+                  </div>
+              </div>              
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<%- include("../partials/user/footer") %>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const retryPaymentButton = document.getElementById('retryPayment');
+    const viewOrderButton = document.getElementById('viewOrder');
+    
+    if (retryPaymentButton) {
+        retryPaymentButton.addEventListener('click', function() {
+            const options = {
+                key: '<%= process.env.RAZORPAY_KEY_ID %>',
+                amount: '<%= order.total * 100 %>',
+                currency: 'INR',
+                name: 'Laptop Store',
+                description: 'Order Payment',
+                order_id: '<%= order.razorpayOrderId %>',
+                handler: function(response) {
+                    // Handle successful payment
+                    verifyPayment(response);
+                },
+                prefill: {
+                    name: '<%= order.userId.firstName %> <%= order.userId.lastName %>',
+                    email: '<%= order.userId.email %>',
+                    contact: '<%= order.userId.mobile %>'
+                },
+                theme: {
+                    color: '#3399cc'
+                }
+            };
+            const rzp = new Razorpay(options);
+            rzp.open();
+        });
+    }
+
+    if (viewOrderButton) {
+        viewOrderButton.addEventListener('click', function() {
+            window.location.href = '/order-confirmation/<%= order.orderId %>';
+        });
+    }
+
+    function verifyPayment(response) {
+    axios.post(`/verify-payment/<%= order.orderId %>`, {
+        razorpay_order_id: response.razorpay_order_id,
+        razorpay_payment_id: response.razorpay_payment_id,
+        razorpay_signature: response.razorpay_signature
+      })
+      .then(res => res.data)
+      .then(data => {
+          if (data.success) {
+              document.getElementById('paymentStatus').textContent = 'Your order has been placed successfully!';
+              document.getElementById('retryPayment').remove();
+              const viewOrderButton = document.createElement('button');
+              viewOrderButton.id = 'viewOrder';
+              viewOrderButton.className = 'btn btn-md btn-success';
+              viewOrderButton.textContent = 'View Order Details';
+              viewOrderButton.addEventListener('click', function() {
+                  window.location.href = '/order-confirmation/<%= order.orderId %>';
+              });
+              document.querySelector('.order_button').appendChild(viewOrderButton);
+          } else {
+              alert('Payment verification failed. Please try again.');
+          }
+      })
+      .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred. Please try again.');
+    });
+}
+
+});
+</script>
+

@@ -1,0 +1,254 @@
+<!-- views/admin/inventory.ejs -->
+<%- include('../partials/admin/header') %>
+<%- include('../partials/admin/search') %>
+
+<section class="content-main">
+  <div class="content-header">
+    <h2 class="content-title">Inventory Management</h2>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>In Stock</th>
+              <th>Low Stock Threshold</th>
+              <th>Supplier Info</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% products.forEach(product => { %>
+              <tr class="<%= product.pricingAndAvailability.stockAvailability <= product.inventory.lowStockThreshold ? 'table-warning' : '' %>">
+                <td><%= product.basicInformation.name %></td>
+                <td>
+                  <span class="stock-value <%= product.pricingAndAvailability.stockAvailability <= product.inventory.lowStockThreshold ? 'text-danger' : '' %>">
+                    <%= product.pricingAndAvailability.stockAvailability %>
+                    <% if (product.pricingAndAvailability.stockAvailability <= product.inventory.lowStockThreshold) { %>
+                      <i class="fas fa-exclamation-triangle text-warning ml-2" title="Low Stock"></i>
+                    <% } %>
+                  </span>
+                  <input type="number" class="form-control stock-input d-none" value="<%= product.pricingAndAvailability.stockAvailability %>">
+                </td>
+                <td>
+                  <span class="threshold-value"><%= product.inventory.lowStockThreshold %></span>
+                  <input type="number" class="form-control threshold-input d-none" value="<%= product.inventory.lowStockThreshold %>">
+                </td>
+                <td>
+                  <span class="supplier-value"><%= product.basicInformation.brand || 'N/A' %></span>
+                  <input type="text" class="form-control supplier-input d-none" value="<%= product.basicInformation.brand || 'N/A' %>">
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary edit-btn">Edit</button>
+                  <button class="btn btn-sm btn-primary save-btn d-none" data-product-id="<%= product._id %>">Save</button>
+                  <button class="btn btn-sm btn-secondary cancel-btn d-none">Cancel</button>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <div class="d-flex justify-content-between align-items-center mt-4">
+          <div id="page-info"></div>
+          <nav aria-label="Page navigation">
+            <ul class="pagination" id="pagination"></ul>
+          </nav>
+        </div>        
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/admin/footer') %>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+  let currentPage = 1;
+  const limit = 10;
+
+  function fetchInventory(page) {
+    axios.get(`/admin/inventory?page=${page}&limit=${limit}`)
+      .then(response => {
+        const { products, currentPage, totalPages, totalProducts } = response.data;
+        updateTable(products);
+        updatePagination(currentPage, totalPages);
+        updatePageInfo(currentPage, totalPages, totalProducts);
+      })
+      .catch(error => console.error('Error fetching inventory:', error));
+  }
+
+  function updateTable(products) {
+    const tbody = document.querySelector('table tbody');
+    tbody.innerHTML = '';
+    products.forEach(product => {
+      const tr = document.createElement('tr');
+      tr.className = product.pricingAndAvailability.stockAvailability <= product.inventory.lowStockThreshold ? 'table-warning' : '';
+      tr.innerHTML = `
+        <td>${product.basicInformation.name}</td>
+        <td>
+          <span class="stock-value ${product.pricingAndAvailability.stockAvailability <= product.inventory.lowStockThreshold ? 'text-danger' : ''}">
+            ${product.pricingAndAvailability.stockAvailability}
+            ${product.pricingAndAvailability.stockAvailability <= product.inventory.lowStockThreshold ? '<i class="fas fa-exclamation-triangle text-warning ml-2" title="Low Stock"></i>' : ''}
+          </span>
+          <input type="number" class="form-control stock-input d-none" value="${product.pricingAndAvailability.stockAvailability}">
+        </td>
+        <td>
+          <span class="threshold-value">${product.inventory.lowStockThreshold}</span>
+          <input type="number" class="form-control threshold-input d-none" value="${product.inventory.lowStockThreshold}">
+        </td>
+        <td>
+          <span class="supplier-value">${product.basicInformation.brand || 'N/A'}</span>
+          <input type="text" class="form-control supplier-input d-none" value="${product.basicInformation.brand || 'N/A'}">
+        </td>
+        <td>
+          <button class="btn btn-sm btn-outline-primary edit-btn">Edit</button>
+          <button class="btn btn-sm btn-primary save-btn d-none" data-product-id="${product._id}">Save</button>
+          <button class="btn btn-sm btn-secondary cancel-btn d-none">Cancel</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function updatePagination(currentPage, totalPages) {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+
+    const createPageItem = (page, text = page) => {
+      const li = document.createElement('li');
+      li.className = `page-item ${page === currentPage ? 'active' : ''}`;
+      li.innerHTML = `<a class="page-link" href="#" data-page="${page}">${text}</a>`;
+      return li;
+    };
+
+    if (totalPages > 1) {
+      pagination.appendChild(createPageItem(1, '«'));
+      
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPages, startPage + 4);
+      
+      if (endPage - startPage < 4) {
+        startPage = Math.max(1, endPage - 4);
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        pagination.appendChild(createPageItem(i));
+      }
+
+      pagination.appendChild(createPageItem(totalPages, '»'));
+    }
+
+    pagination.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (e.target.tagName === 'A') {
+        const page = parseInt(e.target.dataset.page);
+        if (page !== currentPage) {
+          currentPage = page;
+          fetchInventory(currentPage);
+        }
+      }
+    });
+  }
+
+  function updatePageInfo(currentPage, totalPages, totalProducts) {
+    const pageInfo = document.getElementById('page-info');
+    const start = (currentPage - 1) * limit + 1;
+    const end = Math.min(currentPage * limit, totalProducts);
+    pageInfo.textContent = `Showing ${start} to ${end} of ${totalProducts} products`;
+  }
+
+  fetchInventory(currentPage);
+
+  const table = document.querySelector('table');
+
+  table.addEventListener('click', function(e) {
+    if (e.target.classList.contains('edit-btn')) {
+      const row = e.target.closest('tr');
+      toggleEditMode(row, true);
+    } else if (e.target.classList.contains('save-btn')) {
+      const row = e.target.closest('tr');
+      const productId = e.target.dataset.productId;
+      const stockAvailability = row.querySelector('.stock-input').value;
+      const lowStockThreshold = row.querySelector('.threshold-input').value;
+      const supplierInfo = row.querySelector('.supplier-input').value;
+
+      axios.put(`/admin/inventory/${productId}`, { stockAvailability, lowStockThreshold, supplierInfo })
+        .then(response => {
+          showSuccess('Inventory updated successfully');
+          updateRowData(row, stockAvailability, lowStockThreshold, supplierInfo);
+          toggleEditMode(row, false);
+        })
+        .catch(error => {
+          console.error('Error updating inventory:', error);
+          showError('Failed to update inventory. Please try again.');
+        });
+    } else if (e.target.classList.contains('cancel-btn')) {
+      const row = e.target.closest('tr');
+      toggleEditMode(row, false);
+    }
+  });
+
+  function toggleEditMode(row, isEditing) {
+    row.querySelectorAll('.stock-value, .threshold-value, .supplier-value').forEach(el => el.classList.toggle('d-none', isEditing));
+    row.querySelectorAll('.stock-input, .threshold-input, .supplier-input').forEach(el => el.classList.toggle('d-none', !isEditing));
+    row.querySelector('.edit-btn').classList.toggle('d-none', isEditing);
+    row.querySelectorAll('.save-btn, .cancel-btn').forEach(el => el.classList.toggle('d-none', !isEditing));
+  }
+
+  function updateRowData(row, stockAvailability, lowStockThreshold, supplierInfo) {
+    const stockValueEl = row.querySelector('.stock-value');
+    const thresholdValueEl = row.querySelector('.threshold-value');
+    const supplierValueEl = row.querySelector('.supplier-value');
+
+    stockValueEl.textContent = stockAvailability;
+    thresholdValueEl.textContent = lowStockThreshold;
+    supplierValueEl.textContent = supplierInfo || 'N/A';
+
+    // Update visual indicators
+    const isLowStock = parseInt(stockAvailability) <= parseInt(lowStockThreshold);
+    row.classList.toggle('table-warning', isLowStock);
+    stockValueEl.classList.toggle('text-danger', isLowStock);
+
+    // Update or add warning icon
+    let warningIcon = stockValueEl.querySelector('.fas.fa-exclamation-triangle');
+    if (isLowStock) {
+      if (!warningIcon) {
+        warningIcon = document.createElement('i');
+        warningIcon.className = 'fas fa-exclamation-triangle text-warning ml-2';
+        warningIcon.title = 'Low Stock';
+        stockValueEl.appendChild(warningIcon);
+      }
+    } else if (warningIcon) {
+      warningIcon.remove();
+    }
+  }
+
+  function showError(message) {
+    Swal.fire({
+      icon: "error",
+      text: message,
+      toast: true,
+      position: "top-right",
+      showConfirmButton: false,
+      timerProgressBar: true,
+      timer: 3000,
+    });
+  }
+
+  function showSuccess(message) {
+    Swal.fire({
+      icon: "success",
+      text: message,
+      toast: true,
+      position: "top-right",
+      showConfirmButton: false,
+      timerProgressBar: true,
+      timer: 3000,
+    });
+  }
+});
+
+</script>

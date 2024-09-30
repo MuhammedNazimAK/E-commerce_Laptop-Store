@@ -1,0 +1,186 @@
+<%- include('../partials/admin/header') %>
+<%- include('../partials/admin/search') %>
+
+<style>
+  .error-message {
+    font-size: 0.9em;
+    color: red;
+  }
+  .error-message-container {
+    height: 20px; 
+    margin-top: 5px;
+  }
+</style>
+
+<section class="content-main">
+  <div class="row">
+    <div class="col-12">
+      <div class="content-header">
+        <h2 class="content-title">Add Referral Offer</h2>
+        <div>
+          <button type="submit" class="btn btn-primary" form="referralOfferForm">Save Offer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-body">
+          <form id="referralOfferForm">
+            <div class="mb-4">
+              <label for="offerName" class="form-label">Offer Name</label>
+              <input type="text" class="form-control" id="offerName" name="offerName">
+              <div id="offerNameError" class="error-message"></div>
+            </div>
+
+            <div class="mb-4">
+              <label for="referrerAmount" class="form-label">Referrer Amount (₹)</label>
+              <input type="number" class="form-control" id="referrerAmount" name="referrerAmount" min="0" step="0.01">
+              <div id="referrerAmountError" class="error-message"></div>
+            </div>
+            
+            <div class="mb-4">
+              <label for="refereeAmount" class="form-label">Referee Amount (₹)</label>
+              <input type="number" class="form-control" id="refereeAmount" name="refereeAmount" min="0" step="0.01">
+              <div id="refereeAmountError" class="error-message"></div>
+            </div>            
+
+            <div class="mb-4">
+              <label for="startDate" class="form-label">Start Date</label>
+              <input type="date" class="form-control" id="startDate" name="startDate">
+              <div id="startDateError" class="error-message"></div>
+            </div>
+
+            <div class="mb-4">
+              <label for="endDate" class="form-label">End Date</label>
+              <input type="date" class="form-control" id="endDate" name="endDate">
+              <div id="endDateError" class="error-message"></div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/admin/footer') %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('referralOfferForm');
+    const fields = [
+    { id: 'offerName', validator: validateOfferName },
+    { id: 'referrerAmount', validator: validateAmount },
+    { id: 'refereeAmount', validator: validateAmount },
+    { id: 'startDate', validator: validateStartDate },
+    { id: 'endDate', validator: validateEndDate }
+  ];
+  
+    fields.forEach(field => {
+      const element = document.getElementById(field.id);
+      element.addEventListener('input', field.validator);
+    });
+  
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (validateForm()) {
+        try {
+          const formData = new FormData(form);
+          const response = await axios.post('/admin/add-referral-offer', Object.fromEntries(formData));
+          if (response.data.offer) {
+            showSuccessSwal('Referral offer added successfully');
+            form.reset();
+          } else {
+            showErrorSwal('Failed to add referral offer');
+          }
+        } catch (error) {
+          console.error('Error adding referral offer:', error);
+          showErrorSwal('Failed to add referral offer');
+        }
+      }
+    });
+  });
+  
+  function validateForm() {
+    const fields = ['offerName', 'referrerAmount', 'refereeAmount', 'startDate', 'endDate'];
+    let isValid = true;
+    fields.forEach(field => {
+      const element = document.getElementById(field);
+      const errorElement = document.getElementById(`${field}Error`);
+      if (!element.value) {
+        errorElement.textContent = 'This field is required';
+        isValid = false;
+      } else {
+        errorElement.textContent = '';
+      }
+    });
+    return isValid;
+  }
+  
+  function validateOfferName() {
+    const offerName = document.getElementById('offerName');
+    const errorElement = document.getElementById('offerNameError');
+    if (offerName.value.length < 3) {
+      errorElement.textContent = 'Offer name must be at least 3 characters long';
+    } else {
+      errorElement.textContent = '';
+    }
+  }
+  
+  function validateAmount() {
+  const amount = parseFloat(this.value);
+  const errorElement = document.getElementById(`${this.id}Error`);
+  if (isNaN(amount) || amount < 0) {
+      errorElement.textContent = 'Amount must be a non-negative number';
+  } else {
+      errorElement.textContent = '';
+  }
+}
+  
+  function validateStartDate() {
+    const startDate = new Date(this.value);
+    const errorElement = document.getElementById('startDateError');
+    if (startDate < new Date()) {
+      errorElement.textContent = 'Start date cannot be in the past';
+    } else {
+      errorElement.textContent = '';
+    }
+  }
+  
+  function validateEndDate() {
+    const startDate = new Date(document.getElementById('startDate').value);
+    const endDate = new Date(this.value);
+    const errorElement = document.getElementById('endDateError');
+    if (endDate <= startDate) {
+      errorElement.textContent = 'End date must be after the start date';
+    } else {
+      errorElement.textContent = '';
+    }
+  }
+  
+  function showSuccessSwal(message) {
+    Swal.fire({
+      icon: 'success',
+      title: 'Success',
+      text: message,
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+    });
+  }
+  
+  function showErrorSwal(message) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: message,
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+    });
+  }
+  </script>  

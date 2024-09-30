@@ -1,0 +1,260 @@
+<%- include('../partials/admin/header') %>
+<%- include('../partials/admin/search') %>
+
+<section class="content-main">
+  <div class="content-header">
+    <h2 class="content-title">Category Offers</h2>
+    <div>
+      <a href="/admin/add-category-offer" class="btn btn-primary">Add New Offer</a>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Offer Name</th>
+              <th>Category</th>
+              <th>Discount</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="offerTableBody">
+            <!-- Table rows will be populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editOfferModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Category Offer</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editOfferForm">
+          <input type="hidden" id="editOfferId">
+          <div class="mb-3">
+            <label for="editOfferName" class="form-label">Offer Name</label>
+            <input type="text" class="form-control" id="editOfferName" required>
+          </div>
+          <div class="mb-3">
+            <label for="editCategory" class="form-label">Category</label>
+            <select class="form-select" id="editCategory" required>
+              <!-- Categories will be populated dynamically -->
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="editDiscountPercentage" class="form-label">Discount Percentage</label>
+            <input type="number" class="form-control" id="editDiscountPercentage" min="0" max="100" required>
+          </div>
+          <div class="mb-3">
+            <label for="editStartDate" class="form-label">Start Date</label>
+            <input type="date" class="form-control" id="editStartDate" required>
+          </div>
+          <div class="mb-3">
+            <label for="editEndDate" class="form-label">End Date</label>
+            <input type="date" class="form-control" id="editEndDate" required>
+          </div>
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="editIsActive">
+            <label class="form-check-label" for="editIsActive">Is Active</label>
+          </div>          
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="saveOfferChanges">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/admin/footer') %>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  loadCategoryOffers();
+
+  async function loadCategoryOffers() {
+    try {
+      const response = await axios.get('/admin/category-offers');
+      const { offers } = response.data;
+      const tableBody = document.getElementById('offerTableBody');
+      tableBody.innerHTML = '';
+
+      if (!Array.isArray(offers)) {
+      console.error('Offers is not an array:', offers);
+      throw new Error('Offers data is not in the expected format');
+      }
+
+      offers.forEach(offer => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${offer._id}</td>
+          <td>${offer.offerName}</td>
+          <td>${offer.category.name}</td>
+          <td>${offer.discountPercentage}%</td>
+          <td>${new Date(offer.startDate).toLocaleDateString()}</td>
+          <td>${new Date(offer.endDate).toLocaleDateString()}</td>
+          <td>${getStatusBadge(offer)}</td>
+          <td>
+            <button class="btn btn-outline-primary edit-offer" data-id="${offer._id}">Edit</button>
+            <button class="btn btn-outline-danger delete-offer" data-id="${offer._id}">Delete</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      attachEditListeners();
+      attachDeleteListeners();
+    } catch (error) {
+      console.error('Error loading offers:', error);
+      showErrorSwal('Failed to load category offers');
+    }
+  }
+
+  function getStatusBadge(offer) {
+    const now = new Date();
+    const startDate = new Date(offer.startDate);
+    const endDate = new Date(offer.endDate);
+
+    if (now < startDate) {
+      return '<span class="badge bg-warning">Upcoming</span>';
+    } else if (now > endDate) {
+      return '<span class="badge bg-secondary">Expired</span>';
+    } else if (offer.isActive) {
+      return '<span class="badge bg-success">Active</span>';
+    } else {
+      return '<span class="badge bg-danger">Inactive</span>';
+    }
+  }
+
+  function attachEditListeners() {
+    const editButtons = document.querySelectorAll('.edit-offer');
+    editButtons.forEach(button => {
+      button.addEventListener('click', () => openEditModal(button.getAttribute('data-id')));
+    });
+  }
+
+  function attachDeleteListeners() {
+  const deleteButtons = document.querySelectorAll('.delete-offer');
+  deleteButtons.forEach(button => {
+    button.addEventListener('click', () => deleteOffer(button.getAttribute('data-id')));
+  });
+}
+
+  async function openEditModal(offerId) {
+    try {
+      const response = await axios.get(`/admin/add-category-offer/${offerId}`);
+      const offer = response.data;
+
+      document.getElementById('editOfferId').value = offer._id;
+      document.getElementById('editOfferName').value = offer.offerName;
+      document.getElementById('editCategory').value = offer.category._id;
+      document.getElementById('editDiscountPercentage').value = offer.discountPercentage;
+      document.getElementById('editStartDate').value = offer.startDate.split('T')[0];
+      document.getElementById('editEndDate').value = offer.endDate.split('T')[0];
+      document.getElementById('editIsActive').checked = offer.isActive
+
+      await populateCategorySelect('editCategory');
+
+      const editModal = new bootstrap.Modal(document.getElementById('editOfferModal'));
+      editModal.show();
+    } catch (error) {
+      console.error('Error fetching offer details:', error);
+      showErrorSwal('Failed to load offer details');
+    }
+  }
+
+  async function deleteOffer(offerId) {
+  if (confirm('Are you sure you want to delete this offer?')) {
+    try {
+      await axios.delete(`/admin/delete-category-offer/${offerId}`);
+      showSuccessSwal('Offer deleted successfully');
+      loadCategoryOffers();
+    } catch (error) {
+      console.error('Error deleting offer:', error);
+      showErrorSwal('Failed to delete offer');
+    }
+  }
+}
+
+  async function populateCategorySelect(selectId) {
+    try {
+      const response = await axios.get('/admin/categories');
+      const categories = response.data;
+      const selectElement = document.getElementById(selectId);
+      categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category._id;
+        option.textContent = category.name;
+        selectElement.appendChild(option);
+      });
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      showErrorSwal('Failed to load categories');
+    }
+  }
+
+
+  document.getElementById('saveOfferChanges').addEventListener('click', async () => {
+    const offerId = document.getElementById('editOfferId').value;
+    const updatedOffer = {
+      offerName: document.getElementById('editOfferName').value,
+      category: document.getElementById('editCategory').value,
+      discountPercentage: document.getElementById('editDiscountPercentage').value,
+      startDate: document.getElementById('editStartDate').value,
+      endDate: document.getElementById('editEndDate').value,
+      isActive: document.getElementById('editIsActive').checked
+    };
+
+    try {
+      await axios.put(`/admin/add-category-offer/${offerId}`, updatedOffer);
+      const editModal = bootstrap.Modal.getInstance(document.getElementById('editOfferModal'));
+      editModal.hide();
+      showSuccessSwal('Offer updated successfully');
+      loadCategoryOffers();
+    } catch (error) {
+      console.error('Error updating offer:', error);
+      showErrorSwal('Failed to update offer');
+    }
+  });
+
+  function showSuccessSwal(message) {
+    Swal.fire({
+      icon: "success",
+      text: message,
+      toast: true,
+      position: "top-right",
+      showConfirmButton: false,
+      timerProgressBar: true,
+      timer: 3000,
+    });
+  }
+
+  function showErrorSwal(message) {
+    Swal.fire({
+      icon: "error",
+      text: message,
+      toast: true,
+      position: "top-right",
+      showConfirmButton: false,
+      timerProgressBar: true,
+      timer: 3000,
+    });
+  }
+});
+
+</script>

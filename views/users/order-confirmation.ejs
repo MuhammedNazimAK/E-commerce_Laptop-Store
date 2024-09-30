@@ -1,0 +1,216 @@
+<%- include("../partials/user/header") %>
+<%- include("../partials/user/right") %>
+
+<!-- Start Order Confirmation Section -->
+<div class="order-confirmation-section section-top-gap-100 section-fluid">
+  <div class="container">
+    <div class="row">
+      <div class="col-12 text-center">
+        <div class="order-confirmation-wrapper" data-aos="fade-up" data-aos-delay="0">
+          <% if (order.status === 'Pending') { %>
+            <i class="fas fa-clock fa-5x text-warning mb-4"></i>
+            <h2 class="title">Order Pending</h2>
+            <p class="subtitle">Your order is awaiting payment confirmation.</p>
+          <% } else { %>
+            <i class="fas fa-check-circle fa-5x text-success mb-4"></i>
+            <h2 class="title">Order Confirmed</h2>
+            <p class="subtitle">Thank you for your purchase!</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Order Confirmation Section -->
+
+<!-- Start Order Details Section -->
+<div class="order-details-section section-top-gap-100 section-fluid">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="order-details-wrapper" data-aos="fade-up" data-aos-delay="0">
+          <h4 class="section-title">Order Details</h4>
+          <div class="order-details-content">
+            <p><strong>Order ID:</strong> <%= order.orderId %></p>
+            <p><strong>Order Date:</strong> <%= new Date(order.createdAt).toLocaleString() %></p>
+            <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
+            <p><strong>Order Status:</strong> <%= order.status %></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <% if (showRetryPayment) { %>
+      <div class="row mt-4">
+        <div class="col-12 text-center">
+          <button id="retryPayment" class="btn btn-md btn-black-default-hover" data-aos="fade-up" data-aos-delay="0">Retry Payment</button>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+<!-- End Order Details Section -->
+
+<!-- Start Order Items Section -->
+<div class="order-items-section section-top-gap-100 section-fluid">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="order-items-wrapper" data-aos="fade-up" data-aos-delay="200">
+          <h4 class="section-title">Order Items</h4>
+          <div class="order-items-content">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Quantity</th>
+                  <th>Price</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% order.products.forEach((item) => { %>
+                  <tr>
+                    <td><%= item.name %></td>
+                    <td><%= item.quantity %></td>
+                    <td>₹<%= item.originalPrice.toFixed(2) %></td>
+                    <td>₹<%= item.discountedPrice.toFixed(2) %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Order Items Section -->
+
+<!-- Start Price Details Section -->
+<div class="price-details-section section-top-gap-100 section-fluid">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="price-details-wrapper" data-aos="fade-up" data-aos-delay="300">
+          <h4 class="section-title">Price Details</h4>
+          <div class="price-details-content">
+            <p><strong>Subtotal:</strong> ₹<%= parseFloat(order.subtotal).toFixed(2) %></p>
+            <p><strong>GST (18%):</strong> ₹<%= parseFloat(order.gst).toFixed(2) %></p>
+            <p><strong>Shipping Charge:</strong> ₹<%= parseFloat(order.shippingCharge).toFixed(2) %></p>
+            <% if (order.discountAmount > 0) { %>
+              <p><strong>Discount:</strong> ₹<%= parseFloat(order.discountAmount).toFixed(2) %></p>
+            <% } %>
+            <p><strong>Total:</strong> ₹<%= parseFloat(order.total).toFixed(2) %></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Price Details Section -->
+
+<!-- Start Shipping Address Section -->
+<div class="shipping-address-section section-top-gap-100 section-fluid">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="shipping-address-wrapper" data-aos="fade-up" data-aos-delay="400">
+          <h4 class="section-title">Shipping Address</h4>
+          <div class="shipping-address-content">
+            <% if (order.shippingAddress) { %>
+              <p><%= order.shippingAddress.name %></p>
+              <p><%= order.shippingAddress.landMark %></p>
+              <p><%= order.shippingAddress.city %>, <%= order.shippingAddress.state %> <%= order.shippingAddress.pinCode %></p>
+              <p><%= order.shippingAddress.mobile %></p>
+            <% } else { %>
+              <p>No shipping address available</p>
+            <% } %>            
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Shipping Address Section -->
+
+
+
+<%- include("../partials/user/footer") %>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+  const razorpayKeyId = "<%= process.env.RAZORPAY_KEY_ID %>";
+  const orderId = "<%= order.orderId %>";
+  const total = "<%= order.total %>";
+
+  async function handleRazorpayOrder(razorpayOrderId, amount) {
+    const options = {
+      key: razorpayKeyId,
+      amount: amount * 100,
+      currency: "INR",
+      name: "Laptop Store",
+      description: "Order Payment",
+      order_id: razorpayOrderId,
+      handler: (response) => {
+        verifyPayment(response, orderId);
+      },
+      modal: {
+        ondismiss: function() {
+        }
+      },
+      theme: { color: "#3399cc" }
+    };
+
+    const razorpayInstance = new Razorpay(options);
+    razorpayInstance.open();
+  }
+
+  async function verifyPayment(paymentResponse, orderId) {
+    try {
+      const response = await axios.post(`/verify-payment/${orderId}`, paymentResponse);
+      if (response.data.success) {
+        showSuccess("Payment successful! Order placed.");
+        setTimeout(() => window.location.reload(), 3000);
+      } else {
+        showError(response.data.message || "Payment failed. Order status: Pending");
+      }
+    } catch (error) {
+      console.error('Error verifying payment:', error);
+      showError("Payment verification failed. Order status: Pending");
+    }
+  }
+
+  function showError(message) {
+  Swal.fire({
+    icon: "error",
+    text: message,
+    toast: true,
+    position: "top-right",
+    showConfirmButton: false,
+    timerProgressBar: true,
+    timer: 3000,
+  });
+}
+
+function showSuccess(message) {
+  Swal.fire({
+    icon: "success",
+    text: message,
+    toast: true,
+    position: "top-right",
+    showConfirmButton: false,
+    timerProgressBar: true,
+    timer: 3000,
+  })
+}
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const retryPaymentButton = document.getElementById('retryPayment');
+    if (retryPaymentButton) {
+      retryPaymentButton.addEventListener('click', function() {
+        handleRazorpayOrder('<%= order.razorpayOrderId %>', '<%= order.total %>');
+      });
+    }
+  });
+
+</script>

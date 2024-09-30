@@ -1,0 +1,224 @@
+<%- include('../partials/admin/header') %>
+<%- include('../partials/admin/search') %>
+
+<section class="content-main">
+  <div class="content-header">
+    <h2 class="content-title">Referral Offers</h2>
+    <div>
+      <a href="/admin/add-referral-offer" class="btn btn-primary">Add New Referral Offer</a>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Offer Name</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Referrer Discount</th>
+              <th>Referee Discount</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% referralOffers.forEach(offer => { %>
+              <tr data-id="<%= offer._id %>">
+                <td><%= offer.offerName %></td>
+                <td><%= offer.startDate.toLocaleDateString() %></td>
+                <td><%= offer.endDate.toLocaleDateString() %></td>
+                <td><%= offer.referrerAmount %>₹</td>
+                <td><%= offer.refereeAmount %>₹</td>
+                <td><%- getStatusBadge(offer) %></td>
+                <td>
+                  <button class="btn btn-outline-primary edit-offer" data-id="<%= offer._id %>">Edit</button>
+                  <button class="btn btn-outline-danger delete-offer" data-id="<%= offer._id %>">Delete</button>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>          
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editOfferModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Referral Offer</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editOfferForm">
+          <input type="hidden" id="editOfferId">
+          <div class="mb-3">
+            <label for="editOfferName" class="form-label">Offer Name</label>
+            <input type="text" class="form-control" id="editOfferName">
+          </div>
+          <div class="mb-3">
+            <label for="editReferrerAmount" class="form-label">Referrer Amount Percentage</label>
+            <input type="number" class="form-control" id="editReferrerAmount" min="0" max="100">
+          </div>
+          <div class="mb-3">
+            <label for="editRefereeAmount" class="form-label">Referee Amount Percentage</label>
+            <input type="number" class="form-control" id="editRefereeAmount" min="0" max="100">
+          </div>
+          <div class="mb-3">
+            <label for="editStartDate" class="form-label">Start Date</label>
+            <input type="date" class="form-control" id="editStartDate">
+          </div>
+          <div class="mb-3">
+            <label for="editEndDate" class="form-label">End Date</label>
+            <input type="date" class="form-control" id="editEndDate">
+          </div>
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="editIsActive">
+            <label class="form-check-label" for="editIsActive">Is Active</label>
+          </div>          
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="saveOfferChanges">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/admin/footer') %>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  function attachEditListeners() {
+    const editButtons = document.querySelectorAll('.edit-offer');
+    editButtons.forEach(button => {
+      button.addEventListener('click', () => openEditModal(button.getAttribute('data-id')));
+    });
+  }
+
+  function attachDeleteListeners() {
+    const deleteButtons = document.querySelectorAll('.delete-offer');
+    deleteButtons.forEach(button => {
+      button.addEventListener('click', () => deleteOffer(button.getAttribute('data-id')));
+    });
+  }
+
+  async function openEditModal(offerId) {
+    try {
+      const response = await axios.get(`/admin/referral-offers/${offerId}`);
+      const offer = response.data.offers[0];
+
+      document.getElementById('editOfferId').value = offer._id;
+      document.getElementById('editOfferName').value = offer.offerName;
+      document.getElementById('editReferrerAmount').value = offer.referrerAmount;
+      document.getElementById('editRefereeAmount').value = offer.refereeAmount;
+      document.getElementById('editStartDate').value = offer.startDate.split('T')[0];
+      document.getElementById('editEndDate').value = offer.endDate.split('T')[0];
+      document.getElementById('editIsActive').checked = offer.isActive;
+
+      const editModal = new bootstrap.Modal(document.getElementById('editOfferModal'));
+      editModal.show();
+    } catch (error) {
+      console.error('Error fetching offer details:', error);
+      showErrorSwal('Failed to load offer details');
+    }
+  }
+
+  async function deleteOffer(offerId) {
+    if (confirm('Are you sure you want to delete this offer?')) {
+      try {
+        await axios.delete(`/admin/delete-referral-offer/${offerId}`);
+        location.reload();
+        showSuccessSwal('Offer deleted successfully');
+      } catch (error) {
+        console.error('Error deleting offer:', error);
+        showErrorSwal('Failed to delete offer');
+      }
+    }
+  }
+
+  async function updateOfferRow(offer) {
+    const row = document.querySelector(`tr[data-id="${offer._id}"]`);
+    if (row) {
+      row.querySelector('td:nth-child(1)').textContent = offer.offerName;
+      row.querySelector('td:nth-child(2)').textContent = new Date(offer.startDate).toLocaleDateString();
+      row.querySelector('td:nth-child(3)').textContent = new Date(offer.endDate).toLocaleDateString();
+      row.querySelector('td:nth-child(4)').textContent = `${offer.referrerAmount}`;
+      row.querySelector('td:nth-child(5)').textContent = `${offer.refereeAmount}`;
+      row.querySelector('td:nth-child(6)').innerHTML = getStatusBadge(offer);
+    }
+  }
+
+  document.getElementById('saveOfferChanges').addEventListener('click', async () => {
+    const offerId = document.getElementById('editOfferId').value;
+    const updatedOffer = {
+      offerName: document.getElementById('editOfferName').value,
+      referrerAmount: document.getElementById('editReferrerAmount').value,
+      refereeAmount: document.getElementById('editRefereeAmount').value,
+      startDate: document.getElementById('editStartDate').value,
+      endDate: document.getElementById('editEndDate').value,
+      isActive: document.getElementById('editIsActive').checked,
+    };
+
+    try {
+      const response = await axios.put(`/admin/update-referral-offer/${offerId}`, updatedOffer);
+      const editModal = bootstrap.Modal.getInstance(document.getElementById('editOfferModal'));
+      editModal.hide();
+      showSuccessSwal('Offer updated successfully');
+      updateOfferRow(response.data.offer);
+    } catch (error) {
+      console.error('Error updating offer:', error);
+      showErrorSwal('Failed to update offer');
+    }
+  });
+
+  function getStatusBadge(offer) {
+  const now = new Date();
+  const startDate = new Date(offer.startDate);
+  const endDate = new Date(offer.endDate);
+
+  if (now < startDate) {
+    return '<span class="badge bg-warning">Upcoming</span>';
+  } else if (now > endDate) {
+    return '<span class="badge bg-secondary">Expired</span>';
+  } else if(offer.isActive) { 
+    return '<span class="badge bg-success">Active</span>';
+  } else {
+    return '<span class="badge bg-danger">Inactive</span>';
+  }
+}
+
+  function showSuccessSwal(message) {
+    Swal.fire({
+      icon: "success",
+      text: message,
+      toast: true,
+      position: "top-right",
+      showConfirmButton: false,
+      timerProgressBar: true,
+      timer: 3000,
+    });
+  }
+
+  function showErrorSwal(message) {
+    Swal.fire({
+      icon: "error",
+      text: message,
+      toast: true,
+      position: "top-right",
+      showConfirmButton: false,
+      timerProgressBar: true,
+      timer: 3000,
+    });
+  }
+
+  attachEditListeners();
+  attachDeleteListeners();
+});
+</script>

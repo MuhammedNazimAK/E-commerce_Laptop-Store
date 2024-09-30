@@ -1,0 +1,243 @@
+<%- include('../partials/admin/header') %>
+<%- include('../partials/admin/search') %>
+
+<style>
+  .error-message {
+    font-size: 0.9em;
+    color: red;
+  }
+  .error-message-container {
+    height: 20px; 
+    margin-top: 5px;
+  }
+</style>
+
+<section class="content-main">
+  <div class="row">
+    <div class="col-12">
+      <div class="content-header">
+        <h2 class="content-title">Add Product Offer</h2>
+        <div>
+          <button type="submit" class="btn btn-primary" form="productOfferForm">Save Offer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-body">
+          <form id="productOfferForm">
+            <div class="mb-4">
+              <label for="offerName" class="form-label">Offer Name</label>
+              <input type="text" class="form-control" id="offerName" name="offerName">
+              <div id="offerNameError" class="error-message"></div>
+            </div>
+
+            <div class="mb-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="isDefault" name="isDefault">
+                <label class="form-check-label" for="isDefault">
+                  Default Offer (applies to all products)
+                </label>
+              </div>
+              <div id="isDefaultError" class="error-message"></div>
+            </div>            
+
+            <div class="mb-4">
+              <label for="product" class="form-label">Product</label>
+              <select class="form-select" id="product" name="product">
+                <option value="">Select a product</option>
+                <% products.forEach(product => { %>
+                  <option value="<%= product._id %>"><%= product.basicInformation.name %></option>
+                <% }) %>
+              </select>
+              <div id="productError" class="error-message"></div>
+            </div>
+
+            <div class="mb-4">
+              <label for="discountPercentage" class="form-label">Discount Percentage</label>
+              <input type="number" class="form-control" id="discountPercentage" name="discountPercentage" min="0" max="100">
+              <div id="discountPercentageError" class="error-message"></div>
+            </div>
+
+            <div class="mb-4">
+              <label for="startDate" class="form-label">Start Date</label>
+              <input type="date" class="form-control" id="startDate" name="startDate">
+              <div id="startDateError" class="error-message"></div>
+            </div>
+
+            <div class">
+              <label for="endDate" class="form-label">End Date</label>
+              <input type="date" class="form-control" id="endDate" name="endDate">
+              <div id="endDateError" class="error-message"></div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/admin/footer') %>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('productOfferForm');
+  const fields = [
+    { id: 'offerName', validator: validateOfferName },
+    { id: 'product', validator: validateProduct },
+    { id: 'discountPercentage', validator: validateDiscountPercentage },
+    { id: 'startDate', validator: validateStartDate },
+    { id: 'endDate', validator: validateEndDate }
+  ];
+
+  fields.forEach(field => {
+    const element = document.getElementById(field.id);
+    element.addEventListener('input', field.validator);
+  });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (validateForm()) {
+      try {
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
+        
+        // Convert isDefault to a boolean
+        data.isDefault = formData.get('isDefault') === 'on';
+        
+        // Convert discountPercentage to a number
+        data.discountPercentage = Number(data.discountPercentage);
+
+        const response = await axios.post('/admin/add-product-offer', data);
+        if (response.data.success) {
+          showSuccessSwal('Product offer added successfully');
+          form.reset();
+        } else {
+          showErrorSwal(response.data.message || 'Failed to add product offer');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        showErrorSwal('An error occurred. Please try again.');
+      }
+    }
+  });
+
+  function validateForm() {
+  const isDefault = document.getElementById('isDefault').checked;
+  if (isDefault) {
+    // Skip product validation for default offers
+    return fields.filter(field => field.id !== 'product').every(field => field.validator());
+  }
+  return fields.every(field => field.validator());
+}
+  
+  function toggleProductSelect() {
+    const isDefault = document.getElementById('isDefault').checked;
+    const productSelect = document.getElementById('product');
+    productSelect.disabled = isDefault;
+    if (isDefault) {
+      productSelect.value = '';
+      clearError(document.getElementById('productError'));
+    }
+  }
+
+  document.getElementById('isDefault').addEventListener('change', toggleProductSelect);
+
+  function validateOfferName() {
+    const input = document.getElementById('offerName');
+    const errorElement = document.getElementById('offerNameError');
+    if (input.value.trim() === '') {
+      showError(errorElement, 'Offer name is required');
+      return false;
+    }
+    clearError(errorElement);
+    return true;
+  }
+
+  function validateProduct() {
+    const input = document.getElementById('product');
+    const errorElement = document.getElementById('productError');
+    if (input.value === '') {
+      showError(errorElement, 'Please select a product');
+      return false;
+    }
+    clearError(errorElement);
+    return true;
+  }
+
+  function validateDiscountPercentage() {
+    const input = document.getElementById('discountPercentage');
+    const errorElement = document.getElementById('discountPercentageError');
+    const value = parseFloat(input.value);
+    if (isNaN(value) || value < 0 || value > 100) {
+      showError(errorElement, 'Discount percentage must be between 0 and 100');
+      return false;
+    }
+    clearError(errorElement);
+    return true;
+  }
+
+  function validateStartDate() {
+    const input = document.getElementById('startDate');
+    const errorElement = document.getElementById('startDateError');
+    if (input.value === '') {
+      showError(errorElement, 'Start date is required');
+      return false;
+    }
+    clearError(errorElement);
+    return true;
+  }
+
+  function validateEndDate() {
+    const startDate = new Date(document.getElementById('startDate').value);
+    const endDate = new Date(document.getElementById('endDate').value);
+    const errorElement = document.getElementById('endDateError');
+    if (isNaN(endDate.getTime())) {
+      showError(errorElement, 'End date is required');
+      return false;
+    }
+    if (endDate <= startDate) {
+      showError(errorElement, 'End date must be after the start date');
+      return false;
+    }
+    clearError(errorElement);
+    return true;
+  }
+
+  function showError(element, message) {
+    element.textContent = message;
+    element.style.display = 'block';
+  }
+
+  function clearError(element) {
+    element.textContent = '';
+    element.style.display = 'none';
+  }
+
+  function showSuccessSwal(message) {
+    Swal.fire({
+      icon: "success",
+      text: message,
+      toast: true,
+      position: "top-right",
+      showConfirmButton: false,
+      timerProgressBar: true,
+      timer: 3000,
+    });
+  }
+
+  function showErrorSwal(message) {
+    Swal.fire({
+      icon: "error",
+      text: message,
+      toast: true,
+      position: "top-right",
+      showConfirmButton: false,
+      timerProgressBar: true,
+      timer: 3000,
+    });
+  }
+});
+
+</script>

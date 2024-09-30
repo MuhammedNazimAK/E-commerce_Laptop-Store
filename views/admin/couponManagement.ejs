@@ -1,0 +1,277 @@
+<%- include('../partials/admin/header') %>
+<%- include('../partials/admin/search') %>
+
+<style>
+    .error-message-container {
+        height: 10px; 
+        margin-top: 5px;
+    }
+    .form-error {
+        font-size: 0.9em;
+        color: red;
+    }
+</style>
+
+<section class="content-main">
+  <form method="post" action="/admin/add-coupon" id="couponForm">
+    <div class="row">
+        <div class="col-12">
+            <div class="content-header">
+                <h2 class="content-title">Add New Coupon</h2>
+                <!-- Submit Button -->
+                <div class="text-end">
+                  <button type="submit" class="btn btn-md rounded font-sm hover-up" form="couponForm">Publish</button>
+              </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="card mb-4">
+                <div class="card-body">
+                        <!-- Basic Information -->
+                        <div class="mb-4">
+                            <label for="couponName" class="form-label">Coupon Name</label>
+                            <input type="text" placeholder="Type here" class="form-control" id="couponName" name="couponName">
+                            <div class="error-message-container"><div id="couponNameError" class="form-error text-danger"></div></div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="couponDescription" class="form-label">Description</label>
+                            <textarea placeholder="Type here" class="form-control" id="couponDescription" name="couponDescription" rows="4"></textarea>
+                            <div class="error-message-container"><div id="couponDescriptionError" class="form-error text-danger"></div></div>
+                        </div>
+                        
+                        <!-- Discount Details -->
+                        <div class="row gx-3">
+                            <div class="col-md-6 mb-3">
+                                <label for="discountPercentage" class="form-label">Discount Percentage</label>
+                                <input type="number" placeholder="Enter percentage" class="form-control" id="discountPercentage" name="discountPercentage" min="0" max="100">
+                                <div class="error-message-container"><div id="discountPercentageError" class="form-error text-danger"></div></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="maxDiscountAmount" class="form-label">Max Discount Amount</label>
+                                <input type="number" placeholder="Enter amount" class="form-control" id="maxDiscountAmount" name="maxDiscountAmount" min="0" step="0.01">
+                                <div class="error-message-container"><div id="maxDiscountAmountError" class="form-error text-danger"></div></div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <!-- Additional Details -->
+                    <div class="mb-4">
+                        <label for="minPurchaseAmount" class="form-label">Minimum Purchase Amount</label>
+                        <input type="number" placeholder="Enter amount" class="form-control" id="minPurchaseAmount" name="minPurchaseAmount" min="0" step="0.01">
+                        <div class="error-message-container"><div id="minPurchaseAmountError" class="form-error text-danger"></div></div>
+                    </div>
+                    
+                    <!-- Status -->
+                    <div class="mb-4">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="couponStatus" name="couponStatus">
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </form>
+</section>
+
+<%- include("../partials/admin/footer") %>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById('couponForm');
+  const fields = [
+    { id: 'couponName', validator: validateCouponName },
+    { id: 'couponDescription', validator: validateDescription },
+    { id: 'discountPercentage', validator: validateDiscountPercentage },
+    { id: 'maxDiscountAmount', validator: validateMaxDiscountAmount },
+    { id: 'minPurchaseAmount', validator: validateMinPurchaseAmount }
+  ];
+
+  fields.forEach(field => {
+    const element = document.getElementById(field.id);
+    element.addEventListener('input', field.validator);
+  });
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    let isValid = true;
+    fields.forEach(field => {
+      if (!field.validator()) {
+        isValid = false;
+      }
+    });
+
+    if (!isValid) {
+      return;
+    }
+    const formData = new FormData(form);
+    axios.post('/admin/add-coupon', formData)
+  .then(response => {
+    if (response.data.success) {
+      showSuccess(`Coupon added successfully! Generated Code: ${response.data.couponCode}`);
+      form.reset();
+    } else {
+      showError(response.data.message || 'Failed to add coupon');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      showError(error.response.data.message || 'An error occurred. Please try again.');
+    } else if (error.request) {
+      // The request was made but no response was received
+      showError('No response received from the server. Please try again.');
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      showError('An error occurred. Please try again.');
+    }
+  })
+})
+
+
+  function validateCouponName() {
+    const input = document.getElementById('couponName');
+    const errorElement = document.getElementById('couponNameError');
+    const value = input.value.trim();
+    
+    if (value === '') {
+      showError(errorElement, 'Coupon Name is required');
+      return false;
+    } else if (value.length < 3 || value.length > 50) {
+      showError(errorElement, 'Coupon Name must be between 3 and 50 characters');
+      return false;
+    }
+    
+    clearError(errorElement);
+    return true;
+  }
+
+  function validateDescription() {
+    const input = document.getElementById('couponDescription');
+    const errorElement = document.getElementById('couponDescriptionError');
+    const value = input.value.trim();
+    
+    if (value === '') {
+      showError(errorElement, 'Description is required');
+      return false;
+    } else if (value.length > 200) {
+      showError(errorElement, 'Description must not exceed 200 characters');
+      return false;
+    }
+    
+    clearError(errorElement);
+    return true;
+  }
+
+  function validateCouponCode() {
+    const input = document.getElementById('couponCode');
+    const errorElement = document.getElementById('couponCodeError');
+    const value = input.value.trim();
+    const regex = /^[A-Z0-9-_]{5,20}$/;
+    
+    if (value === '') {
+      showError(errorElement, 'Coupon Code is required');
+      return false;
+    } else if (!regex.test(value)) {
+      showError(errorElement, 'Coupon Code must be 5-20 characters long and contain only uppercase letters, numbers, hyphens, or underscores');
+      return false;
+    }
+    
+    clearError(errorElement);
+    return true;
+  }
+
+  function validateDiscountPercentage() {
+    const input = document.getElementById('discountPercentage');
+    const errorElement = document.getElementById('discountPercentageError');
+    const value = parseFloat(input.value);
+    
+    if (isNaN(value) || value < 0 || value > 100) {
+      showError(errorElement, 'Discount Percentage must be between 0 and 100');
+      return false;
+    }
+    
+    clearError(errorElement);
+    return true;
+  }
+
+  function validateMaxDiscountAmount() {
+    const input = document.getElementById('maxDiscountAmount');
+    const errorElement = document.getElementById('maxDiscountAmountError');
+    const value = parseFloat(input.value);
+    const minPurchaseAmount = parseFloat(document.getElementById('minPurchaseAmount').value);
+    
+    if (isNaN(value) || value <= 0) {
+      showError(errorElement, 'Maximum Discount Amount must be greater than zero');
+      return false;
+    } else if (!isNaN(minPurchaseAmount) && value > minPurchaseAmount) {
+      showError(errorElement, 'Maximum Discount Amount cannot exceed Minimum Purchase Amount');
+      return false;
+    }
+    
+    clearError(errorElement);
+    return true;
+  }
+
+  function validateMinPurchaseAmount() {
+    const input = document.getElementById('minPurchaseAmount');
+    const errorElement = document.getElementById('minPurchaseAmountError');
+    const value = parseFloat(input.value);
+    
+    if (isNaN(value) || value < 0) {
+      showError(errorElement, 'Minimum Purchase Amount must be zero or greater');
+      return false;
+    }
+    
+    clearError(errorElement);
+    validateMaxDiscountAmount();
+    return true;
+  }
+
+  function showError(elementOrMessage, message) {
+  if (typeof elementOrMessage === 'string') {
+    Swal.fire({
+      icon: "error",
+      text: elementOrMessage,
+      toast: true,
+      position: "top-right",
+      showConfirmButton: false,
+      timerProgressBar: true,
+      timer: 3000,
+    });
+  } else if (elementOrMessage instanceof Element) {
+    // If the first argument is a DOM element, update its content and style
+    elementOrMessage.textContent = message;
+    elementOrMessage.style.display = 'block';
+  } else {
+    console.error('Invalid argument passed to showError function');
+  }
+}
+
+  function clearError(element) {
+    element.textContent = '';
+    element.style.display = 'none';
+  }
+});
+
+function showSuccess(message) {
+  swal.fire({
+    icon: "success",
+    text: message,
+    toast: true,
+    position: "top-right",
+    showConfirmButton: false,
+    timerProgressBar: true,
+    timer: 3000,
+  });
+}
+
+</script>
