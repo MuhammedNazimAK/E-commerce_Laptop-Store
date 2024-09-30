@@ -17,6 +17,7 @@ const loadAdminLoginPage = async (req, res) => {
     }
 };
 
+
 const   verifyAdminCredentials = async (req, res) => {
     const { email, password } = req.body;
     const errors = {};
@@ -64,6 +65,7 @@ const loadAdminDashboard = (req, res) => {
         return res.status(500).send("Internal server Error");
     }
 };
+
 
 const loadCustomersListPage = async (req, res) => {
     try {
@@ -204,6 +206,7 @@ const getDashboardData = async (req, res) => {
         res.status(500).json({ message: 'Error fetching dashboard data' });
     }
 };
+
 
 const getLatestOrders = async (req, res) => {
     try {

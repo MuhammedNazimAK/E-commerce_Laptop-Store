@@ -58,6 +58,7 @@
     };
   }
 
+
   const getAddProductPage = async (req, res) => {
     try {
       const categories = await Category.find();
@@ -67,6 +68,7 @@
       res.status(500).send("Internal Server Error");
     }
   };
+
 
   //handle product creation
   const addProduct = async (req, res) => {
@@ -151,6 +153,7 @@
     }
   };
 
+
   const getProductsList = async (req, res) => {
     try {
 
@@ -181,10 +184,11 @@
     }
   };
 
+
   const loadProductListingPage = async (req, res) => {
     try {
 
-      const { brand, category } = req.params;
+      const { brand, category } = req.query;
 
       let filter = {};
       if (brand) {
@@ -224,6 +228,7 @@
     }
   }
 
+  
   const getProductDetails = async (req, res) => {
       const { productId } = req.params;
       
@@ -240,6 +245,7 @@
         res.status(500).json({ success: false, message: "Error fetching product details" });
       }
   };
+
 
   const getProductEditPage = async (req, res) => {
     const { productId } = req.params;
@@ -261,6 +267,7 @@
       res.status(500).json({ success: false, message: "Error fetching product details" });
     }
   };
+
 
   const updateProduct = async (req, res) => {    
     try {
@@ -351,7 +358,6 @@
   };
   
 
-
   const deleteImage = async (req, res) => {
     try {
       const productId = req.params.productId;
@@ -392,6 +398,7 @@
         res.status(500).json({ success: false, message: "Error updating product" });
     }
   };
+
 
   const getRelatedProducts = async (product) => {
     const relatedProducts = await Product.find({
@@ -445,7 +452,6 @@
             $or: [
               { "basicInformation.name": { $regex: searchQuery, $options: "i" } },
               { "basicInformation.brand": { $regex: searchQuery, $options: "i" } },
-              { "basicInformation.description": { $regex: searchQuery, $options: "i" } },
               { "category": { $regex: searchQuery, $options: "i" } },
             ],
           },

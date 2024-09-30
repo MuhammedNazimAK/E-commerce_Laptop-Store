@@ -15,6 +15,7 @@ const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 
 
+
 async function getProductWithOffers(productId) {
   const product = await Product.findById(productId).populate('category');
 
@@ -66,6 +67,7 @@ async function getProductWithOffers(productId) {
   };
 }
 
+
 function generateUniqueReferralCode() {
   return uuidv4().substring(0, 8).toUpperCase();
 }
@@ -105,11 +107,19 @@ const renderHomePage = async (req, res) => {
 
 
 const renderLoginPage = (req, res) => {
-  const message = req.session.message || req.flash('success') || req.flash('error') || '';
-
-  delete req.session.message;
-  res.render("users/login", { error: message || "" });
+  try {
+    if (req.session.user) {
+      return res.redirect('/home');
+    }
+    const message = req.session.message || req.flash('success') || req.flash('error') || '';
+    delete req.session.message;
+    res.render("users/login", { error: message || "" });
+  } catch (error) {
+    console.error("Error in renderLoginPage:", error);
+    res.status(500).render("users/pageNotFound", { message: "Error loading login page" });
+  }
 };
+
 
 const authenticateUser = async (req, res) => {
   try {
@@ -136,14 +146,17 @@ const authenticateUser = async (req, res) => {
   }
 };
 
+
 const sendError = (req, res, message) => {
   req.session.message = message;
   res.redirect("/login");
 };
 
+
 const generateOtp = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
+
 
 const sendVerificationEmail = async (email, otp) => {
   try {
@@ -215,8 +228,6 @@ const registerUser = async (req, res) => {
       referralCode: generateUniqueReferralCode()
     };
 
-    console.log('Stored session OTP:', req.session.userOtp);  
-
     return res.redirect('/enter-otp');
   } catch (error) {
     console.error("Error in registerUser:", error);
@@ -271,7 +282,6 @@ const resendOtp = async(req, res) => {
     
     const email = req.session.userData.email;
     const otp = generateOtp();
-    console.log('new otp', otp);
 
     const emailSent = await sendVerificationEmail(email, otp);
     if(!emailSent) {
@@ -401,7 +411,7 @@ const logoutUser = (req, res) => {
     if (err) {
       console.error("Error destroying session:", err);
     }
-    res.redirect("/login");
+    res.redirect('/my-account')
   });
 };
 
@@ -496,7 +506,6 @@ const changePassword = async (req, res) => {
 };
 
 
-
 const forgotPassword = async (req, res) => {
   try {
      const { email } = req.body;
@@ -528,7 +537,7 @@ const forgotPassword = async (req, res) => {
      req.flash('error', 'Server error while sending password reset link');
      return res.json({ success: false });
   }
- };
+};
 
 
 const resetPassword = async (req, res) => {
@@ -561,7 +570,6 @@ const loadResetPasswordPage = (req, res) => {
 
 
 
-
 module.exports = {
   renderLoginPage,
   authenticateUser,
@@ -580,5 +588,4 @@ module.exports = {
   resetPassword,
   loadResetPasswordPage,
 };
-
 

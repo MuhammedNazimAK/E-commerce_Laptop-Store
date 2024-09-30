@@ -61,7 +61,6 @@ async function getProductWithOffers(productId) {
 }
 
 
-
 const addToCart = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
@@ -178,6 +177,7 @@ const removeFromCart = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
 
 const getCart = async (req, res) => {
   try {
@@ -346,12 +346,83 @@ const checkout = async (req, res) => {
 };
 
 
+const getCartItems = async (req, res) => {
+  try {
+    const userId = req.session.user?._id || req.session.guestCartId;
+
+    const cart = await Cart.aggregate([
+      { $match: { user: new mongoose.Types.ObjectId(userId) } },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'items.product',
+          foreignField: '_id',
+          as: 'productDetails'
+        }
+      },
+      { $unwind: '$items' },
+      { $unwind: '$productDetails' },
+      {
+        $match: {
+          $expr: { $eq: ['$items.product', '$productDetails._id'] }
+        }
+      },
+      {
+        $group: {
+          _id: '$_id',
+          user: { $first: '$user' },
+          items: {
+            $push: {
+              product: '$productDetails',
+              quantity: '$items.quantity'
+            }
+          }
+        }
+      }
+    ]);
+
+    if (cart.length === 0) {
+      return res.json({ items: [], subtotal: 0, shipping: 0, total: 0 });
+    }
+
+    let subtotal = 0;
+    let shipping = 25;
+
+    const items = await Promise.all(cart[0].items.map(async (item) => {
+      const productWithOffers = await getProductWithOffers(item.product._id);
+      const price = productWithOffers.discountedPrice;
+      const total = price * item.quantity;
+      subtotal += total;
+      return {
+        ...productWithOffers,
+        quantity: item.quantity,
+        total,
+      };
+    }));
+
+    const total = subtotal + shipping;
+
+    return res.json({
+      items,
+      subtotal,
+      shipping,
+      total,
+    });
+  } catch (error) {
+    console.error('Error in getCartItems:', error);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+
+
 module.exports = {
   addToCart,
   removeFromCart,
   getCart,
   updateCart,
   checkout,
+  getCartItems,
 };
 
     

@@ -23,7 +23,7 @@ adminRoute.get("/logout", adminAuth.requireAuth, adminController.logoutAdmin);
 
 
 // Admin dashboard and customer management
-adminRoute.get("/dashboard", adminAuth.requireAuth, adminController.loadAdminDashboard);
+adminRoute.get("/dashboard", adminController.loadAdminDashboard);
 adminRoute.get("/customerlist", adminAuth.requireAuth, adminController.loadCustomersListPage);
 adminRoute.get("/customers", adminAuth.requireAuth, adminController.loadCustomersList);
 adminRoute.patch("/customers", adminAuth.requireAuth, adminController.toggleUserBlockStatus);
@@ -57,9 +57,9 @@ adminRoute.delete('/delete-product-offer/:id', adminAuth.requireAuth, productCon
 
 
 // Category management
-adminRoute.get("/categoryManagement", adminAuth.requireAuth, categoryController.loadCategoryManagementPage);
-adminRoute.get("/categories", adminAuth.requireAuth, categoryController.getAllCategories);
-adminRoute.post("/categories", adminAuth.requireAuth, categoryController.addNewCategory);
+adminRoute.get("/categoryManagement", categoryController.loadCategoryManagementPage);
+adminRoute.get("/categories", categoryController.getAllCategories);
+adminRoute.post("/categories", categoryController.addNewCategory);
 adminRoute.get("/categories/:id", adminAuth.requireAuth, categoryController.getCategory);
 adminRoute.put("/categories/:id", adminAuth.requireAuth, categoryController.editExistingCategory);
 adminRoute.patch("/categories", adminAuth.requireAuth, categoryController.softDeleteCategory);

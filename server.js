@@ -9,8 +9,8 @@ const passport = require('./config/passport');
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require('./routes/adminRoutes');
-const { addUserToLocals } = require('./middleware/authMiddleware');
 const flash = require('connect-flash');
+const { addUserToLocals } = require('./middleware/authMiddleware');
 
 const PORT = process.env.PORT;
 const app = express();
@@ -52,6 +52,4 @@ app.use("/", userRoutes);
 app.use("/admin", adminRoutes);
 
 
-app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
-});
+app.listen(PORT);

@@ -2,6 +2,7 @@ const Address = require('../models/addressModel');
 const User = require('../models/userModel');
 const mongoose = require('mongoose');
 
+
 const getAddresses = async (req, res) => {
   try {
     
@@ -15,6 +16,7 @@ const getAddresses = async (req, res) => {
     
   }
 }
+
 
 const addAddress = async (req, res) => {
   try {
@@ -106,7 +108,6 @@ const editAddress = async (req, res) => {
 };
 
 
-
 const deleteAddress = async (req, res) => {
   try {
     const addressId = req.params.addressId;
@@ -129,7 +130,6 @@ const deleteAddress = async (req, res) => {
 };
 
 
-
 const getAddressDetails = async (req, res) => {
   try {
       const addressId = req.params.addressId;
@@ -147,6 +147,7 @@ const getAddressDetails = async (req, res) => {
       res.status(500).json({ error: 'Server error while fetching address details' });
   }
 };
+
 
 const getAddressById = async (req, res) => {
   try {

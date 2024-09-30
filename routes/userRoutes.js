@@ -15,7 +15,7 @@ const passport = require('passport');
 
 //user authentication
 router.get('/', userController.renderHomePage);
-router.get('/home', userController.renderHomePage);
+router.get('/home', requireAuth, userController.renderHomePage);
 router.get('/login', userController.renderLoginPage);
 router.post('/login', userController.authenticateUser);
 router.get('/signup', userController.renderRegisterPage);
@@ -26,7 +26,7 @@ router.post('/resend-otp', userController.resendOtp);
 
 
 //user account
-  router.get('/my-account', userController.renderMyAccount);
+router.get('/my-account', userController.renderMyAccount);
 router.post('/logout', requireAuth, userController.logoutUser);
 router.post('/update-profile', requireAuth, userController.updateProfile);
 router.get('/forgot-password', userController.getChangePasswordPage);
@@ -58,6 +58,7 @@ router.post('/add-to-cart', cartController.addToCart);
 router.post('/removeFromCart', cartController.removeFromCart);
 router.get('/cart', cartController.getCart);
 router.post('/updateCart', cartController.updateCart);
+router.get('/cart-items', cartController.getCartItems);
 
 
 //coupon controller
@@ -80,7 +81,6 @@ router.put('/my-account/cancel-order/:id', requireAuth, orderController.cancelOr
 router.put('/my-account/return-order/:id', requireAuth, orderController.returnOrder);
 
 
-
 //wishlist controller
 router.get('/wishlist', wishlistController.getWishList);
 router.get('/wishlist-items', wishlistController.getWishListItems);
@@ -100,9 +100,18 @@ router.get('/download-invoice/:orderId', requireAuth, invoiceController.getInvoi
 
 //passport authentication google
 router.get('/auth/google', passport.authenticate('google', {scope: ['profile', 'email']}));
-router.get('/auth/google/callback', passport.authenticate('google', {failureRedirect: '/signup'}), (req, res) => {
-  res.redirect('/home')
-});
+router.get('/auth/google/callback', 
+  passport.authenticate('google', { failureRedirect: '/signup' }),
+  (req, res) => {
+    req.session.user = req.user;
+    req.session.save((err) => {
+      if (err) {
+        console.error("Error saving session:", err);
+      }
+      res.redirect('/home');
+    });
+  }
+);
 
 
 module.exports = router;

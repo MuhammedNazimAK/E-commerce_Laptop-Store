@@ -13,7 +13,6 @@ const loadCategoryManagementPage = (req, res) => {
 };
 
 
-
 const getAllCategories = async (req, res) => {
   try {
       const page = parseInt(req.query.page) || 1;
@@ -40,7 +39,6 @@ const getAllCategories = async (req, res) => {
 };
 
 
-
 const addNewCategory = async (req, res) => {
     const { name, description } = req.body;
     if (!name || !description) {
@@ -49,6 +47,7 @@ const addNewCategory = async (req, res) => {
     try {
         const newCategory = new Category({ name, description });
         await newCategory.save();
+
         res.status(201).json({ success: true, message: 'Category created successfully', category: newCategory });
     } catch (error) {
         console.error('Error creating category:', error);
@@ -72,7 +71,6 @@ const getCategory = async (req, res) => {
 };
 
 
-
 const editExistingCategory = async (req, res) => {
     const { name, description } = req.body;
     try {
@@ -90,7 +88,6 @@ const editExistingCategory = async (req, res) => {
         return res.status(500).json({ error: 'Server error' });
     }
 };
-
 
 
 const softDeleteCategory = async (req, res) => {
@@ -256,6 +253,7 @@ const loadAddCategoryOfferPage = async (req, res) => {
         res.status(500).render('users/pageNotFound', { message: "Internal server error" });
     }
 };
+
 
 const loadCategoryOfferPage = async (req, res) => {
     try {

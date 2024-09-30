@@ -322,20 +322,21 @@
     </div>
     <div class="banner-wrapper clearfix">
         <% topBrands.forEach((brand, index) => { %>
-            <div class="banner-single-item banner-style-7 banner-animation banner-color--green float-left" data-aos="fade-up" data-aos-delay="<%= index * 200 %>">
+            <a href="/productListing?brand=<%= encodeURIComponent(brand._id) %>" class="banner-single-item banner-style-7 banner-animation banner-color--green float-left" data-aos="fade-up" data-aos-delay="<%= index * 200 %>">
                 <div class="image">
                     <img class="img-fluid" src="/assets/images/Brands/<%= brand._id.toLowerCase() %>.webp" alt="<%= brand._id %>">
                 </div>
-                <a href="/productListing?brand=<%= brand._id %>" class="content">
+                <div class="content">
                     <div class="inner">
-                      <h4 class="title"><%= brand._id %></h4>
-                      <h6 class="sub-title"><%= brand.count %> products</h6>
+                        <h4 class="title"><%= brand._id %></h4>
+                        <h6 class="sub-title"><%= brand.count %> products</h6>
                     </div>
-                  </a>                  
-            </div>
+                </div>
+            </a>
         <% }); %>
     </div>
 </div>
+
 
 <!-- Categories Section -->
 <div class="banner-section section-top-gap-100">
@@ -358,7 +359,7 @@
                 <div class="image">
                     <img class="img-fluid" src="/assets/images/Category/<%= category.name.toLowerCase() %>.webp" alt="<%= category.name %>">
                 </div>
-                <a href="/productListing?category=<%= category._id %>" class="content">
+                <a href="/productListing?category=<%= encodeURIComponent(category._id) %>" class="content">
                     <span class="round-btn"><i class="ion-ios-arrow-thin-right"></i></span>
                   </a>                  
             </div>

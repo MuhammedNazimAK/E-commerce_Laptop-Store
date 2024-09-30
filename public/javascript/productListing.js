@@ -18,9 +18,32 @@ class ProductData {
     this.currentPage = 1;
     this.itemsPerPage = 9;
 
+    this.parseURLParams();
     this.initEventListeners();
     this.initPriceSlider();
     this.fetchProducts();
+  }
+
+  parseURLParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const brand = urlParams.get('brand');
+    const category = urlParams.get('category');
+
+    if (brand) {
+      const brandCheckbox = document.querySelector(`.brand-filter[value="${brand}"]`);
+      if (brandCheckbox) {
+        brandCheckbox.checked = true;
+        this.filters.brands = [brand];
+      }
+    }
+
+    if (category) {
+      const categoryCheckbox = document.querySelector(`.category-filter[value="${category}"]`);
+      if (categoryCheckbox) {
+        categoryCheckbox.checked = true;
+        this.filters.categories = [category];
+      }
+    }
   }
 
   initEventListeners() {
@@ -331,4 +354,4 @@ document.addEventListener('DOMContentLoaded', () => {
   new ProductData();
 });
 }
-})(); 
+})();
