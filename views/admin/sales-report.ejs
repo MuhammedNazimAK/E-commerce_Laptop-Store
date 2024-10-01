@@ -150,7 +150,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function showError(message) {
-    alert(message);
+    Swal.fire({
+      icon: "error",
+      text: message,
+      toast: true,
+      position: "top-right",
+      showConfirmButton: false,
+      timerProgressBar: true,
+      timer: 3000,
+    });
   }
 
   toggleDateInputs();

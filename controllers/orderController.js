@@ -145,8 +145,8 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    // Refund wallet if payment was made through wallet
-    if (order.paymentMethod === 'wallet') {
+    // Refund to wallet
+    if (order.paymentMethod === 'razorpay' && order.status === 'Confirmed') {
       const wallet = await Wallet.findOne({ userId: order.userId });
       if (wallet) {
         wallet.transactions.push({
@@ -155,7 +155,23 @@ const cancelOrder = async (req, res) => {
           amount: order.total,
           type: 'credit',
           status: 'refunded',
-          description: 'Refund for order'
+          description: 'Refund for cancelled Razorpay order'
+        });
+        wallet.balance += order.total;
+        await wallet.save();
+      }
+    }
+
+    if (order.paymentMethod === 'wallet') {
+      const wallet = await Wallet.findOne({ userId: req.session.user._id });
+      if (wallet) {
+        wallet.transactions.push({
+          transactionId: uuidv4(),
+          orderId: order._id,
+          amount: order.total,
+          type: 'credit',
+          status: 'refunded',
+          description: 'Refund for cancelled wallet order'
         });
         wallet.balance += order.total;
         await wallet.save();
@@ -163,9 +179,10 @@ const cancelOrder = async (req, res) => {
     }
 
     order.status = 'Cancelled';
+    order.canceledAt = new Date();
     await order.save();
 
-    res.json({ success: true, message: 'Order cancelled successfully' });
+    res.json({ success: true, message: 'Order cancelled successfully and amount refunded to wallet' });
   } catch (error) {
     console.error('Error cancelling order:', error);
     res.status(500).json({ success: false, message: 'Error cancelling order' });

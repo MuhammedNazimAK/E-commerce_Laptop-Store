@@ -24,6 +24,7 @@ function addToWishlist(productId, button) {
       if (response.data.success) {
         if (response.data.added) {
           showSuccess('Product added to wishlist');
+          updateItemCounts();
           button.classList.add('added-to-wishlist');
         } else {
           showSuccess('Product removed from wishlist');
@@ -76,6 +77,7 @@ function removeFromWishlist(productId) {
   axios.put('/remove-from-wishlist', { productId })
     .then(response => {
       if (response.data.success) {
+        updateItemCounts();
         showSuccess('Product removed from wishlist');
         if (window.location.pathname === '/wishlist') {
           loadWishlistItems();

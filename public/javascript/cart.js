@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const response = await axios.post('/removeFromCart', { productId });
         if (response.data.success) {
           row.remove();
+          updateItemCounts();
           updateCartTotals();
           showSuccess('Item removed successfully');
         } else {

@@ -52,27 +52,42 @@ async function viewOrderDetails(orderId) {
   document.getElementById('orderStatus').textContent = order.status;
   document.getElementById('orderTotal').textContent = order.total.toFixed(2);
   document.getElementById('orderPayment').textContent = order.paymentMethod;
+  
   const modalFooter = document.querySelector('#orderDetailsModal .modal-footer');
+  
+  // Remove any existing download button
+  const existingDownloadButton = modalFooter.querySelector('.download-invoice-btn');
+  if (existingDownloadButton) {
+    existingDownloadButton.remove();
+  }
 
-  const downloadButton = document.createElement('a');
-  downloadButton.href = `/download-invoice/${orderId}`;
-  downloadButton.className = 'btn btn-md btn-black-default-hover';
-  downloadButton.textContent = 'Download Invoice';
-  modalFooter.appendChild(downloadButton);
+  // Add download button only if the order status is not 'Pending'
+  if (order.status !== 'Pending') {
+    const downloadButton = document.createElement('a');
+    downloadButton.href = `/download-invoice/${orderId}`;
+    downloadButton.className = 'btn btn-md btn-black-default-hover download-invoice-btn';
+    downloadButton.textContent = 'Download Invoice';
+    modalFooter.appendChild(downloadButton);
+  }
 
   // Fetch address details
-  const addressResponse = await axios.get(`/address/${order.shippingAddress}`);
-  const shippingAddress = addressResponse.data;
+  try {
+    const addressResponse = await axios.get(`/address/${order.shippingAddress}`);
+    const shippingAddress = addressResponse.data;
 
-  const formattedAddress = shippingAddress ? `
-    ${shippingAddress.name}, 
-    ${shippingAddress.addressType},
-    ${shippingAddress.landMark},
-    ${shippingAddress.city},
-    ${shippingAddress.state} - ${shippingAddress.pinCode},
-    Mobile: ${shippingAddress.mobile}
-  ` : 'Address not available';
-  document.getElementById('orderShippingAddress').textContent = formattedAddress;
+    const formattedAddress = shippingAddress ? 
+      `${shippingAddress.name}, 
+      ${shippingAddress.addressType},
+      ${shippingAddress.landMark},
+      ${shippingAddress.city},
+      ${shippingAddress.state} - ${shippingAddress.pinCode},
+      Mobile: ${shippingAddress.mobile}` 
+      : 'Address not available';
+    document.getElementById('orderShippingAddress').textContent = formattedAddress;
+  } catch (error) {
+    console.error('Error fetching address:', error);
+    document.getElementById('orderShippingAddress').textContent = 'Address not available';
+  }
 
   const itemsTableBody = document.getElementById('orderItemsTableBody');
   itemsTableBody.innerHTML = order.products.map(item => `
@@ -103,7 +118,7 @@ function getActionButton(order) {
 
 
 function cancelOrder(orderId) {
-  if (confirm('Are you sure you want to cancel this order?')) {
+  if (Swal.fire(confirm = 'Are you sure you want to cancel this order?', icon = 'warning', showCancelButton = true, confirmButtonColor = '#3085d6', cancelButtonColor = '#d33', confirmButtonText = 'Yes, cancel it!')) {
     axios.put(`/my-account/cancel-order/${orderId}`)
       .then(response => {
         if (response.data.success) {

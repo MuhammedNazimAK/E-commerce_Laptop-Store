@@ -238,9 +238,7 @@ async function handleWalletOrder(orderId, amount) {
     if (response.data.success) {
       showSuccess('Order placed successfully using wallet balance');
       redirectToOrderConfirmation(orderId);
-    } else {
-      showError(response.data.message || ERROR_MESSAGES.GENERAL_ERROR);
-    }
+    } 
   } catch (error) {
     console.error('Error handling wallet order:', error);
     if (error.response && error.response.status === 400) {

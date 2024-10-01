@@ -159,12 +159,23 @@ document.addEventListener('DOMContentLoaded', function() {
               });
               document.querySelector('.order_button').appendChild(viewOrderButton);
           } else {
-              alert('Payment verification failed. Please try again.');
+              showError('Payment verification failed. Please try again.');
           }
       })
       .catch(error => {
           console.error('Error:', error);
-          alert('An error occurred. Please try again.');
+          showError('An error occurred. Please try again.');
+    });
+}
+function showError(message) {
+    Swal.fire({
+        icon: "error",
+        text: message,
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timerProgressBar: true,
+        timer: 3000,
     });
 }
 
