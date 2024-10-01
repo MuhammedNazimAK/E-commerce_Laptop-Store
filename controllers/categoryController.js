@@ -3,6 +3,7 @@ const CategoryOffer = require('../models/categoryOfferModel');
 const { validationResult } = require('express-validator');
 
 
+
 const loadCategoryManagementPage = (req, res) => {
     try {
         res.render('admin/categoryManagement');
@@ -110,7 +111,7 @@ const softDeleteCategory = async (req, res) => {
     }
 };
 
- 
+
 // Category Offer controller
 const categoryOfferController = {
 

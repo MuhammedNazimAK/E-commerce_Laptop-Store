@@ -1,6 +1,7 @@
 const Coupon = require('../models/couponModel');
 const Cart = require('../models/cartModel');
 const Product = require('../models/productModel');
+const User = require('../models/userModel');
 const ProductOffer = require('../models/productOfferModel');
 const CategoryOffer = require('../models/categoryOfferModel');
 
@@ -60,7 +61,17 @@ async function getProductWithOffers(productId) {
 //customer side
 const getAvailableCoupons = async (req, res) => {
   try {
-    const coupons = await Coupon.find({ isActive: true }).select('name description code');
+    const userId = req.session.user._id;
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const coupons = await Coupon.find({
+      isActive: true,
+      code: { $nin: user.usedCoupons }
+    }).select('name description code');
     
     res.json({ success: true, coupons });
   } catch (error) {

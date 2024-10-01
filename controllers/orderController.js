@@ -613,6 +613,12 @@ const editOrderAdmin = async (req, res) => {
     order.status = status;
     await order.save();
 
+    if (status === 'Delivered' && order.couponCode) {
+      await User.findByIdAndUpdate(order.userId, {
+        $addToSet: { usedCoupons: order.couponCode }
+      });
+    }
+
     res.json({ message: 'Order status updated successfully' });
   } catch (error) {
     console.error('Error updating order status:', error);

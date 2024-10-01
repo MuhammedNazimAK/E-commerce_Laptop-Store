@@ -76,6 +76,10 @@ const userSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
+  usedCoupons: [{
+    type: String,
+    ref: 'Coupon'
+  }],
   searchHistory: [
     {
       category: {
