@@ -118,22 +118,33 @@ function getActionButton(order) {
 
 
 function cancelOrder(orderId) {
-  if (Swal.fire(confirm = 'Are you sure you want to cancel this order?', icon = 'warning', showCancelButton = true, confirmButtonColor = '#3085d6', cancelButtonColor = '#d33', confirmButtonText = 'Yes, cancel it!')) {
-    axios.put(`/my-account/cancel-order/${orderId}`)
-      .then(response => {
-        if (response.data.success) {
-          showSuccess('Order cancelled successfully');
-          updateOrderStatus(orderId, 'Cancelled');
-        } else {
-          showError(response.data.message || 'Failed to cancel order');
-        }
-      })
-      .catch(error => {
-        console.error('Error cancelling order:', error);
-        showError(error.response?.data?.message || 'Failed to cancel order');
-      });
-  }
+  Swal.fire({
+    title: 'Are you sure?',
+    text: 'Do you want to cancel this order?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, cancel it!'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      axios.put(`/my-account/cancel-order/${orderId}`)
+        .then(response => {
+          if (response.data.success) {
+            Swal.fire('Cancelled!', 'Your order has been cancelled.', 'success');
+            updateOrderStatus(orderId, 'Cancelled');
+          } else {
+            Swal.fire('Error', response.data.message || 'Failed to cancel order', 'error');
+          }
+        })
+        .catch(error => {
+          console.error('Error cancelling order:', error);
+          Swal.fire('Error', error.response?.data?.message || 'Failed to cancel order', 'error');
+        });
+    }
+  });
 }
+
 
 function returnOrder(orderId) {
   if (confirm('Are you sure you want to return this order?')) {

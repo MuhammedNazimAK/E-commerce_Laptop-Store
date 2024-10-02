@@ -12,6 +12,7 @@ const nodeMailer = require('nodemailer');
 const bcrypt = require("bcrypt");
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
 
@@ -75,6 +76,14 @@ function generateUniqueReferralCode() {
 
 const renderHomePage = async (req, res) => {
   try {
+
+    let userId = req.session.user?._id;
+
+    
+    if (!userId) {
+      // If the user is not authenticated, create a guest cart
+      userId = req.session.guestCartId || (req.session.guestCartId = new mongoose.Types.ObjectId());
+    }
 
     const products = await Promise.all(
       (await Product.find().limit(16)).map(async (product) => {

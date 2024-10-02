@@ -1,10 +1,11 @@
 const WishList = require('../models/wishListModel');
 const Cart = require('../models/cartModel');
+const mongoose = require('mongoose');
 
 
 const getWishListItems = async (req, res) => {
   try {
-    const userId = req.session.user._id;
+    const userId = req.session.user?._id;
     const wishlist = await WishList.findOne({ userId }).populate('products.productId');
     
     const wishlistItems = wishlist ? wishlist.products.map(item => ({
@@ -32,7 +33,12 @@ const getWishList = async (req, res) => {
 const addToWishList = async (req, res) => {
   try {
     const { productId } = req.body;
-    const userId = req.session.user._id;
+    let userId = req.session.user?._id;
+
+    if (!userId) {
+      // If the user is not authenticated, create a guest cart
+      userId = req.session.guestCartId || (req.session.guestCartId = new mongoose.Types.ObjectId());
+    }
 
     let wishlist = await WishList.findOne({ userId });
 
@@ -61,7 +67,7 @@ const addToWishList = async (req, res) => {
 const removeFromWishList = async (req, res) => {
   try {
     const { productId } = req.body;
-    const userId = req.session.user._id;
+    const userId = req.session?.user?._id;
 
     const wishlist = await WishList.findOne({ userId });
     if (!wishlist) {
