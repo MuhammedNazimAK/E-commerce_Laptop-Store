@@ -210,6 +210,7 @@ const registerUser = async (req, res) => {
     }
 
     const otp = generateOtp();
+    console.log('otp', otp);
     const emailSent = await sendVerificationEmail(email, otp);
 
     if (!emailSent) {
@@ -597,4 +598,3 @@ module.exports = {
   resetPassword,
   loadResetPasswordPage,
 };
-
