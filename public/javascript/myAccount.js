@@ -55,13 +55,11 @@ async function viewOrderDetails(orderId) {
   
   const modalFooter = document.querySelector('#orderDetailsModal .modal-footer');
   
-  // Remove any existing download button
   const existingDownloadButton = modalFooter.querySelector('.download-invoice-btn');
   if (existingDownloadButton) {
     existingDownloadButton.remove();
   }
 
-  // Add download button only if the order status is not 'Pending'
   if (order.status !== 'Pending') {
     const downloadButton = document.createElement('a');
     downloadButton.href = `/download-invoice/${orderId}`;
@@ -96,6 +94,7 @@ async function viewOrderDetails(orderId) {
       <td>${item.quantity}</td>
       <td>₹${item.price.toFixed(2)}</td>
       <td>₹${(item.price * item.quantity).toFixed(2)}</td>
+      <td>${getProductReturnButton(order, item)}</td>
     </tr>
   `).join('');
 
@@ -103,6 +102,14 @@ async function viewOrderDetails(orderId) {
   modal.show();
 }
 
+function getProductReturnButton(order, item) {
+  if (order.status === 'Delivered' && item.returnStatus === 'Not Returned') {
+    return `<button onclick="returnProduct('${order._id}', '${item.product._id}')" class="btn btn-sm btn-black-default-hover">Return</button>`;
+  } else if (item.returnStatus !== 'Not Returned') {
+    return `<span>${item.returnStatus}</span>`;
+  }
+  return '';
+}
 
 function getActionButton(order) {
   if (order.status === 'Cancelled' || order.status === 'Return Requested') {
@@ -135,13 +142,17 @@ function cancelOrder(orderId) {
   }
 }
 
-function returnOrder(orderId) {
-  if (confirm('Are you sure you want to return this order?')) {
-    axios.put(`/my-account/return-order/${orderId}`)
+function returnProduct(orderId, productId) {
+  const confirmModal = new bootstrap.Modal(document.getElementById('confirmReturnModal'));
+  confirmModal.show();
+
+  document.getElementById('confirmReturnBtn').onclick = function() {
+    confirmModal.hide();
+    axios.put(`/my-account/return-product/${orderId}`, { productId })
       .then(response => {
         if (response.data.success) {
           showSuccess('Return request submitted successfully');
-          updateOrderStatus(orderId, 'Return Requested');
+          updateProductReturnStatus(orderId, productId, 'Return Requested');
         } else {
           showError(response.data.message || 'Failed to request return');
         }
@@ -150,7 +161,50 @@ function returnOrder(orderId) {
         console.error('Error requesting return:', error);
         showError(error.response?.data?.message || 'Failed to request return');
       });
+  };
+}
+
+function returnOrder(orderId) {
+  const orders = JSON.parse(window.ordersData);
+  const order = orders.find(o => o._id === orderId);
+  
+  if (!order) {
+    showError('Order not found');
+    return;
   }
+
+  const allProductsReturned = order.products.every(product => product.returnStatus !== 'Not Returned');
+  
+  if (allProductsReturned) {
+    showError('All products in this order have already been returned or have return requests');
+    return;
+  }
+
+  Swal.fire({
+    title: 'Return entire order?',
+    text: "This will request a return for all eligible products in the order.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, return all'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      axios.put(`/my-account/return-order/${orderId}`)
+        .then(response => {
+          if (response.data.success) {
+            showSuccess('Return request submitted successfully for all eligible products');
+            updateOrderStatus(orderId, 'Return Requested');
+          } else {
+            showError(response.data.message || 'Failed to request return');
+          }
+        })
+        .catch(error => {
+          console.error('Error requesting return:', error);
+          showError(error.response?.data?.message || 'Failed to request return');
+        });
+    }
+  });
 }
 
 function updateOrderStatus(orderId, newStatus) {
@@ -186,6 +240,25 @@ function updatePagination(containerId, currentPage, totalPages, fetchFunction) {
     li.appendChild(a);
     container.appendChild(li);
   }
+}
+
+
+function updateProductReturnStatus(orderId, productId, newStatus) {
+  const orders = JSON.parse(window.ordersData);
+  const updatedOrders = orders.map(order => {
+    if (order._id === orderId) {
+      const updatedProducts = order.products.map(product => {
+        if (product.product._id === productId) {
+          return { ...product, returnStatus: newStatus };
+        }
+        return product;
+      });
+      return { ...order, products: updatedProducts };
+    }
+    return order;
+  });
+  window.ordersData = JSON.stringify(updatedOrders);
+  viewOrderDetails(orderId);
 }
 
 

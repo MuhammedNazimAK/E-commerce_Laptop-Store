@@ -2,18 +2,16 @@ const requireAuth = (req, res, next) => {
   if ((req.session && req.session.user) || req.user) {
     const user = req.session.user || req.user;
     if (user.isBlocked) {
-      req.session.destroy((err) => {
-        if (err) console.error("Session destruction error:", err);
-        return res.redirect("/login?message=Your account has been blocked");
-      });
+      req.flash('error', 'Your account has been blocked');
+      return res.redirect('/login');
     } else {
       next();
     }
   } else {
-    return res.redirect("/login");
+    req.flash('error', 'Please log in to continue');
+    return res.redirect('/login');
   }
 };
-
 
 module.exports = {
   requireAuth,

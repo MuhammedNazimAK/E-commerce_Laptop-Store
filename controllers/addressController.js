@@ -1,6 +1,7 @@
 const Address = require('../models/addressModel');
 const User = require('../models/userModel');
 const mongoose = require('mongoose');
+const StatusCodes = require('../public/javascript/statusCodes');
 
 
 const getAddresses = async (req, res) => {
@@ -12,7 +13,7 @@ const getAddresses = async (req, res) => {
     res.json({ success: true, addresses });
   } catch (error) {
     console.error("Error in showAddAddress:", error);
-    res.status(500).send("Server Error");
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Server Error");
     
   }
 }
@@ -22,20 +23,20 @@ const addAddress = async (req, res) => {
   try {
     if (!req.session || !req.session.user) {
       console.error('User session not found');
-      return res.status(401).send('User not authenticated');
+      return res.status(StatusCodes.UNAUTHORIZED).send('User not authenticated');
     }
 
     const userId = req.session.user._id;
     if (!userId) {
       console.error('User ID not found in session');
-      return res.status(401).send('User not authenticated');
+      return res.status(StatusCodes.UNAUTHORIZED).send('User not authenticated');
     }
 
     const { name, addressType, city, landMark, state, pinCode, mobile } = req.body;
 
     const pinCodeNumber = Number(pinCode);
     if (isNaN(pinCodeNumber)) {
-      return res.status(400).send('Invalid pincode');
+      return res.status(StatusCodes.BAD_REQUEST).send('Invalid pincode');
     }
 
     const newAddressData = {
@@ -69,9 +70,9 @@ const addAddress = async (req, res) => {
   } catch (error) {
     console.error('Error adding address:', error);
     if (error.name === 'ValidationError') {
-      return res.status(400).send('Invalid address data');
+      return res.status(StatusCodes.BAD_REQUEST).send('Invalid address data');
     }
-    res.status(500).send('Server error while adding address');
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('Server error while adding address');
   }
 };
 
@@ -96,14 +97,14 @@ const editAddress = async (req, res) => {
     );
 
     if (result.nModified === 0) {
-      return res.status(404).json({ success: false, message: 'Address not found or not modified' });
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Address not found or not modified' });
     }
     const updatedAddress = await Address.findOne({ userId, "address._id": addressId }, { "address.$": 1 });
     const addressData = updatedAddress.address[0];
-    res.status(200).json({ success: true, message: 'Address updated successfully', address: addressData, addressId });
+    res.status(StatusCodes.OK).json({ success: true, message: 'Address updated successfully', address: addressData, addressId });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Server error while editing address' });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Server error while editing address' });
   }
 };
 
@@ -119,13 +120,13 @@ const deleteAddress = async (req, res) => {
     );
 
     if (result.nModified === 0) {
-      return res.status(404).json({ success: false, message: 'Address not found or not deleted' });
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Address not found or not deleted' });
     }
 
-    res.status(200).json({ success: true, message: 'Address deleted successfully' });
+    res.status(StatusCodes.OK).json({ success: true, message: 'Address deleted successfully' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Server error while deleting address' });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Server error while deleting address' });
   }
 };
 
@@ -139,12 +140,12 @@ const getAddressDetails = async (req, res) => {
           { "address.$": 1 }
       );
       if (!userWithAddress || !userWithAddress.address[0]) {
-          return res.status(404).json({ error: 'Address not found' });
+          return res.status(StatusCodes.NOT_FOUND).json({ error: 'Address not found' });
       }
       res.json(userWithAddress.address[0]);
   } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'Server error while fetching address details' });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Server error while fetching address details' });
   }
 };
 
@@ -159,13 +160,13 @@ const getAddressById = async (req, res) => {
     );
 
     if (!address || !address.address[0]) {
-      return res.status(404).json({ error: 'Address not found' });
+      return res.status(StatusCodes.NOT_FOUND).json({ error: 'Address not found' });
     }
 
     res.json(address.address[0]);
   } catch (error) {
     console.error('Error fetching address details:', error);
-    res.status(500).json({ error: 'Server error while fetching address details' });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Server error while fetching address details' });
   }
 };
 

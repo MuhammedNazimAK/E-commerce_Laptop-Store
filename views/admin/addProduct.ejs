@@ -263,6 +263,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 <script>
 
+document.addEventListener('DOMContentLoaded', function() {
 const imageCropperModal = new bootstrap.Modal(document.getElementById('image-cropper-modal'), {});
 
 let cropper;
@@ -299,7 +300,7 @@ async function handleProductImages(event) {
     return formData;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+let selectedFiles = [];
     const imageInput = document.getElementById('product_images');
     const imagePreviewContainer = document.getElementById('image-preview');
     const imageToCrop = document.getElementById('image-to-crop');
@@ -340,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         modal._element.addEventListener('hidden.bs.modal', () => {
-            cropper.destroy();checkout
+            cropper.destroy();
             cropper = null;
         });
 
@@ -378,18 +379,37 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     imageInput.addEventListener('change', (event) => {
-        handleProductImages(event)
-        .catch((error) => {
-            console.error('Error:', error);
-            Swal.fire({
-                title: "Error!",
-                text: "There was an error uploading the images.",
-                icon: "error"
-            });
-        }); 
-        const files = [...event.target.files];
-        handleFiles(files);
+        const newFiles = Array.from(event.target.files);
+        selectedFiles = [...selectedFiles, ...newFiles];
+        
+        event.target.value = '';
+
+        updateImagePreview();
     });
+
+    function updateImagePreview() {
+        imagePreviewContainer.innerHTML = ''; // Clear existing previews
+        selectedFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.classList.add('img-thumbnail');
+                img.style.cursor = 'pointer';
+                img.loading = 'lazy';
+
+                const imageContainer = document.createElement('div');
+                imageContainer.classList.add('img-container');
+                imageContainer.appendChild(img);
+
+                const deleteButton = createDeleteButton(index);
+                imageContainer.appendChild(deleteButton);
+
+                imagePreviewContainer.appendChild(imageContainer);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 
     const handleFiles = async (files) => {
         files.forEach(file => {
@@ -405,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const createDeleteButton = (imageContainer) => {
+    const createDeleteButton = (index) => {
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
         deleteButton.classList.add('btn', 'btn-danger', 'btn-sm');
@@ -416,12 +436,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         deleteButton.addEventListener('click', (event) => {
             event.stopPropagation();
-            imageContainer.remove();
+            selectedFiles.splice(index, 1);
+            updateImagePreview();
         });
 
         return deleteButton;
     };
-});
 
 
 const validateForm = () => {
@@ -478,10 +498,10 @@ const validateForm = () => {
         errors.stockAvailability = 'Stock Availability is required.';
         isValid = false;
     }
-    if (images === 0) {
-        errors.images = 'At least one image is required.';
-        isValid = false;
-    }
+    // if (images === 0) {
+    //     errors.images = 'At least one image is required.';
+    //     isValid = false;
+    // }
     if (categories.length === 0) {
         errors.categories = 'At least one category is required.';
         isValid = false;
@@ -517,8 +537,14 @@ const resetForm = () => {
 }
 };
 
-document.getElementById('publish').addEventListener('click', async () => {
+document.getElementById('publish').addEventListener('click', async (event) => {
+    event.preventDefault();
+    const publishButton = event.target;
+
     if (!validateForm()) return;
+
+    publishButton.disabled = true;
+    publishButton.textContent = 'Publishing...';
 
     const formData = new FormData();
 
@@ -539,10 +565,12 @@ document.getElementById('publish').addEventListener('click', async () => {
         .map(checkbox => checkbox.value);
     formData.append('categories', JSON.stringify(categories));
 
-     const files = document.querySelector('#product_images').files;
-    for (let i = 0; i < files.length; i++) {
-        formData.append('images', files[i]);
-    }
+    selectedFiles.forEach((file, index) => {
+            formData.append('images', file);
+        });
+
+    console.log('form data', formData.getAll('images'));
+    console.log('form data', formData);
 
 
     try {
@@ -559,6 +587,7 @@ document.getElementById('publish').addEventListener('click', async () => {
                 icon: "success"
             });  
             resetForm();   
+            clearForm();
         } else {
             Swal.fire({
                 title: "Error!",
@@ -573,7 +602,42 @@ document.getElementById('publish').addEventListener('click', async () => {
             text: "There was an error saving the product.",
             icon: "error"
         });
+    } finally {
+        publishButton.disabled = false;
+        publishButton.textContent = 'Publish';
     }
+});
+
+function clearForm() {
+    
+    const form = document.getElementById('product-form');
+
+    if (form) {
+        form.reset();
+    } else {
+        console.error('Form not found');
+    }
+
+    selectedFiles = [];
+
+    const fileInput = document.getElementById('product_images');
+    if (fileInput) {
+        fileInput.value = '';
+    }
+    const previewContainer = document.getElementById('image-preview-container');
+    if (previewContainer) {
+        previewContainer.innerHTML = '';
+    }
+
+    const selects = document.querySelectorAll('select');
+    selects.forEach(select => select.value = '');
+
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(checkbox => checkbox.checked = false);
+
+    const errorMessages = document.querySelectorAll('.form-error');
+    errorMessages.forEach(errorMessage => errorMessage.textContent = '');
+}
 });
 
 </script>

@@ -25,6 +25,11 @@ const orderSchema = new mongoose.Schema({
     price: {
       type: Number,
       required: true
+    },
+    returnStatus: {
+      type: String,
+      enum: ['Not Returned', 'Return Requested', 'Return Approved', 'Return Rejected', 'Returned'],
+      default: 'Not Returned'
     }
   }],
   total: {

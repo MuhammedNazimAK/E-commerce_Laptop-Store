@@ -236,7 +236,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 };
                 
                 $(cropperModalElement).modal('hide');
-                updateFileInput(); // Update the file input after cropping
+                updateFileInput();
             };
             reader.readAsDataURL(blob);
             });

@@ -1,4 +1,5 @@
 const Product = require('../../models/productModel');
+const StatusCodes = require('../../public/javascript/statusCodes');
 
 
 const getInventoryPage = async (req, res) => {
@@ -26,7 +27,7 @@ const getInventoryPage = async (req, res) => {
 
     res.render('admin/inventoryManagement', { products, currentPage: page, totalPages, totalProducts });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching inventory data', error });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error fetching inventory data', error });
   }
 };
 
@@ -51,12 +52,12 @@ const updateInventory = async (req, res) => {
     );
 
     if (!updatedProduct) {
-      return res.status(404).json({ message: 'Product not found' });
+      return res.status(StatusCodes.NOT_FOUND).json({ message: 'Product not found' });
     }
 
-    res.status(200).json({ message: 'Inventory updated successfully', product: updatedProduct });
+    res.status(StatusCodes.OK).json({ message: 'Inventory updated successfully', product: updatedProduct });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating inventory', error });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error updating inventory', error });
   }
 };
 

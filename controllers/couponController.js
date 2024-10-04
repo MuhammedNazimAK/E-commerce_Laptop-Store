@@ -4,6 +4,7 @@ const Product = require('../models/productModel');
 const User = require('../models/userModel');
 const ProductOffer = require('../models/productOfferModel');
 const CategoryOffer = require('../models/categoryOfferModel');
+const StatusCodes = require('../public/javascript/statusCodes');
 
 
 async function getProductWithOffers(productId) {
@@ -65,7 +66,7 @@ const getAvailableCoupons = async (req, res) => {
     const user = await User.findById(userId);
     
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'User not found' });
     }
 
     const coupons = await Coupon.find({
@@ -75,7 +76,7 @@ const getAvailableCoupons = async (req, res) => {
     
     res.json({ success: true, coupons });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Error fetching coupons', error: error.message });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Error fetching coupons', error: error.message });
   }
 };
 
@@ -126,7 +127,7 @@ const applyCoupon = async (req, res) => {
     }
 
     if (!req.session.user || !req.session.user._id) {
-      return res.status(401).json({ success: false, message: 'User not authenticated' });
+      return res.status(StatusCodes.UNAUTHORIZED).json({ success: false, message: 'User not authenticated' });
     }
 
     const { subtotal, discountedTotal } = await calculateCartTotal(req.session.user._id);
@@ -147,7 +148,7 @@ const applyCoupon = async (req, res) => {
     // Store the applied coupon in the session
     req.session.appliedCoupon = {
       code: coupon.code,
-      discountAmount: couponDiscountAmount
+      discountAmount: parseFloat(couponDiscountAmount.toFixed(2))
     };
 
     res.json({ 
@@ -160,7 +161,7 @@ const applyCoupon = async (req, res) => {
     });
   } catch (error) {
     console.error('Error applying coupon:', error);
-    res.status(500).json({ success: false, message: 'Error applying coupon', error: error.message });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Error applying coupon', error: error.message });
   }
 };
 
@@ -182,7 +183,7 @@ const getCouponManagement = async (req, res) => {
     res.render('admin/couponManagement');
   } catch (error) {
     console.error('Error in getCouponManagement:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -210,7 +211,7 @@ const createCoupon = async (req, res) => {
     } = req.body;
 
     if (!couponName || !couponDescription || !discountPercentage || !minPurchaseAmount) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Missing required fields' });
     }
 
     let couponCode;
@@ -222,7 +223,7 @@ const createCoupon = async (req, res) => {
 
     const existingCouponName = await Coupon.findOne({ name: couponName });
     if (existingCouponName) {
-      return res.status(400).json({ success: false, message: 'A coupon with this name already exists.' });
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'A coupon with this name already exists.' });
     }
 
     const newCoupon = new Coupon({
@@ -239,7 +240,7 @@ const createCoupon = async (req, res) => {
     res.json({ success: true, message: 'Coupon added successfully', couponCode });
   } catch (error) {
     console.error('Error creating coupon:', error);
-    res.status(400).json({ success: false, message: 'Failed to add coupon' });
+    res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'Failed to add coupon' });
   }
 }
 
@@ -283,13 +284,13 @@ const toggleCouponStatus = async (req, res, next) => {
     const { couponId } = req.body;
 
     if (!couponId) {
-      return res.status(400).json({ success: false, message: 'Coupon ID is required' });
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'Coupon ID is required' });
     }
 
     const coupon = await Coupon.findById(couponId);
 
     if (!coupon) {
-      return res.status(404).json({ success: false, message: 'Coupon not found' });
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Coupon not found' });
     }
 
     coupon.isActive = !coupon.isActive;
@@ -298,7 +299,7 @@ const toggleCouponStatus = async (req, res, next) => {
     res.json({ success: true, message: `Coupon ${coupon.isActive ? 'activated' : 'deactivated'} successfully` });
   } catch (error) {
     console.error('Error toggling coupon status:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -308,19 +309,19 @@ const deleteCoupon = async (req, res) => {
     const couponId = req.params.id;
 
     if (!couponId) {
-      return res.status(400).json({ success: false, message: 'Coupon ID is required' });
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'Coupon ID is required' });
     }
 
     const deletedCoupon = await Coupon.findByIdAndDelete(couponId);
 
     if (!deletedCoupon) {
-      return res.status(404).json({ success: false, message: 'Coupon not found' });
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Coupon not found' });
     }
 
     res.json({ success: true, message: 'Coupon deleted successfully' });
   } catch (error) {
     console.error('Error deleting coupon:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Internal server error' });
   }
 };
 

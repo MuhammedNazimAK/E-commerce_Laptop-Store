@@ -2,9 +2,11 @@
   const Category = require("../models/categoryModel");
   const ProductOffer = require('../models/productOfferModel');
   const CategoryOffer = require('../models/categoryOfferModel');
+  const StatusCodes = require('../public/javascript/statusCodes');
   const { validationResult } = require('express-validator');
   const { uploadImages, cloudinary } = require("../config/cloudinary");
   const { incrementProductView } = require("../utils/viewCounter");
+  const { getCachedData } = require("../utils/cache");
   const mongoose = require("mongoose");
 
   async function getProductWithOffers(productId) {
@@ -65,7 +67,7 @@
       res.render("admin/addProduct", { categories });
     } catch (error) {
       console.error("Error fetching categories:", error);
-      res.status(500).send("Internal Server Error");
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Internal Server Error");
     }
   };
 
@@ -99,7 +101,7 @@
                     imageUrls = [...newImageUrls];
                 } catch (error) {
                     console.error('Error uploading new images:', error);
-                    return res.status(500).json({ success: false, message: "Error uploading new images" });
+                    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Error uploading new images" });
                 }
             }
         }
@@ -112,7 +114,7 @@
               imageUrls = [...existingImages, ...imageUrls];
           } catch (error) {
               console.error("Error parsing existing images:", error);
-              return res.status(400).json({ success: false, message: "Invalid existing images data" });
+              return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Invalid existing images data" });
           }
       }
 
@@ -149,7 +151,7 @@
       res.json({ success: true, message: "Product added successfully" });
     } catch (error) {
       console.error("Error adding product:", error);
-      res.status(500).json({ success: false, message: "Error adding product" });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Error adding product" });
     }
   };
 
@@ -180,7 +182,7 @@
       });
     } catch (error) {
       console.error("Error fetching products:", error);
-      res.status(500).json({ success: false, message: "Error fetching products" });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Error fetching products" });
     }
   };
 
@@ -224,7 +226,7 @@
       });
     } catch (error) {
       console.error('Error loading product listing page:', error);
-      res.status(500).send('An error occurred while loading the product listing page');
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('An error occurred while loading the product listing page');
     }
   }
 
@@ -236,13 +238,13 @@
         const product = await Product.findById(productId).lean();
         
         if (!product) {
-          return res.status(404).render({ success: false, message: "Product not found" });
+          return res.status(StatusCodes.NOT_FOUND).render({ success: false, message: "Product not found" });
         }
     
         res.json({ success: true, product });
       } catch (error) {
         console.error("Error fetching product details:", error);
-        res.status(500).json({ success: false, message: "Error fetching product details" });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Error fetching product details" });
       }
   };
 
@@ -256,7 +258,7 @@
       const processors = await Product.distinct('technicalSpecification.processor');
       const categories = await Category.find().lean();
       if (!product) {
-        return res.status(404).json({ success: false, message: "Product not found" });
+        return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: "Product not found" });
       }
 
       product.category = product.category.map(cat => cat._id.toString());
@@ -264,7 +266,7 @@
       res.render("admin/editProduct", { product, categories, brands, processors });
     } catch (error) {
       console.error("Error fetching product details:", error);
-      res.status(500).json({ success: false, message: "Error fetching product details" });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Error fetching product details" });
     }
   };
 
@@ -278,12 +280,12 @@
         updatedData = JSON.parse(req.body.productData);
       } catch (error) {
         console.error("Error parsing product data:", error);
-        return res.status(400).json({ success: false, message: "Invalid product data" });
+        return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Invalid product data" });
       }
   
       const existingProduct = await Product.findById(productId);
       if (!existingProduct) {
-        return res.status(404).json({ success: false, message: "Product not found" });
+        return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: "Product not found" });
       }
   
       let imageUrls = [];
@@ -296,7 +298,7 @@
                 imageUrls = [...newImageUrls];
             } catch (error) {
                 console.error('Error uploading new images:', error);
-                return res.status(500).json({ success: false, message: "Error uploading new images" });
+                return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Error uploading new images" });
             }
         }
     }
@@ -309,7 +311,7 @@
           imageUrls = [...existingImages, ...imageUrls];
       } catch (error) {
           console.error("Error parsing existing images:", error);
-          return res.status(400).json({ success: false, message: "Invalid existing images data" });
+          return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Invalid existing images data" });
       }
   }
     
@@ -319,7 +321,7 @@
           parsedCategories = JSON.parse(req.body.categories).map(categoryId => new mongoose.Types.ObjectId(categoryId));
         } catch (error) {
           console.error("Error parsing categories:", error);
-          return res.status(400).json({ success: false, message: "Invalid category data" });
+          return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Invalid category data" });
         }
       }
   
@@ -346,14 +348,14 @@
       );
   
       if (!updatedProduct) {  
-        return res.status(404).json({ success: false, message: "Product not found" });
+        return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: "Product not found" });
       }
   
       res.json({ success: true, product: updatedProduct });
     } catch (error) {
       console.error("Error updating product:", error);
       console.error(error.stack);
-      res.status(500).json({ success: false, message: "Error updating product", error: error.message });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Error updating product", error: error.message });
     }
   };
   
@@ -366,7 +368,7 @@
       const product = await Product.findById(productId);
 
         if (!product) {
-            return res.status(404).json({ success: false, message: "Product not found" });
+            return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: "Product not found" });
         }
 
         if (product.images || product.images.highResolutionPhotos) {
@@ -378,7 +380,7 @@
         res.json({ success: true , message: "Image deleted successfully" });
     } catch (error) {
         console.error("Error deleting image:", error);
-        res.status(500).json({ success: false, message: "Error deleting image" });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Error deleting image" });
     }
   };
 
@@ -388,14 +390,14 @@
         const { productId } = req.query;
         const product = await Product.findById(productId);
         if (!product) {
-            return res.status(404).json({ success: false, message: "Product not found" });
+            return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: "Product not found" });
         }
         product.status = !product.status; // Toggle the status
         await product.save();
         res.json({ success: true });
     } catch (error) {
         console.error("Error updating product:", error);
-        res.status(500).json({ success: false, message: "Error updating product" });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Error updating product" });
     }
   };
 
@@ -426,7 +428,7 @@
         return await getProductWithOffers(relatedProduct._id);
       }));
       if (!product) {
-        return res.status(404).render({ success: false, message: "Product not found" });
+        return res.status(StatusCodes.NOT_FOUND).render({ success: false, message: "Product not found" });
       }
       
       incrementProductView(productId, req.session.user?._id);
@@ -434,7 +436,7 @@
       res.render("users/productDetails", { product, relatedProducts, relatedProductsWithOffers });
     } catch (error) {
       console.error("Error fetching product details:", error);
-      res.status(500).json({ success: false, message: "Error fetching product details" });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Error fetching product details" });
     }
   };
 
@@ -442,9 +444,12 @@
   const searchAndSortProducts = async (req, res) => {
     try {
       const { filters, sort, page, itemsPerPage, searchQuery } = req.body;
-      
-      const aggregationPipeline = [];
-  
+
+      const cacheKey = `productList_${JSON.stringify(filters)}_${sort}_${page}_${itemsPerPage}_${searchQuery}`;
+
+      const result = await getCachedData(cacheKey, async () => {
+        const aggregationPipeline = [];
+        
       // Search stage
       if (searchQuery) {
         aggregationPipeline.push({
@@ -542,34 +547,37 @@
       // Execute the aggregation
       const products = await Product.aggregate(aggregationPipeline);
   
-      res.json({
+      return {
         products,
         totalProducts,
         currentPage: page,
         totalPages: Math.ceil(totalProducts / itemsPerPage)
+        }
       });
+      res.json(result);
     } catch (error) {
       console.error('Error fetching products:', error);
-      res.status(500).json({ error: 'An error occurred while fetching products' });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'An error occurred while fetching products' });
     }
   };
 
 
   //product offer controller
   const productOfferController = {
+    
     getProductOffersPage: async (req, res) => {
       try {
         res.render('admin/product-offer-list');
       } catch (error) {
         console.error("Error loading product offer page:", error);
-        res.status(500).render('users/pageNotFound', { message: "Internal server error" });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).render('users/pageNotFound', { message: "Internal server error" });
       }
     },
 
     createProductOffer: async (req, res) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        return res.status(StatusCodes.BAD_REQUEST).json({ errors: errors.array() });
       }
 
       try {
@@ -578,13 +586,13 @@
 
         const existingOffer = await ProductOffer.findOne({ offerName: offerName });
         if (existingOffer) {
-          return res.status(400).json({ message: 'An offer with this name already exists' });
+          return res.status(StatusCodes.BAD_REQUEST).json({ message: 'An offer with this name already exists' });
         }
 
 
         // Validate discount percentage
         if (discountPercentage < 0 || discountPercentage > 100) {
-          return res.status(400).json({ message: 'Discount percentage must be between 0 and 100' });
+          return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Discount percentage must be between 0 and 100' });
         }
 
         if (isDefault) {
@@ -600,7 +608,7 @@
               isActive: false
             });
             await newOffer.save();
-            return res.status(201).json({ 
+            return res.status(StatusCodes.CREATED).json({ 
               success: true, 
               message: 'A default offer already exists. New offer created as inactive.',
               offer: newOffer 
@@ -608,11 +616,11 @@
           }
         } else {
           if (!product) {
-            return res.status(400).json({ message: 'Product ID is required for non-default offers' });
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Product ID is required for non-default offers' });
           }
           const productExists = await Product.findById(product);
           if (!productExists) {
-            return res.status(400).json({ message: 'Product not found' });
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Product not found' });
           }
 
           const overlappingOffer = await ProductOffer.findOne({
@@ -625,7 +633,7 @@
           });
 
           if (overlappingOffer) {
-            return res.status(400).json({ message: 'An overlapping offer already exists for this product' });
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'An overlapping offer already exists for this product' });
           }
         }
 
@@ -640,17 +648,17 @@
         });
 
         await newOffer.save();
-        return res.status(201).json({ success: true, message: 'Product offer created successfully', offer: newOffer });
+        return res.status(StatusCodes.CREATED).json({ success: true, message: 'Product offer created successfully', offer: newOffer });
       } catch (error) {
         console.error('Error creating product offer:', error);
-        return res.status(500).json({ success: false, message: 'Error error: error.message' });
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Error error: error.message' });
       }
     },
 
     updateProductOffer: async (req, res) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        return res.status(StatusCodes.BAD_REQUEST).json({ errors: errors.array() });
       }
 
       try {
@@ -658,12 +666,12 @@
 
         const offer = await ProductOffer.findById(req.params.id);
         if (!offer) {
-          return res.status(404).json({ message: 'Product offer not found' });
+          return res.status(StatusCodes.NOT_FOUND).json({ message: 'Product offer not found' });
         }
 
         // Validate discount percentage
         if (discountPercentage && (discountPercentage < 0 || discountPercentage > 100)) {
-          return res.status(400).json({ message: 'Discount percentage must be between 0 and 100' });
+          return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Discount percentage must be between 0 and 100' });
         }
 
         if (isDefault !== undefined && isDefault !== offer.isDefault) {
@@ -678,13 +686,13 @@
           });
 
           if (!confirmResult.isConfirmed) {
-            return res.status(400).json({ message: 'Default status change cancelled' });
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Default status change cancelled' });
           }
 
           if (isDefault) {
             const existingDefault = await ProductOffer.findOne({ isDefault: true, _id: { $ne: req.params.id } });
             if (existingDefault) {
-              return res.status(400).json({ message: 'Another default offer already exists' });
+              return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Another default offer already exists' });
             }
           }
         }
@@ -692,7 +700,7 @@
         if (!isDefault && product) {
           const productExists = await Product.findById(product);
           if (!productExists) {
-            return res.status(404).json({ message: 'Product not found' });
+            return res.status(StatusCodes.NOT_FOUND).json({ message: 'Product not found' });
           }
 
           const overlappingOffer = await ProductOffer.findOne({
@@ -706,7 +714,7 @@
           });
 
           if (overlappingOffer) {
-            return res.status(400).json({ message: 'An overlapping offer already exists for this product' });
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'An overlapping offer already exists for this product' });
           }
         }
 
@@ -742,7 +750,7 @@
         await offer.save();
         res.json({ message: 'Product offer updated successfully', offer });
       } catch (error) {
-        res.status(500).json({ message: 'Error updating product offer', error: error.message });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error updating product offer', error: error.message });
       }
     },
 
@@ -750,21 +758,21 @@
       try {
         const offer = await ProductOffer.findByIdAndDelete(req.params.id);
         if (!offer) {
-          return res.status(404).json({ message: 'Product offer not found' });
+          return res.status(StatusCodes.NOT_FOUND).json({ message: 'Product offer not found' });
         }
         res.json({ message: 'Product offer deleted successfully' });
       } catch (error) {
-        res.status(500).json({ message: 'Error deleting product offer', error: error.message });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error deleting product offer', error: error.message });
       }
     },
 
     loadAddProductOfferPage: async (req, res) => {
       try {
         const products = await Product.find({});
-        res.status(200).render('admin/product-offer-add', { products });
+        res.status(StatusCodes.OK).render('admin/product-offer-add', { products });
       } catch (error) {
         console.error("Error loading add product offer page:", error);
-        res.status(500).render('users/pageNotFound', { message: "Internal server error" });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).render('users/pageNotFound', { message: "Internal server error" });
       }
     },
 
@@ -791,7 +799,7 @@
         res.json({ offers });
       } catch (error) {
         console.error("Error fetching product offers:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "Internal server error" });
       }
     },
 
@@ -799,28 +807,15 @@
       try {
         const offer = await ProductOffer.findById(req.params.id).populate('product');
         if (!offer) {
-          return res.status(404).render('users/pageNotFound', { message: "Product offer not found" });
+          return res.status(StatusCodes.NOT_FOUND).render('users/pageNotFound', { message: "Product offer not found" });
         }
         const products = await Product.find({});
         res.json({ offer, products });
       } catch (error) {
         console.error("Error loading edit product offer page:", error);
-        res.status(500).render('users/pageNotFound', { message: "Internal server error" });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).render('users/pageNotFound', { message: "Internal server error" });
       }
     },
-
-    // getProductOfferDetails: async (req, res) => {
-    //   try {
-    //     const offer = await ProductOffer.findById(req.params.id).populate('product');
-    //     if (!offer) {
-    //       return res.status(404).json({ message: "Product offer not found" });
-    //     }
-    //     res.json({ offer });
-    //   } catch (error) {
-    //     console.error("Error fetching product offer details:", error);
-    //     res.status(500).json({ message: "Internal server error" });
-    //   }
-    // }
   };
 
   

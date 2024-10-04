@@ -5,6 +5,7 @@ const User = require('../../models/userModel');
 const Order = require('../../models/orderModel');
 const Product = require('../../models/productModel');
 const Category = require('../../models/categoryModel');
+const StatusCodes = require('../../public/javascript/statusCodes');
 
 
 
@@ -21,7 +22,6 @@ const loadAdminLoginPage = async (req, res) => {
 const   verifyAdminCredentials = async (req, res) => {
     const { email, password } = req.body;
     const errors = {};
-    let generalError = null;
 
     try {
         if (!email) {
@@ -32,7 +32,6 @@ const   verifyAdminCredentials = async (req, res) => {
             errors.password = "Password is required";
         }
 
-        // If there are validation errors, render the login page with errors
         if (Object.keys(errors).length > 0) {
             return res.render('admin/adminLogin', { errors });
         }
@@ -59,10 +58,10 @@ const   verifyAdminCredentials = async (req, res) => {
 
 const loadAdminDashboard = (req, res) => {
     try {
-        return res.status(200).render('admin/dashboard');
+        return res.status(StatusCodes.OK).render('admin/dashboard');
     } catch (error) {
         console.error("Error while loading admin dashboard:", error.message);
-        return res.status(500).send("Internal server Error");
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Internal server Error");
     }
 };
 
@@ -76,7 +75,7 @@ const loadCustomersListPage = async (req, res) => {
         });
     } catch (error) {
         console.error("Error while loading customers list page:", error.message);
-        return res.status(500).send("Internal server Error");
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Internal server Error");
     }
 };
 
@@ -117,7 +116,7 @@ const loadCustomersList = async (req, res) => {
         });
     } catch (error) {
         console.error("Error while loading users:", error.message);
-        res.status(500).json({ error: "Internal server Error" });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: "Internal server Error" });
     }
 };
 
@@ -129,17 +128,17 @@ const toggleUserBlockStatus = async (req, res) => {
         const user = await User.findById(userId);
         if (!user) {
             console.error(`User not found: ${userId}`);
-            return res.status(404).send('User not found');
+            return res.status(StatusCodes.NOT_FOUND).send('User not found');
         }
 
         user.isBlocked = !user.isBlocked;
         await user.save();
 
         const message = user.isBlocked ? "User successfully blocked" : "User successfully unblocked";
-        return res.status(200).json({ success: true, message, user });
+        return res.status(StatusCodes.OK).json({ success: true, message, user });
     } catch (error) {
         console.error("Error while toggling user block status:", error.message);
-        return res.status(500).send("Internal server Error");
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Internal server Error");
     }
 };
 
@@ -157,7 +156,7 @@ const logoutAdmin = (req, res) => {
         }, 1000);
     } catch (error) {
         console.error("Error while logging out admin:", error.message);
-        res.status(500).send("Internal server Error");
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Internal server Error");
     }
 }
  
@@ -203,7 +202,7 @@ const getDashboardData = async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching dashboard data:', error);
-        res.status(500).json({ message: 'Error fetching dashboard data' });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error fetching dashboard data' });
     }
 };
 
@@ -262,7 +261,7 @@ const getLatestOrders = async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching latest orders:', error);
-        res.status(500).json({ message: 'Error fetching latest orders' });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error fetching latest orders' });
     }
 };
 

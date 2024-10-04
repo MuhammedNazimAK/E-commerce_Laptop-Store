@@ -1,6 +1,7 @@
 const Order = require('../../models/orderModel');
 const Product = require('../../models/productModel');
 const Category = require('../../models/categoryModel');
+const StatusCodes = require('../../public/javascript/statusCodes');
 const moment = require('moment');
 
 exports.getDashboardData = async (req, res) => {
@@ -28,7 +29,7 @@ exports.getDashboardData = async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
-    res.status(500).json({ message: 'Error fetching dashboard data' });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error fetching dashboard data' });
   }
 };
 
@@ -39,7 +40,7 @@ exports.getSalesData = async (req, res) => {
     res.json(salesData);
   } catch (error) {
     console.error('Error fetching sales data:', error);
-    res.status(500).json({ message: 'Error fetching sales data' });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error fetching sales data' });
   }
 };
 
