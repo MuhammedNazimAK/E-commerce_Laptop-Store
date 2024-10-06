@@ -6,7 +6,7 @@
     <h2 class="content-title card-title">Order List</h2>
 </div>
 <input type="text" id="searchOrderId" placeholder="Search order ID" class="form-control bg-white">
-  
+
   <div class="card mb-4">
     <header class="card-header">
       <div class="row gx-3">
@@ -26,7 +26,7 @@
             <option value="Return Rejected">Return Rejected</option>
             <option value="Returned">Returned</option>
           </select>
-        </div>
+        </div>        
         <div class="col-lg-2 col-6 col-md-3">
           <select id="pageSize" class="form-select">
             <option value="10">Show 10</option>
@@ -36,7 +36,7 @@
         </div>
       </div>
     </header>
-    
+
     <div class="card-body">
       <div class="table-responsive">
         <table class="table table-hover">
@@ -204,11 +204,12 @@
         }
       });
 
-      const { orders, totalPages: pages, currentPage: fetchedPage } = response.data;
+      const { orders, totalPages: pages, currentPage: fetchedPage, currentStatus } = response.data;
       totalPages = pages;
       currentPage = fetchedPage;
       renderOrders(orders);
       renderPagination();
+      setTimeout(() => updateStatusFilter(currentStatus), 0);
     } catch (error) {
       console.error('Error fetching orders:', error);
       showError('Failed to fetch orders. Please try again.');
@@ -436,6 +437,20 @@ function viewOrderDetailsAdmin(orderId) {
     });
 }
 
+const updateStatusFilter = (currentStatus) => {
+  console.log('Updating status filter with:', currentStatus);
+  const statusFilter = document.getElementById('statusFilter');
+  console.log('Status filter element:', statusFilter);
+  if (currentStatus) {
+    console.log('Setting status filter value to:', currentStatus);
+    statusFilter.value = currentStatus;
+    console.log('Status filter value after setting:', statusFilter.value);
+  } else {
+    console.log('Setting status filter to empty');
+    statusFilter.value = '';
+  }
+};
+
 
 function showError(message) {
     Swal.fire({
@@ -460,7 +475,6 @@ function showSuccess(message) {
         timer: 3000,
     });
 }
-
 
 document.getElementById('searchOrderId').addEventListener('input', () => {
   currentPage = 1;

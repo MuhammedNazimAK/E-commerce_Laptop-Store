@@ -115,12 +115,11 @@ function getActionButton(order) {
   if (order.status === 'Cancelled' || order.status === 'Return Requested') {
     return '';
   }
-  if (order.status === 'Delivered') {
-    return `<button onclick="returnOrder('${order._id}')" class="btn btn-md btn-black-default-hover">Return</button>`;
-  } else if (order.status === 'Pending' && order.paymentMethod === 'razorpay') {
+  if (order.status === 'Pending' && order.paymentMethod === 'razorpay') {
     return `<a href="/retry-checkout/${order._id}" class="btn btn-md btn-black-default-hover">Retry Payment</a>`;
+  } else {
+    return `<button onclick="cancelOrder('${order._id}')" class="btn btn-md btn-black-default-hover">Cancel</button>`;
   }
-  return `<button onclick="cancelOrder('${order._id}')" class="btn btn-md btn-black-default-hover">Cancel</button>`;
 }
 
 

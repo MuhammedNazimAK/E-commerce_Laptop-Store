@@ -224,10 +224,6 @@ const returnOrder = async (req, res) => {
 
     productToReturn.returnStatus = 'Return Requested';
 
-    await Product.findByIdAndUpdate(productToReturn.product, {
-      $inc: { 'pricingAndAvailability.stockAvailability': productToReturn.quantity }
-    });
-
     await order.save();
 
     res.json({ success: true, message: 'Return request submitted successfully for the specified product' });
@@ -538,7 +534,8 @@ const showOrderConfirmation = async (req, res) => {
 //admin side
 const getOrderManagementPage = (req, res) => {
   try {
-    res.render('admin/orderManagement');
+
+    res.render('admin/orderManagement'); 
   } catch (error) {
     console.error('Error rendering order management page:', error);
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('Error rendering order management page');
@@ -552,7 +549,9 @@ const getOrdersList = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const searchOrderId = req.query.searchOrderId;
     const searchGeneral = req.query.searchGeneral;
-    const status = req.query.status;
+    let currentStatus = req.query.status;
+
+    console.log('current status in get orders list', currentStatus);
 
     let query = {};
 
@@ -568,23 +567,21 @@ const getOrdersList = async (req, res) => {
       ];
     }
 
-    if (status) {
-      query.status = status;
-    }
-
+    
     const totalOrders = await Order.countDocuments(query);
     const totalPages = Math.ceil(totalOrders / limit);
-
+    
     const orders = await Order.find(query)
-      .populate('userId', 'firstName lastName email')
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
+    .populate('userId', 'firstName lastName email')
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(limit);
 
     res.json({
       orders,
       totalPages,
-      currentPage: page
+      currentPage: page,
+      currentStatus
     });
   } catch (error) {
     console.error('Error fetching orders:', error);
@@ -639,14 +636,12 @@ const editOrderAdmin = async (req, res) => {
       return res.status(StatusCodes.NOT_FOUND).json({ message: 'Order not found' });
     }
 
-    // Check if the order can be edited based on its current status
-    const nonEditableStatuses = ['Delivered', 'Cancelled', 'Shipped', 'Returned'];
+    const nonEditableStatuses = ['Cancelled', 'Shipped', 'Returned'];
     if (nonEditableStatuses.includes(order.status)) {
       return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Order cannot be edited in its current status' });
     }
 
-    // Validate the new status
-    const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Requested', 'Return Approved', 'Return Rejected', 'Returned'];
+    const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Approved', 'Return Rejected', 'Returned'];
     if (!validStatuses.includes(status)) {
       return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid status provided' });
     }
@@ -661,10 +656,10 @@ const editOrderAdmin = async (req, res) => {
       });
     }
 
-    // Handle return-related status changes
     if (status === 'Return Approved' || status === 'Returned') {
-      // You might want to update product stock or perform other actions here
-      console.log(`Return ${status === 'Return Approved' ? 'approved' : 'completed'} for order ${orderId}`);
+      await Product.findByIdAndUpdate(productToReturn.product, {
+        $inc: { 'pricingAndAvailability.stockAvailability': productToReturn.quantity }
+      });
     }
 
     res.json({ message: 'Order status updated successfully' });
