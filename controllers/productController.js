@@ -530,7 +530,7 @@
           aggregationPipeline.push({ $sort: { "basicInformation.name": -1 } });
           break;
         default:
-          aggregationPipeline.push({ $sort: { createdAt: -1 } });
+          aggregationPipeline.push({ $sort: { createdAt: 1 } });
       }
   
       // Count total products
