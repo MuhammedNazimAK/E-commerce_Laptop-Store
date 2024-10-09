@@ -78,7 +78,6 @@ router.get('/order-confirmation/:orderId', orderController.showOrderConfirmation
 router.get('/orders', orderController.getOrders);
 router.get('/my-account/orders/:id', requireAuth, orderController.getSingleOrderDetails);
 router.put('/my-account/cancel-order/:id', requireAuth, orderController.cancelOrder);
-router.put('/my-account/return-order/:id', requireAuth, orderController.returnOrder);
 router.put('/my-account/return-product/:id', requireAuth, orderController.returnOrder);
 
 

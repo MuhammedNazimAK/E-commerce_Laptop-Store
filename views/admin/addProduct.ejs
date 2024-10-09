@@ -569,10 +569,6 @@ document.getElementById('publish').addEventListener('click', async (event) => {
             formData.append('images', file);
         });
 
-    console.log('form data', formData.getAll('images'));
-    console.log('form data', formData);
-
-
     try {
         const response = await axios.post('/admin/products/add', formData, {
             headers: {

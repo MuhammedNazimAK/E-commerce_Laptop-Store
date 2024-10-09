@@ -295,7 +295,6 @@ const updateCart = async (req, res) => {
 
 const checkout = async (req, res) => {
   try {
-    console.log('Starting checkout process');
     let userId = req.session.user?._id;
     const addressId = await Address.findOne({ userId: userId });
   
@@ -303,19 +302,14 @@ const checkout = async (req, res) => {
       userId = req.session.guestCartId || (req.session.guestCartId = new mongoose.Types.ObjectId());
     }
     
-    console.log('User ID:', userId);
     const cart = await Cart.findOne({ user: userId }).populate('items.product');
     if (!cart || cart.items.length === 0) {
-      console.log('Cart is empty');
       return res.render('users/checkout', { items: [], priceDetails: {} });
     }
 
-    console.log('Cart found:', cart);
     let totalSavings = 0;
-    console.log('Initial totalSavings:', totalSavings);
 
     const items = await Promise.all(cart.items.map(async (item, index) => {
-      console.log(`Processing item ${index + 1}:`, item);
       const productWithOffers = await getProductWithOffers(item.product._id);
       const getValidPrice = (price) => {
         const parsedPrice = parseFloat(price);
@@ -328,10 +322,8 @@ const checkout = async (req, res) => {
       
       // Calculate savings for this item
       const itemSavings = Math.max(0, (originalPrice - price) * item.quantity);
-      console.log(`Item ${index + 1} - Original Price: ${originalPrice}, Discounted Price: ${price}, Savings: ${itemSavings}`);
       
       totalSavings += itemSavings;
-      console.log(`Running totalSavings after item ${index + 1}:`, totalSavings);
 
       return {
         ...productWithOffers,
@@ -342,27 +334,16 @@ const checkout = async (req, res) => {
       };
     }));
 
-    console.log('All items processed');
-
     // Calculate price details
     const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-    console.log('Subtotal:', subtotal);
     const gstRate = 0.18; // 18% GST
     const gstAmount = subtotal * gstRate;
-    console.log('GST Amount:', gstAmount);
     
     let discountAmount = 0;
-    console.log('Applied Coupon:', req.session.appliedCoupon);
     if (req.session.appliedCoupon && req.session.appliedCoupon.discountAmount) {
       discountAmount = parseFloat(req.session.appliedCoupon.discountAmount);
-      console.log('Discount Amount before adding to totalSavings:', discountAmount);
-      console.log('totalSavings before adding discount:', totalSavings);
       totalSavings += discountAmount;
-      console.log('totalSavings after adding discount:', totalSavings);
     }
-
-    console.log('Final discountAmount:', discountAmount);
-    console.log('Final totalSavings:', totalSavings);
 
     const total = subtotal + gstAmount - discountAmount + 25;
 
@@ -375,8 +356,6 @@ const checkout = async (req, res) => {
       totalSavings: totalSavings.toFixed(2),
       shipping: 25.00.toFixed(2),
     };
-
-    console.log('Final priceDetails:', priceDetails);
 
     return res.render('users/checkout', { items, priceDetails, addressId });
   } catch (error) {

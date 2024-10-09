@@ -8,7 +8,6 @@ const requireAuth = (req, res, next) => {
       next();
     }
   } else {
-    req.flash('error', 'Please log in to continue');
     return res.redirect('/login');
   }
 };

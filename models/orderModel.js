@@ -1,30 +1,6 @@
 const mongoose = require('mongoose');
 
 
-const returnReasonSchema = new mongoose.Schema({
-  reason: {
-    type: String,
-    required: true,
-    enum: [
-      'Defective/Damaged Product',
-      'Wrong Item Received',
-      'Item Not As Described',
-      'Size/Fit Issue',
-      'Changed Mind',
-      'Late Delivery',
-      'Quality Not Satisfactory',
-      'Missing Parts/Accessories',
-      'Received Extra Item',
-      'Other'
-    ]
-  },
-  description: {
-    type: String,
-    required: true
-  },
-});
-
-
 const orderSchema = new mongoose.Schema({
   orderId: {
     type: String,
@@ -56,7 +32,6 @@ const orderSchema = new mongoose.Schema({
       enum: ['Not Returned', 'Return Requested', 'Return Approved', 'Return Rejected', 'Returned'],
       default: 'Not Returned'
     },
-    returnDetails: returnReasonSchema
   }],
   total: {
     type: Number,

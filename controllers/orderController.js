@@ -8,6 +8,7 @@ const Wallet = require('../models/walletModel');
 const { razorpay } = require('../config/razorpay');
 const ProductOffer = require('../models/productOfferModel');
 const CategoryOffer = require('../models/categoryOfferModel');
+const { addWalletTransaction } = require('./walletController');
 const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
 const StatusCodes = require('../public/javascript/statusCodes');
@@ -192,10 +193,10 @@ const cancelOrder = async (req, res) => {
 
 
 const returnOrder = async (req, res) => {
-  
   try {
     const orderId = req.params.id;
-    const productId = req.body.productId;
+    const { productId } = req.body;
+
     const order = await Order.findById(orderId);
 
     if (!order) {
@@ -218,7 +219,7 @@ const returnOrder = async (req, res) => {
       return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'Product not found in this order' });
     }
 
-    if (!productToReturn.returnStatus == 'Not Returned') {
+    if (productToReturn.returnStatus !== 'Not Returned') {
       return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'Return already requested for this product' });
     }
 
@@ -551,8 +552,6 @@ const getOrdersList = async (req, res) => {
     const searchGeneral = req.query.searchGeneral;
     let currentStatus = req.query.status;
 
-    console.log('current status in get orders list', currentStatus);
-
     let query = {};
 
     if (searchOrderId) {
@@ -631,7 +630,7 @@ const editOrderAdmin = async (req, res) => {
     const orderId = req.params.id;
     const { status } = req.body;
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findById(orderId).populate('userId');
     if (!order) {
       return res.status(StatusCodes.NOT_FOUND).json({ message: 'Order not found' });
     }
@@ -646,6 +645,7 @@ const editOrderAdmin = async (req, res) => {
       return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid status provided' });
     }
 
+    const oldStatus = order.status;
     order.status = status;
     await order.save();
 
@@ -657,9 +657,23 @@ const editOrderAdmin = async (req, res) => {
     }
 
     if (status === 'Return Approved' || status === 'Returned') {
-      await Product.findByIdAndUpdate(productToReturn.product, {
-        $inc: { 'pricingAndAvailability.stockAvailability': productToReturn.quantity }
-      });
+      for (const productToReturn of order.products) {
+        await Product.findByIdAndUpdate(productToReturn.product, {
+          $inc: { 'pricingAndAvailability.stockAvailability': productToReturn.quantity }
+        });
+      }
+
+      // Credit the order amount to the user's wallet
+      if (oldStatus !== 'Return Approved' && oldStatus !== 'Returned') {
+        const refundAmount = order.total;
+        await addWalletTransaction(
+          order.userId,
+          refundAmount,
+          'credit',
+          order._id,
+          `Refund for order #${order.orderId}`
+        );
+      }
     }
 
     res.json({ message: 'Order status updated successfully' });
@@ -670,6 +684,38 @@ const editOrderAdmin = async (req, res) => {
 };
 
 
+const editReturnStatus = async (req, res) => {
+  try {
+    const { orderId, productId } = req.params;
+    const { status } = req.body;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(StatusCodes.NOT_FOUND).json({ message: 'Order not found' });
+    }
+
+    const productToReturn = order.products.find(p => p.product.toString() === productId);
+
+    if (!productToReturn) {
+      return res.status(StatusCodes.NOT_FOUND).json({ message: 'Product not found in order' });
+    }
+
+    productToReturn.returnStatus = status;
+
+    if (status === 'Return Approved') {
+      await Product.findByIdAndUpdate(productId, {
+        $inc: { 'pricingAndAvailability.stockAvailability': productToReturn.quantity }
+      });
+    }
+
+    await order.save();
+
+    res.json({ message: 'Return status updated successfully' });
+  } catch (error) {
+    console.error('Error updating return status:', error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error updating return status' });
+  }
+};
 
 
 
@@ -688,4 +734,5 @@ module.exports = {
   getOrdersList,
   getOrderDetails,
   editOrderAdmin,
+  editReturnStatus
 };

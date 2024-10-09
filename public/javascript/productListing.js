@@ -110,11 +110,11 @@ class ProductData {
     if (slider && minPriceInput && maxPriceInput) {
       if (!slider.noUiSlider) {
       noUiSlider.create(slider, {
-        start: [0, 500000],
+        start: [0, 100000],
         connect: true,
         range: {
           'min': 0,
-          'max': 500000
+          'max': 100000
         }
       });
     }

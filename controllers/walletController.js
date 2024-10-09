@@ -1,4 +1,3 @@
-// walletController.js
 const Wallet = require('../models/walletModel');
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
@@ -112,10 +111,43 @@ const getTransactions = async (req, res) => {
   }
 };
 
+const addWalletTransaction = async (userId, amount, type, orderId, description) => {
+  try {
+    const wallet = await Wallet.findOne({ userId });
+    
+    if (!wallet) {
+      throw new Error('Wallet not found for user');
+    }
+
+    const transaction = {
+      transactionId: uuidv4(),
+      orderId,
+      amount,
+      type,
+      status: 'completed',
+      description
+    };
+
+    wallet.transactions.push(transaction);
+    
+    if (type === 'credit') {
+      wallet.balance += amount;
+    } else if (type === 'debit') {
+      wallet.balance -= amount;
+    }
+
+    await wallet.save();
+    return transaction;
+  } catch (error) {
+    console.error('Error adding wallet transaction:', error);
+    throw error;
+  }
+};
 
 
 module.exports = {
   getBalance,
   useFunds,
-  getTransactions
+  getTransactions,
+  addWalletTransaction
 };
