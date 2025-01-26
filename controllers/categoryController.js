@@ -1,6 +1,7 @@
 const Category = require('../models/categoryModel');
 const CategoryOffer = require('../models/categoryOfferModel');
 const { validationResult } = require('express-validator');
+const StatusCodes = require('../public/javascript/statusCodes');
 
 
 
@@ -9,7 +10,7 @@ const loadCategoryManagementPage = (req, res) => {
         res.render('admin/categoryManagement');
     } catch (error) {
         console.error("Error loading category management page:", error);
-        res.status(500).render('users/pageNotFound', { message: "Internal server error" });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).render('users/pageNotFound', { message: "Internal server error" });
     }
 };
 
@@ -27,7 +28,7 @@ const getAllCategories = async (req, res) => {
           .skip(skip)
           .limit(limit);
 
-      res.status(200).json({
+      res.status(StatusCodes.OK).json({
           categories,
           currentPage: page,
           totalPages,
@@ -35,7 +36,7 @@ const getAllCategories = async (req, res) => {
       });
   } catch (error) {
       console.error("Error fetching categories:", error);
-      res.status(500).json({ error: 'Server error' });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Server error' });
   }
 };
 
@@ -43,16 +44,16 @@ const getAllCategories = async (req, res) => {
 const addNewCategory = async (req, res) => {
     const { name, description } = req.body;
     if (!name || !description) {
-        return res.status(400).json({ error: 'Name and description are required' });
+        return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Name and description are required' });
     }
     try {
         const newCategory = new Category({ name, description });
         await newCategory.save();
 
-        res.status(201).json({ success: true, message: 'Category created successfully', category: newCategory });
+        res.status(StatusCodes.CREATED).json({ success: true, message: 'Category created successfully', category: newCategory });
     } catch (error) {
         console.error('Error creating category:', error);
-        res.status(500).json({ error: 'Server error' });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Server error' });
     }
 };
 
@@ -62,12 +63,12 @@ const getCategory = async (req, res) => {
     try {
         const category = await Category.findById(req.params.id);
         if (!category) {
-            return res.status(404).json({ success: false, message: "Category not found" });
+            return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: "Category not found" });
         }
         res.json(category);
     } catch (error) {
         console.error("Error fetching category:", error);
-        res.status(500).json({ error: 'Server error' });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Server error' });
     }
 };
 
@@ -81,12 +82,12 @@ const editExistingCategory = async (req, res) => {
             { new: true }
         );
         if (!updatedCategory) {
-            return res.status(404).json({ success: false, message: "Category not found" });
+            return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: "Category not found" });
         }
-        return res.status(200).json({ success: true, message: "Category successfully edited", category: updatedCategory });
+        return res.status(StatusCodes.OK).json({ success: true, message: "Category successfully edited", category: updatedCategory });
     } catch (error) {
         console.error("Error while editing category:", error.message);
-        return res.status(500).json({ error: 'Server error' });
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Server error' });
     }
 };
 
@@ -96,7 +97,7 @@ const softDeleteCategory = async (req, res) => {
     try {
         const category = await Category.findById(categoryId);
         if (!category) {
-            return res.status(404).json({ success: false, message: "Category not found" });
+            return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: "Category not found" });
         }
         const updatedCategory = await Category.findByIdAndUpdate(
             categoryId,
@@ -104,10 +105,10 @@ const softDeleteCategory = async (req, res) => {
             { new: true }
         );
         const message = category.isBlocked ? "Category successfully restored" : "Category successfully deleted";
-        return res.status(200).json({ success: true, message, isBlocked: updatedCategory.isBlocked });
+        return res.status(StatusCodes.OK).json({ success: true, message, isBlocked: updatedCategory.isBlocked });
     } catch (error) {
         console.error("Error while soft deleting category:", error.message);
-        return res.status(500).json({ error: 'Server error' });
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Server error' });
     }
 };
 
@@ -120,14 +121,14 @@ const categoryOfferController = {
       res.render('admin/category-offer-list');  
     } catch (error) {
         console.error("Error loading category offer page:", error);
-        res.status(500).render('users/pageNotFound', { message: "Internal server error" });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).render('users/pageNotFound', { message: "Internal server error" });
     }
   },
 
   createCategoryOffer: async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(StatusCodes.BAD_REQUEST).json({ errors: errors.array() });
     }
 
     try {
@@ -135,7 +136,7 @@ const categoryOfferController = {
 
       const categoryExists = await Category.findById(category);
       if (!categoryExists) {
-        return res.status(404).json({ message: 'Category not found' });
+        return res.status(StatusCodes.NOT_FOUND).json({ message: 'Category not found' });
       }
 
       // Check for overlapping offers
@@ -149,7 +150,7 @@ const categoryOfferController = {
       });
 
       if (overlappingOffer) {
-        return res.status(400).json({ message: 'An overlapping offer already exists for this category' });
+        return res.status(StatusCodes.BAD_REQUEST).json({ message: 'An overlapping offer already exists for this category' });
       }
 
       const newOffer = new CategoryOffer({
@@ -161,9 +162,9 @@ const categoryOfferController = {
       });
 
       await newOffer.save();
-      res.status(201).json({ message: 'Category offer created successfully', offer: newOffer });
+      res.status(StatusCodes.CREATED).json({ message: 'Category offer created successfully', offer: newOffer });
     } catch (error) {
-      res.status(500).json({ message: 'Error creating category offer', error: error.message });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error creating category offer', error: error.message });
     }
   },
 
@@ -171,18 +172,18 @@ const categoryOfferController = {
     try {
       const offer = await CategoryOffer.findById(req.params.id).populate('category', 'name');
       if (!offer) {
-        return res.status(404).json({ message: 'Category offer not found' });
+        return res.status(StatusCodes.NOT_FOUND).json({ message: 'Category offer not found' });
       }
       res.json(offer);
     } catch (error) {
-      res.status(500).json({ message: 'Error fetching category offer', error: error.message });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error fetching category offer', error: error.message });
     }
   },
 
   updateCategoryOffer: async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(StatusCodes.BAD_REQUEST).json({ errors: errors.array() });
     }
 
     try {
@@ -190,14 +191,14 @@ const categoryOfferController = {
 
       const offer = await CategoryOffer.findById(req.params.id);
       if (!offer) {
-        return res.status(404).json({ message: 'Category offer not found' });
+        return res.status(StatusCodes.NOT_FOUND).json({ message: 'Category offer not found' });
       }
 
       // Check if the category exists
       if (category) {
         const categoryExists = await Category.findById(category);
         if (!categoryExists) {
-          return res.status(404).json({ message: 'Category not found' });
+          return res.status(StatusCodes.NOT_FOUND).json({ message: 'Category not found' });
         }
       }
 
@@ -213,7 +214,7 @@ const categoryOfferController = {
       });
 
       if (overlappingOffer) {
-        return res.status(400).json({ message: 'An overlapping offer already exists for this category' });
+        return res.status(StatusCodes.BAD_REQUEST).json({ message: 'An overlapping offer already exists for this category' });
       }
 
       // Update the offer
@@ -227,7 +228,7 @@ const categoryOfferController = {
       await offer.save();
       res.json({ message: 'Category offer updated successfully', offer });
     } catch (error) {
-      res.status(500).json({ message: 'Error updating category offer', error: error.message });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error updating category offer', error: error.message });
     }
   },
 
@@ -235,11 +236,11 @@ const categoryOfferController = {
     try {
       const offer = await CategoryOffer.findByIdAndDelete(req.params.id);
       if (!offer) {
-        return res.status(404).json({ message: 'Category offer not found' });
+        return res.status(StatusCodes.NOT_FOUND).json({ message: 'Category offer not found' });
       }
       res.json({ message: 'Category offer deleted successfully' });
     } catch (error) {
-      res.status(500).json({ message: 'Error deleting category offer', error: error.message });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error deleting category offer', error: error.message });
     }
   }
 };
@@ -248,10 +249,10 @@ const categoryOfferController = {
 const loadAddCategoryOfferPage = async (req, res) => {
     try {
         const categories = await Category.find({});
-        res.status(200).render('admin/category-offer-add', { categories });
+        res.status(StatusCodes.OK).render('admin/category-offer-add', { categories });
     } catch (error) {
         console.error("Error loading add category offer page:", error);
-        res.status(500).render('users/pageNotFound', { message: "Internal server error" });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).render('users/pageNotFound', { message: "Internal server error" });
     }
 };
 
@@ -259,10 +260,10 @@ const loadAddCategoryOfferPage = async (req, res) => {
 const loadCategoryOfferPage = async (req, res) => {
     try {
       const offers = await CategoryOffer.find().populate('category', 'name');
-        res.status(200).json({offers: offers});
+        res.status(StatusCodes.OK).json({offers: offers});
     } catch (error) {
         console.error("Error loading category offer page:", error);
-        res.status(500).render('users/pageNotFound', { message: "Internal server error" });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).render('users/pageNotFound', { message: "Internal server error" });
     }
 };
 

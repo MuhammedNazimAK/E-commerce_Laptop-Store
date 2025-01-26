@@ -90,18 +90,14 @@ class CustomerManager {
       const pagination = document.getElementById('pagination');
       pagination.innerHTML = '';
 
-      // Previous page button
       this.addPaginationButton(pagination, this.currentPage - 1, '«', this.currentPage > 1);
 
-      // Page numbers
       for (let i = 1; i <= this.totalPages; i++) {
           this.addPaginationButton(pagination, i, i.toString(), true, i === this.currentPage);
       }
 
-      // Next page button
       this.addPaginationButton(pagination, this.currentPage + 1, '»', this.currentPage < this.totalPages);
 
-      // Update customer count
       document.getElementById('customerCount').textContent = `Showing ${data.userData.length} of ${data.totalUsers} customers`;
   }
 

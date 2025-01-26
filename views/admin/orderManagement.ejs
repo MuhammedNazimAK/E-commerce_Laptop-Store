@@ -6,7 +6,7 @@
     <h2 class="content-title card-title">Order List</h2>
 </div>
 <input type="text" id="searchOrderId" placeholder="Search order ID" class="form-control bg-white">
-  
+
   <div class="card mb-4">
     <header class="card-header">
       <div class="row gx-3">
@@ -21,8 +21,12 @@
             <option value="Shipped">Shipped</option>
             <option value="Delivered">Delivered</option>
             <option value="Cancelled">Cancelled</option>
+            <option value="Return Requested">Return Requested</option>
+            <option value="Return Approved">Return Approved</option>
+            <option value="Return Rejected">Return Rejected</option>
+            <option value="Returned">Returned</option>
           </select>
-        </div>
+        </div>        
         <div class="col-lg-2 col-6 col-md-3">
           <select id="pageSize" class="form-select">
             <option value="10">Show 10</option>
@@ -32,7 +36,7 @@
         </div>
       </div>
     </header>
-    
+
     <div class="card-body">
       <div class="table-responsive">
         <table class="table table-hover">
@@ -92,7 +96,10 @@
               <option value="Processing">Processing</option>
               <option value="Shipped">Shipped</option>
               <option value="Delivered">Delivered</option>
-              <option value="Return Requested">Return Requested</option>
+              <!-- <option value="Return Requested">Return Requested</option>
+              <option value="Return Approved">Return Approved</option>
+              <option value="Return Rejected">Return Rejected</option>
+              <option value="Returned">Returned</option> -->
             </select>
           </div>
         </form>
@@ -141,6 +148,7 @@
                                     <th>Quantity</th>
                                     <th>Price</th>
                                     <th>Total</th>
+                                    <th>Return Status</th>
                                 </tr>
                             </thead>
                             <tbody id="orderItemsTableBody">
@@ -157,6 +165,35 @@
     </div>
 </div>
 
+<!-- Return Edit Modal -->
+<div class="modal fade" id="returnEditModal" tabindex="-1" aria-labelledby="returnEditModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="returnEditModalLabel">Edit Return Status</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="returnEditForm">
+          <input type="hidden" id="returnEditOrderId">
+          <input type="hidden" id="returnEditProductId">
+          <div class="mb-3">
+            <label for="returnEditStatus" class="form-label">Return Status</label>
+            <select class="form-select" id="returnEditStatus">
+              <option value="Return Approved">Approve Return</option>
+              <option value="Return Rejected">Reject Return</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" onclick="saveReturnChanges()">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -170,7 +207,11 @@
     'Processing': 'info',
     'Shipped': 'primary',
     'Delivered': 'success',
-    'Cancelled': 'danger'
+    'Cancelled': 'danger',
+    'Return Requested': 'secondary',
+    'Return Approved': 'info',
+    'Return Rejected': 'danger',
+    'Returned': 'success'
   };
 
   const getStatusClass = (status) => statusClasses[status] || 'secondary';
@@ -192,11 +233,12 @@
         }
       });
 
-      const { orders, totalPages: pages, currentPage: fetchedPage } = response.data;
+      const { orders, totalPages: pages, currentPage: fetchedPage, currentStatus } = response.data;
       totalPages = pages;
       currentPage = fetchedPage;
       renderOrders(orders);
       renderPagination();
+      setTimeout(() => updateStatusFilter(currentStatus), 0);
     } catch (error) {
       console.error('Error fetching orders:', error);
       showError('Failed to fetch orders. Please try again.');
@@ -215,8 +257,8 @@
         <td>${new Date(order.createdAt).toLocaleDateString()}</td>
         <td class="text-end">
           <button onclick="fetchOrderItems('${order._id}')" class="btn btn-sm btn-outline-primary">View Items</button>
-          <button onclick="editOrder('${order._id}')" class="btn btn-sm btn-outline-primary" ${order.status === 'Delivered' || order.status === 'Cancelled' || order.status === 'Shipped' ? 'disabled' : ''}>Edit</button>
-          <button onclick="cancelOrder('${order._id}')" class="btn btn-sm btn-outline-danger" ${order.status === 'Delivered' || order.status === 'Cancelled' || order.status === 'Shipped' ? 'disabled' : ''}>Cancel</button>
+          <button onclick="editOrder('${order._id}')" class="btn btn-sm btn-outline-primary" ${['Delivered', 'Cancelled', 'Shipped', 'Returned'].includes(order.status) ? 'disabled' : ''}>Edit</button>
+          <button onclick="cancelOrder('${order._id}')" class="btn btn-sm btn-outline-danger" ${['Delivered', 'Cancelled', 'Shipped', 'Returned'].includes(order.status) ? 'disabled' : ''}>Cancel</button>
         </td>
       </tr>
     `).join('');
@@ -274,239 +316,243 @@
     fetchOrders();
   };
 
-const editOrder = async (orderId) => {
-  try {
-    const response = await axios.get(`/admin/orders/${orderId}`);
-    const order = response.data;
-    
-    if (order.status === 'Delivered' || order.status === 'Cancelled') {
-      showError('Cannot edit a delivered or cancelled order.');
-      return;
-    }
-    
-    document.getElementById('editOrderId').value = order._id;
-    document.getElementById('editOrderStatus').value = order.status;
-    
-    new bootstrap.Modal(document.getElementById('editOrderModal')).show();
-  } catch (error) {
-    console.error('Error fetching order details:', error);
-    showError('Failed to fetch order details. Please try again.');
-  }
-};
-
-const saveOrderChanges = async () => {
-  try {
-    const orderId = document.getElementById('editOrderId').value;
-    const status = document.getElementById('editOrderStatus').value;
-    
-    const response = await axios.get(`/admin/orders/${orderId}`);
-    const order = response.data;const createCoupon = async (req, res) => {
-  try {
-    const {
-      couponName,
-      couponDescription,
-      discountPercentage,
-      maxDiscountAmount,
-      minPurchaseAmount,
-      couponStatus
-    } = req.body;
-
-    if (!couponName || !couponDescription || !discountPercentage || !minPurchaseAmount) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    let couponCode;
-    let existingCoupon;
-    do {
-      couponCode = generateCouponCode();
-      existingCoupon = await Coupon.findOne({ code: couponCode });
-    } while (existingCoupon);
-
-    const existingCouponName = await Coupon.findOne({ name: couponName });
-    if (existingCouponName) {
-      return res.status(400).json({ success: false, message: 'A coupon with this name already exists.' });
-    }
-
-    const newCoupon = new Coupon({
-      name: couponName,
-      description: couponDescription,
-      code: couponCode,
-      discountPercentage: parseFloat(discountPercentage),
-      maxDiscountAmount: parseFloat(maxDiscountAmount) || 0,
-      minPurchaseAmount: parseFloat(minPurchaseAmount) || 0,
-      isActive: couponStatus === 'true'
-    });
-
-    await newCoupon.save();
-    res.json({ success: true, message: 'Coupon added successfully', couponCode });
-  } catch (error) {
-    console.error('Error creating coupon:', error);
-    res.status(400).json({ success: false, message: 'Failed to add coupon' });
-  }
-}
-    
-    if (order.status === 'Delivered' || order.status === 'Cancelled') {
-      showError('Cannot update a delivered or cancelled order.');
-      return;
-    }
-    
-    await axios.put(`/admin/edit-order/${orderId}`, { status });
-    
-    bootstrap.Modal.getInstance(document.getElementById('editOrderModal')).hide();
-    fetchOrders();
-    showSuccess('Order updated successfully');
-  } catch (error) {
-    console.error('Error updating order:', error);
-    showError('Failed to update order. Please try again.');
-  }
-};
-
-
-const cancelOrder = async (orderId) => {
-  if (confirm('Are you sure you want to cancel this order?')) {
+  const editOrder = async (orderId) => {
     try {
       const response = await axios.get(`/admin/orders/${orderId}`);
       const order = response.data;
       
-      if (order.status === 'Delivered' || order.status === 'Cancelled' || order.status === 'Shipped') {
-        showError('Cannot cancel a delivered or already cancelled order.');
+      if (['Delivered', 'Cancelled', 'Shipped', 'Returned'].includes(order.status)) {
+        showError('Cannot edit this order in its current status.');
         return;
       }
       
-      await axios.put(`/admin/edit-order/${orderId}`, { status: 'Cancelled' });
-      fetchOrders();
-      showSuccess('Order cancelled successfully');
+      document.getElementById('editOrderId').value = order._id;
+      document.getElementById('editOrderStatus').value = order.status;
+      
+      new bootstrap.Modal(document.getElementById('editOrderModal')).show();
     } catch (error) {
-      console.error('Error cancelling order:', error);
-      showError('Failed to cancel order. Please try again.');
+      console.error('Error fetching order details:', error);
+      showError('Failed to fetch order details. Please try again.');
     }
+  };
+
+  const saveOrderChanges = async () => {
+    try {
+      const orderId = document.getElementById('editOrderId').value;
+      const status = document.getElementById('editOrderStatus').value;
+      
+      const response = await axios.get(`/admin/orders/${orderId}`);
+      const order = response.data;
+      
+      if (['Delivered', 'Cancelled', 'Shipped', 'Returned'].includes(order.status)) {
+        showError('Cannot update this order in its current status.');
+        return;
+      }
+      
+      await axios.put(`/admin/edit-order/${orderId}`, { status });
+      
+      bootstrap.Modal.getInstance(document.getElementById('editOrderModal')).hide();
+      fetchOrders();
+      showSuccess('Order updated successfully');
+    } catch (error) {
+      console.error('Error updating order:', error);
+      showError('Failed to update order. Please try again.');
+    }
+  };
+
+  const cancelOrder = async (orderId) => {
+      if (confirm('Are you sure you want to cancel this order?')) {
+        try {
+          const response = await axios.get(`/admin/orders/${orderId}`);
+          const order = response.data;
+          
+          if (['Delivered', 'Cancelled', 'Shipped', 'Returned'].includes(order.status)) {
+            showError('Cannot cancel this order in its current status.');
+            return;
+          }
+          
+          await axios.put(`/admin/edit-order/${orderId}`, { status: 'Cancelled' });
+          fetchOrders();
+          showSuccess('Order cancelled successfully');
+        } catch (error) {
+          console.error('Error cancelling order:', error);
+          showError('Failed to cancel order. Please try again.');
+        }
+      }
+    };
+
+  const fetchOrderItems = async (orderId) => {
+    try {
+      const response = await axios.get(`/admin/orders/${orderId}`);
+      const order = response.data;
+      renderOrderDetails(order);
+      new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      showError('Failed to fetch order details. Please try again.');
+    }
+  };
+
+  const renderOrderDetails = (order) => {
+      if (!order) {
+          console.error('Order object is undefined');
+          return;
+      }
+
+      // Order Information
+      document.getElementById('orderId').textContent = order.orderId || 'N/A';
+      document.getElementById('orderStatus').textContent = order.status || 'N/A';
+      document.getElementById('orderDate').textContent = order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A';
+      document.getElementById('orderTotal').textContent = order.total ? `₹${(order.total).toFixed(2)}` : 'N/A';
+      document.getElementById('orderPayment').textContent = order.paymentMethod || 'N/A';
+
+      // Customer Information
+      document.getElementById('customerName').textContent = order.userId ? `${order.userId.firstName} ${order.userId.lastName}` : 'N/A';
+      document.getElementById('customerEmail').textContent = order.userId ? order.userId.email : 'N/A';
+      document.getElementById('customerPhone').textContent = order.userId ? order.userId.mobile : 'N/A';
+
+      // Shipping Address
+      const shippingAddressElement = document.getElementById('shippingAddress');
+      if (order.shippingAddress) {
+        shippingAddressElement.textContent = `
+          ${order.shippingAddress.name}, 
+          ${order.shippingAddress.addressType}, 
+          ${order.shippingAddress.landMark}, 
+          ${order.shippingAddress.city}, 
+          ${order.shippingAddress.state} - ${order.shippingAddress.pinCode}, 
+          Mobile: ${order.shippingAddress.mobile}
+        `;
+      } else {
+        shippingAddressElement.textContent = 'N/A';
+      }
+
+      // Render Order Items
+      const orderItemsTableBody = document.getElementById('orderItemsTableBody');
+      orderItemsTableBody.innerHTML = '';
+
+      if (Array.isArray(order.products)) {
+        order.products.forEach(item => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${item.product.basicInformation?.name || 'N/A'}</td>
+            <td>${item.quantity || 'N/A'}</td>
+            <td>₹${(item.price).toFixed(2)}</td>
+            <td>₹${((item.quantity * item.price)).toFixed(2)}</td>
+            <td>${item.returnStatus || 'Not Returned'}</td>
+            <td>
+              ${order.status === 'Delivered' && item.returnStatus === 'Return Requested' 
+                ? `<button class="btn btn-sm btn-primary" onclick="editReturnStatus('${order._id}', '${item.product._id}')">Edit Return</button>`
+                : ''}
+            </td>
+          `;
+          orderItemsTableBody.appendChild(row);
+        });
+      } else {
+        console.error('Order products is not an array:', order.products);
+      }
+  };
+
+  function viewOrderDetailsAdmin(orderId) {
+    axios.get(`/admin/orders/${orderId}`)
+      .then(response => {
+        const order = response.data;
+        
+        const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+        modal.show();
+      })
+      .catch(error => {
+        console.error('Error fetching order details:', error);
+        showError('Failed to fetch order details');
+      });
   }
-};
 
+  const updateStatusFilter = (currentStatus) => {
+    const statusFilter = document.getElementById('statusFilter');
+    if (currentStatus) {
+      statusFilter.value = currentStatus;
+    } else {
+      statusFilter.value = '';
+    }
+  };
 
-const fetchOrderItems = async (orderId) => {
+  const editReturnStatus = async (orderId, productId) => {
   try {
     const response = await axios.get(`/admin/orders/${orderId}`);
     const order = response.data;
-    renderOrderDetails(order);
-    new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
+    const product = order.products.find(p => p.product._id === productId);
+
+    document.getElementById('returnEditOrderId').value = orderId;
+    document.getElementById('returnEditProductId').value = productId;
+    new bootstrap.Modal(document.getElementById('returnEditModal')).show();
   } catch (error) {
     console.error('Error fetching order details:', error);
-    showError('Failed to fetch order details. Please try again.');
+    showError('Failed to fetch order details');
   }
 };
 
-const renderOrderDetails = (order) => {
-    if (!order) {
-        console.error('Order object is undefined');
-        return;
-    }
+  const saveReturnChanges = async () => {
+  try {
+    const orderId = document.getElementById('returnEditOrderId').value;
+    const productId = document.getElementById('returnEditProductId').value;
+    const status = document.getElementById('returnEditStatus').value;
 
-    // Order Information
-    document.getElementById('orderId').textContent = order.orderId || 'N/A';
-    document.getElementById('orderStatus').textContent = order.status || 'N/A';
-    document.getElementById('orderDate').textContent = order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A';
-    document.getElementById('orderTotal').textContent = order.total ? `₹${(order.total).toFixed(2)}` : 'N/A';
-    document.getElementById('orderPayment').textContent = order.paymentMethod || 'N/A';
+    await axios.put(`/admin/edit-return/${orderId}/${productId}`, { status });
 
-    // Customer Information
-    document.getElementById('customerName').textContent = order.userId ? `${order.userId.firstName} ${order.userId.lastName}` : 'N/A';
-    document.getElementById('customerEmail').textContent = order.userId ? order.userId.email : 'N/A';
-    document.getElementById('customerPhone').textContent = order.userId ? order.userId.mobile : 'N/A';
+    bootstrap.Modal.getInstance(document.getElementById('returnEditModal')).hide();
 
-    // Shipping Address
-    const shippingAddressElement = document.getElementById('shippingAddress');
-    if (order.shippingAddress) {
-      shippingAddressElement.textContent = `
-        ${order.shippingAddress.name}, 
-        ${order.shippingAddress.addressType}, 
-        ${order.shippingAddress.landMark}, 
-        ${order.shippingAddress.city}, 
-        ${order.shippingAddress.state} - ${order.shippingAddress.pinCode}, 
-        Mobile: ${order.shippingAddress.mobile}
-      `;
-    } else {
-      shippingAddressElement.textContent = 'N/A';
-    }
-
-    // Render Order Items
-    const orderItemsTableBody = document.getElementById('orderItemsTableBody');
-    orderItemsTableBody.innerHTML = '';
-
-    if (Array.isArray(order.products)) {
-      order.products.forEach(item => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${item.product.basicInformation?.name || 'N/A'}</td>
-          <td>${item.quantity || 'N/A'}</td>
-          <td>₹${(item.price).toFixed(2)}</td>
-          <td>₹${((item.quantity * item.price)).toFixed(2)}</td>
-        `;
-        orderItemsTableBody.appendChild(row);
-      });
-    } else {
-      console.error('Order products is not an array:', order.products);
-    }
+    fetchOrderItems(orderId); // Refresh the order details
+    showSuccess('Return status updated successfully');
+    setTimeout(() => {
+            window.location.reload();
+    }, 3000);
+  } catch (error) {
+    console.error('Error updating return status:', error);
+    showError('Failed to update return status. Please try again.');
+  }
 };
 
-function viewOrderDetailsAdmin(orderId) {
-  axios.get(`/admin/orders/${orderId}`)
-    .then(response => {
-      const order = response.data;
-      
-      const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
-      modal.show();
-    })
-    .catch(error => {
-      console.error('Error fetching order details:', error);
-      showError('Failed to fetch order details');
-    });
-}
+  function showError(message) {
+      Swal.fire({
+          icon: "error",
+          text: message,
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timerProgressBar: true,
+          timer: 3000,
+      });
+  }
 
+  function showSuccess(message) {
+      Swal.fire({
+          icon: "success",
+          text: message,
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timerProgressBar: true,
+          timer: 3000,
+      });
+  }
 
-function showError(message) {
-    Swal.fire({
-        icon: "error",
-        text: message,
-        toast: true,
-        position: "top-right",
-        showConfirmButton: false,
-        timerProgressBar: true,
-        timer: 3000,
-    });
-}
+  document.getElementById('searchOrderId').addEventListener('input', () => {
+    currentPage = 1;
+    fetchOrders();
+  });
+  document.getElementById('searchGeneral').addEventListener('input', () => {
+    currentPage = 1;
+    fetchOrders();
+  });
+  document.getElementById('statusFilter').addEventListener('change', () => {
+    currentPage = 1;
+    fetchOrders();
+  });
+  document.getElementById('pageSize').addEventListener('change', () => {
+    currentPage = 1;
+    fetchOrders();
+  });
 
-function showSuccess(message) {
-    Swal.fire({
-        icon: "success",
-        text: message,
-        toast: true,
-        position: "top-right",
-        showConfirmButton: false,
-        timerProgressBar: true,
-        timer: 3000,
-    });
-}
-
-
-document.getElementById('searchOrderId').addEventListener('input', () => {
-  currentPage = 1;
   fetchOrders();
-});
-document.getElementById('searchGeneral').addEventListener('input', () => {
-  currentPage = 1;
-  fetchOrders();
-});
-document.getElementById('statusFilter').addEventListener('change', () => {
-  currentPage = 1;
-  fetchOrders();
-});
-document.getElementById('pageSize').addEventListener('change', () => {
-  currentPage = 1;
-  fetchOrders();
-});
-
-fetchOrders();
 
 </script>
 

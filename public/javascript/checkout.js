@@ -72,6 +72,7 @@ const ERROR_MESSAGES = {
   COD_NOT_AVAILABLE: 'COD is not available for orders above Rs 1000.'
 };
 
+
 document.addEventListener("DOMContentLoaded", () => {
   fetchAddresses();
   initializeAddAddress();

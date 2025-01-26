@@ -11,8 +11,14 @@ const sendEmail = require('../../utils/sendEmail');
 const nodeMailer = require('nodemailer');
 const bcrypt = require("bcrypt");
 const crypto = require('crypto');
-const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
+const { getCachedData } = require("../../utils/cache"); 
+const { v4: uuidv4 } = require('uuid');
+<<<<<<< HEAD
+const mongoose = require('mongoose');
+=======
+const StatusCodes = require("../../public/javascript/statusCodes");
+>>>>>>> 8b8d0b1f4dbeb2cd05ef9b8baccfe3055e30f7ee
 require('dotenv').config();
 
 
@@ -79,12 +85,19 @@ const renderHomePage = async (req, res) => {
 
     let userId = req.session.user?._id;
 
+<<<<<<< HEAD
     
+=======
+>>>>>>> 8b8d0b1f4dbeb2cd05ef9b8baccfe3055e30f7ee
     if (!userId) {
       // If the user is not authenticated, create a guest cart
       userId = req.session.guestCartId || (req.session.guestCartId = new mongoose.Types.ObjectId());
     }
 
+<<<<<<< HEAD
+=======
+    const result = await getCachedData('homePage', async () => {
+>>>>>>> 8b8d0b1f4dbeb2cd05ef9b8baccfe3055e30f7ee
     const products = await Promise.all(
       (await Product.find().limit(16)).map(async (product) => {
         const productWithOffers = await getProductWithOffers(product._id);
@@ -107,10 +120,13 @@ const renderHomePage = async (req, res) => {
 
     const categories = await Category.find().limit(4);
 
-    return res.render("users/home", { products, topProducts, topBrands, categories });
+    return { products, topProducts, topBrands, categories };
+  });
+
+    return res.render("users/home", result);
   } catch (error) {
     console.error("Error fetching data:", error);
-    res.status(500).render("users/pageNotFound", { message: "Error loading home page" });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).render("users/pageNotFound", { message: "Error loading home page" });
   }
 };
 
@@ -125,7 +141,7 @@ const renderLoginPage = (req, res) => {
     res.render("users/login", { error: message || "" });
   } catch (error) {
     console.error("Error in renderLoginPage:", error);
-    res.status(500).render("users/pageNotFound", { message: "Error loading login page" });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).render("users/pageNotFound", { message: "Error loading login page" });
   }
 };
 
@@ -214,7 +230,7 @@ const registerUser = async (req, res) => {
     const emailSent = await sendVerificationEmail(email, otp);
 
     if (!emailSent) {
-      return res.status(500).send("Failed to send verification email");
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Failed to send verification email");
     }
 
     let referredBy = null;
@@ -411,7 +427,7 @@ const renderMyAccount = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in renderMyAccount:", error);
-    res.status(500).json({ success: false, message: 'An error occurred while loading the account page' });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'An error occurred while loading the account page' });
   }
 };
 
@@ -434,7 +450,7 @@ const updateProfile = async (req, res) => {
     const user = await User.findById(userId);
 
     if(!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'User not found' });
     }
 
     user.firstName = firstName;
@@ -457,7 +473,7 @@ const updateProfile = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Server error while updating profile' });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error while updating profile' });
   }
 };
 
@@ -473,45 +489,45 @@ const changePassword = async (req, res) => {
         const { currentPassword, newPassword, confirmNewPassword } = req.body;
 
         if (!currentPassword || !newPassword || !confirmNewPassword) {
-            return res.status(400).json({ success: false, msg: 'All fields are required' });
+            return res.status(StatusCodes.BAD_REQUEST).json({ success: false, msg: 'All fields are required' });
         }
 
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/;
         if (!passwordRegex.test(newPassword)) {
-            return res.status(400).json({
+            return res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 msg: 'New password must be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, and one number'
             });
         }
 
         if (newPassword !== confirmNewPassword) {
-            return res.status(400).json({ success: false, msg: 'New passwords do not match' });
+            return res.status(StatusCodes.BAD_REQUEST).json({ success: false, msg: 'New passwords do not match' });
         }
 
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ success: false, msg: 'User not found' });
+            return res.status(StatusCodes.NOT_FOUND).json({ success: false, msg: 'User not found' });
         }
 
         const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
-            return res.status(400).json({ success: false, msg: 'Current password is incorrect' });
+            return res.status(StatusCodes.BAD_REQUEST).json({ success: false, msg: 'Current password is incorrect' });
         }
 
         // Check if new password is different from the current password
         const isSamePassword = await bcrypt.compare(newPassword, user.password);
         if (isSamePassword) {
-            return res.status(400).json({ success: false, msg: 'New password must be different from the current password' });
+            return res.status(StatusCodes.BAD_REQUEST).json({ success: false, msg: 'New password must be different from the current password' });
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         user.password = hashedPassword;
         await user.save();
 
-        res.status(200).json({ success: true, msg: 'Password changed successfully' });
+        res.status(StatusCodes.OK).json({ success: true, msg: 'Password changed successfully' });
     } catch (error) {
         console.error('Error in changePassword:', error);
-        res.status(500).json({ success: false, msg: 'Server error while changing password' });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, msg: 'Server error while changing password' });
     }
 };
 
@@ -558,7 +574,7 @@ const resetPassword = async (req, res) => {
     const user = await User.findOne({ resetPasswordToken: token, resetPasswordExpires: { $gt: Date.now() } });
 
     if (!user) {
-      return res.status(404).json({ success: false, message: 'Password reset token not found' });
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Password reset token not found' });
     }
 
     user.password = await bcrypt.hash(password, 10);
@@ -566,10 +582,10 @@ const resetPassword = async (req, res) => {
     user.resetPasswordExpires = undefined; 
     await user.save();
 
-    res.status(200).json({ success: true, message: 'Password reset successfully' });
+    res.status(StatusCodes.OK).json({ success: true, message: 'Password reset successfully' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Server error while resetting password' });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error while resetting password' });
   }
 }
 
@@ -577,7 +593,6 @@ const resetPassword = async (req, res) => {
 const loadResetPasswordPage = (req, res) => {
   res.render('users/resetPassword');
 }
-
 
 
 module.exports = {

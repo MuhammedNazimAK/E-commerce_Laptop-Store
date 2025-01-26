@@ -81,6 +81,7 @@ adminRoute.get('/orders', adminAuth.requireAuth, orderController.getOrderManagem
 adminRoute.get('/orders-list', adminAuth.requireAuth, orderController.getOrdersList);
 adminRoute.get('/orders/:id', adminAuth.requireAuth, orderController.getOrderDetails);
 adminRoute.put('/edit-order/:id', adminAuth.requireAuth, orderController.editOrderAdmin);
+adminRoute.put('/edit-return/:orderId/:productId', adminAuth.requireAuth, orderController.editReturnStatus);
 
 
 // Coupon management

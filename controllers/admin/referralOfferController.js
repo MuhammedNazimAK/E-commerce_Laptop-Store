@@ -1,4 +1,5 @@
 const ReferralOffer = require('../../models/referralOfferModel');
+const StatusCodes = require('../../public/javascript/statusCodes');
 const { validationResult } = require('express-validator');
 
 
@@ -25,7 +26,7 @@ const referralOfferController = {
       res.render('admin/referral-offer-list', { referralOffers, getStatusBadge });
     } catch (error) {
       console.error("Error loading referral offer page:", error);
-      res.status(500).render('users/pageNotFound', { message: "Internal server error" });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).render('users/pageNotFound', { message: "Internal server error" });
     }
   },
 
@@ -33,7 +34,7 @@ const referralOfferController = {
   createReferralOffer: async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(StatusCodes.BAD_REQUEST).json({ errors: errors.array() });
     }
 
     try {
@@ -48,9 +49,9 @@ const referralOfferController = {
       });
 
       await newOffer.save();
-      res.status(201).json({ message: 'Referral offer created successfully', offer: newOffer });
+      res.status(StatusCodes.CREATED).json({ message: 'Referral offer created successfully', offer: newOffer });
     } catch (error) {
-      res.status(500).json({ message: 'Error creating referral offer', error: error.message });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error creating referral offer', error: error.message });
     }
   },
 
@@ -59,11 +60,11 @@ const referralOfferController = {
     try {
       const offer = await ReferralOffer.findById(req.params.id);
       if (!offer) {
-        return res.status(404).json({ message: 'Referral offer not found' });
+        return res.status(StatusCodes.NOT_FOUND).json({ message: 'Referral offer not found' });
       }
       res.json(offer);
     } catch (error) {
-      res.status(500).json({ message: 'Error fetching referral offer', error: error.message });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error fetching referral offer', error: error.message });
     }
   },
 
@@ -71,7 +72,7 @@ const referralOfferController = {
   updateReferralOffer: async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(StatusCodes.BAD_REQUEST).json({ errors: errors.array() });
     }
 
     try {
@@ -79,7 +80,7 @@ const referralOfferController = {
 
       const offer = await ReferralOffer.findById(req.params.id);
       if (!offer) {
-        return res.status(404).json({ message: 'Referral offer not found' });
+        return res.status(StatusCodes.NOT_FOUND).json({ message: 'Referral offer not found' });
       }
 
       offer.offerName = offerName || offer.offerName;
@@ -92,7 +93,7 @@ const referralOfferController = {
       await offer.save();
       res.json({ message: 'Referral offer updated successfully', offer });
     } catch (error) {
-      res.status(500).json({ message: 'Error updating referral offer', error: error.message });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error updating referral offer', error: error.message });
     }
   },
 
@@ -101,21 +102,21 @@ const referralOfferController = {
     try {
       const offer = await ReferralOffer.findByIdAndDelete(req.params.id);
       if (!offer) {
-        return res.status(404).json({ message: 'Referral offer not found' });
+        return res.status(StatusCodes.NOT_FOUND).json({ message: 'Referral offer not found' });
       }
       res.json({ message: 'Referral offer deleted successfully' });
     } catch (error) {
-      res.status(500).json({ message: 'Error deleting referral offer', error: error.message });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error deleting referral offer', error: error.message });
     }
   },
 
 
   loadAddReferralOfferPage: async (req, res) => {
     try {
-      res.status(200).render('admin/referral-offer-add');
+      res.status(StatusCodes.OK).render('admin/referral-offer-add');
     } catch (error) {
       console.error("Error loading add referral offer page:", error);
-      res.status(500).render('users/pageNotFound', { message: "Internal server error" });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).render('users/pageNotFound', { message: "Internal server error" });
     }
   },
 
@@ -123,10 +124,10 @@ const referralOfferController = {
   loadReferralOfferPage: async (req, res) => {
     try {
       const offers = await ReferralOffer.find();
-      res.status(200).json({ offers: offers });
+      res.status(StatusCodes.OK).json({ offers: offers });
     } catch (error) {
       console.error("Error loading referral offer page:", error);
-      res.status(500).render('users/pageNotFound', { message: "Internal server error" });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).render('users/pageNotFound', { message: "Internal server error" });
     }
   }
 };

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+
 const orderSchema = new mongoose.Schema({
   orderId: {
     type: String,
@@ -25,12 +26,17 @@ const orderSchema = new mongoose.Schema({
     price: {
       type: Number,
       required: true
-    }
+    },
+    returnStatus: {
+      type: String,
+      enum: ['Not Returned', 'Return Requested', 'Return Approved', 'Return Rejected', 'Returned'],
+      default: 'Not Returned'
+    },
   }],
   total: {
     type: Number,
     required: true
-  },
+  },  
   couponCode: {
     type: String,
     trim: true

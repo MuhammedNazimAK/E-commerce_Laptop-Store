@@ -139,6 +139,8 @@
 </style> -->
 
 <style>
+
+
     .view-all-button {
         display: block;
         width: 200px;
@@ -158,6 +160,12 @@
         background-color: #ff0000;
         color: #fff;
     }
+
+    .hero-slider-bg img {
+    max-width: 100%;
+    height: auto;
+}
+
 </style>
     <!-- Start Header Area -->
 
@@ -171,7 +179,7 @@
                 <!-- Start Hero Single Slider Item -->
                 <div class="hero-single-slider-item swiper-slide">
                     <!-- Hero Slider Image -->
-                    <div class="hero-slider-bg" style="width: 1564px;">
+                    <div class="hero-slider-bg">
                         <img src="/assets/images/remake/fwebp_upscayl_4x_realesrgan-x4plus.webp" alt="">
                     </div>
                     <!-- Hero Slider Content -->
@@ -431,12 +439,21 @@
                                                         <% } else { %>
                                                             <a class="disabled">Unavailable</a>
                                                         <% } %>
+<<<<<<< HEAD
                                                         <div class="action-link-right">
                                                             <a href="#" class="add-to-wishlist <%= product.inWishlist ? 'added-to-wishlist' : '' %>" data-product-id="<%= product._id %>">
                                                               <i class="icon-heart"></i>
                                                             </a>
                                                       </div>
                                                   </div>
+=======
+                                                    </div>
+                                                    <div class="action-link-right">
+                                                      <a href="#" class="add-to-wishlist <%= product.inWishlist ? 'added-to-wishlist' : '' %>" data-product-id="<%= product._id %>">
+                                                        <i class="icon-heart"></i>
+                                                      </a>
+                                                    </div>
+>>>>>>> 8b8d0b1f4dbeb2cd05ef9b8baccfe3055e30f7ee
                                                 </div>
                                             </div>
                                             <div class="content">

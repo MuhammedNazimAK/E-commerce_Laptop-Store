@@ -55,13 +55,11 @@ async function viewOrderDetails(orderId) {
   
   const modalFooter = document.querySelector('#orderDetailsModal .modal-footer');
   
-  // Remove any existing download button
   const existingDownloadButton = modalFooter.querySelector('.download-invoice-btn');
   if (existingDownloadButton) {
     existingDownloadButton.remove();
   }
 
-  // Add download button only if the order status is not 'Pending'
   if (order.status !== 'Pending') {
     const downloadButton = document.createElement('a');
     downloadButton.href = `/download-invoice/${orderId}`;
@@ -96,6 +94,7 @@ async function viewOrderDetails(orderId) {
       <td>${item.quantity}</td>
       <td>₹${item.price.toFixed(2)}</td>
       <td>₹${(item.price * item.quantity).toFixed(2)}</td>
+      <td>${getProductReturnButton(order, item)}</td>
     </tr>
   `).join('');
 
@@ -103,19 +102,24 @@ async function viewOrderDetails(orderId) {
   modal.show();
 }
 
-
-function getActionButton(order) {
-  if (order.status === 'Cancelled' || order.status === 'Return Requested') {
-    return '';
+function getProductReturnButton(order, item) {
+  if (order.status === 'Delivered' && item.returnStatus === 'Not Returned') {
+    return `<button onclick="returnProduct('${order._id}', '${item.product._id}')" class="btn btn-sm btn-black-default-hover">Return</button>`;
+  } else if (item.returnStatus !== 'Not Returned') {
+    return `<span>${item.returnStatus}</span>`;
   }
-  if (order.status === 'Delivered') {
-    return `<button onclick="returnOrder('${order._id}')" class="btn btn-md btn-black-default-hover">Return</button>`;
-  } else if (order.status === 'Pending' && order.paymentMethod === 'razorpay') {
-    return `<a href="/retry-checkout/${order._id}" class="btn btn-md btn-black-default-hover">Retry Payment</a>`;
-  }
-  return `<button onclick="cancelOrder('${order._id}')" class="btn btn-md btn-black-default-hover">Cancel</button>`;
+  return '';
 }
 
+function getActionButton(order) {
+   if (order.status === 'Pending' && order.paymentMethod === 'razorpay') {
+    return `<a href="/retry-checkout/${order._id}" class="btn btn-md btn-black-default-hover">Retry Payment</a>`;
+  } else if (order.status === 'Pending') {
+    return `<button onclick="cancelOrder('${order._id}')" class="btn btn-md btn-black-default-hover">Cancel</button>`;
+  } else {
+    return '';
+  }
+}
 
 function cancelOrder(orderId) {
   Swal.fire({
@@ -145,14 +149,32 @@ function cancelOrder(orderId) {
   });
 }
 
+<<<<<<< HEAD
 
 function returnOrder(orderId) {
   if (confirm('Are you sure you want to return this order?')) {
     axios.put(`/my-account/return-order/${orderId}`)
+=======
+function returnProduct(orderId, productId) {
+  const orderDetailsModal = bootstrap.Modal.getInstance(document.getElementById('orderDetailsModal'));
+  const confirmReturnModal = new bootstrap.Modal(document.getElementById('confirmReturnModal'));
+
+  // Show the confirm return modal without hiding the order details modal
+  confirmReturnModal.show();
+
+  document.getElementById('confirmReturnBtn').onclick = function() {
+    confirmReturnModal.hide();
+    axios.put(`/my-account/return-product/${orderId}`, { productId })
+>>>>>>> 8b8d0b1f4dbeb2cd05ef9b8baccfe3055e30f7ee
       .then(response => {
         if (response.data.success) {
+          orderDetailsModal.hide();
+          confirmReturnModal.hide();
           showSuccess('Return request submitted successfully');
-          updateOrderStatus(orderId, 'Return Requested');
+          setTimeout(() => {
+            window.location.reload();
+          }, 3000);
+          updateProductReturnStatus(orderId, productId, 'Return Requested');
         } else {
           showError(response.data.message || 'Failed to request return');
         }
@@ -161,6 +183,17 @@ function returnOrder(orderId) {
         console.error('Error requesting return:', error);
         showError(error.response?.data?.message || 'Failed to request return');
       });
+  };
+
+  document.getElementById('confirmReturnModal').removeEventListener('hidden.bs.modal', orderDetailsModal.show);
+}
+
+function updateProductReturnStatus(orderId, productId, newStatus) {
+  const orderItemsTableBody = document.getElementById('orderItemsTableBody');
+  const productRow = orderItemsTableBody.querySelector(`tr[data-product-id="${productId}"]`);
+  if (productRow) {
+    const actionCell = productRow.querySelector('td:last-child');
+    actionCell.innerHTML = `<span>${newStatus}</span>`;
   }
 }
 
@@ -175,7 +208,6 @@ function updateOrderStatus(orderId, newStatus) {
   window.ordersData = JSON.stringify(updatedOrders);
   fetchOrders();
 }
-
 
 function updatePagination(containerId, currentPage, totalPages, fetchFunction) {
   const container = document.getElementById(containerId);
@@ -198,7 +230,6 @@ function updatePagination(containerId, currentPage, totalPages, fetchFunction) {
     container.appendChild(li);
   }
 }
-
 
 function showError(message) {
   Swal.fire({

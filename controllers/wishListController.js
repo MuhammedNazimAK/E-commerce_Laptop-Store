@@ -1,6 +1,11 @@
 const WishList = require('../models/wishListModel');
+<<<<<<< HEAD
 const Cart = require('../models/cartModel');
 const mongoose = require('mongoose');
+=======
+const mongoose = require('mongoose');
+const StatusCodes = require('../public/javascript/statusCodes');
+>>>>>>> 8b8d0b1f4dbeb2cd05ef9b8baccfe3055e30f7ee
 
 
 const getWishListItems = async (req, res) => {
@@ -20,7 +25,7 @@ const getWishListItems = async (req, res) => {
     res.json(wishlistItems);
   } catch (error) {
     console.error('Error fetching wishlist:', error);
-    res.status(500).json({ success: false, error: 'Internal server error' });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: 'Internal server error' });
   }
 };
 
@@ -51,15 +56,15 @@ const addToWishList = async (req, res) => {
     if (productIndex === -1) {
       wishlist.products.push({ productId });
       await wishlist.save();
-      res.status(200).json({ success: true, message: 'Product added to wishlist', added: true });
+      res.status(StatusCodes.OK).json({ success: true, message: 'Product added to wishlist', added: true });
     } else {
       wishlist.products.splice(productIndex, 1);
       await wishlist.save();
-      res.status(200).json({ success: true, message: 'Product removed from wishlist', added: false });
+      res.status(StatusCodes.OK).json({ success: true, message: 'Product removed from wishlist', added: false });
     }
   } catch (error) {
     console.error('Error updating wishlist:', error);
-    res.status(500).json({ success: false, error: 'Internal server error' });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: 'Internal server error' });
   }
 };
 
@@ -67,20 +72,24 @@ const addToWishList = async (req, res) => {
 const removeFromWishList = async (req, res) => {
   try {
     const { productId } = req.body;
+<<<<<<< HEAD
     const userId = req.session?.user?._id;
+=======
+    const userId = req.session.user?._id;
+>>>>>>> 8b8d0b1f4dbeb2cd05ef9b8baccfe3055e30f7ee
 
     const wishlist = await WishList.findOne({ userId });
     if (!wishlist) {
-      return res.status(404).json({ success: false, message: 'Wishlist not found' });
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Wishlist not found' });
     }
 
     wishlist.products = wishlist.products.filter(item => item.productId.toString() !== productId);
     await wishlist.save();
 
-    res.status(200).json({ success: true, message: 'Product removed from wishlist' });
+    res.status(StatusCodes.OK).json({ success: true, message: 'Product removed from wishlist' });
   } catch (error) {
     console.error('Error removing product from wishlist:', error);
-    res.status(500).json({ success: false, error: 'Internal server error' });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: 'Internal server error' });
   }
 };
 

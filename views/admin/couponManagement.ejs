@@ -194,8 +194,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const errorElement = document.getElementById('discountPercentageError');
     const value = parseFloat(input.value);
     
-    if (isNaN(value) || value < 0 || value > 100) {
-      showError(errorElement, 'Discount Percentage must be between 0 and 100');
+    if (isNaN(value) || value < 0 || value > 99) {
+      showError(errorElement, 'Discount Percentage must be between 0 and 99');
       return false;
     }
     

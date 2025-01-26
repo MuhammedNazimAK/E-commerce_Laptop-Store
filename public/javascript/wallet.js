@@ -62,11 +62,17 @@ async function updateBalance() {
   }
 }
 
-async function getTransactions() {
+async function getTransactions(page = 1) {
   try {
-    const response = await axios.get('/transactions');
+    const response = await axios.get(`/transactions?page=${page}`);
+    const { transactions, currentPage, totalPages } = response.data;
+    
+    if (!Array.isArray(transactions)) {
+      throw new Error('Invalid response format: transactions is not an array');
+    }
+
     transactionTable.innerHTML = '';
-    response.data.forEach(transaction => {
+    transactions.forEach(transaction => {
       const row = transactionTable.insertRow();
       row.insertCell(0).textContent = new Date(transaction.createdAt).toLocaleString();
       row.insertCell(1).textContent = transaction.type;
@@ -74,10 +80,17 @@ async function getTransactions() {
       row.insertCell(3).textContent = transaction.status;
       row.insertCell(4).textContent = transaction.description;
     });
+
+    // Update pagination if needed
+    if (typeof updatePagination === 'function') {
+      updatePagination('walletPagination', currentPage, totalPages, getTransactions);
+    }
   } catch (error) {
     console.error('Error fetching transactions:', error);
+    showError('Failed to fetch transactions. Please try again later.');
   }
 }
+
 
 updateBalance();
 getTransactions();

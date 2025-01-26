@@ -1,7 +1,8 @@
 const Order = require('../../models/orderModel');
 const moment = require('moment');
 
-const { generatePDF } = require('../.././public/javascript/pdfGenerator')
+const { generatePDF } = require('../.././public/javascript/pdfGenerator');
+const StatusCodes = require('../../public/javascript/statusCodes');
 
 
 const getSalesReport = async (req, res) => {
@@ -9,7 +10,7 @@ const getSalesReport = async (req, res) => {
     res.render('admin/sales-report');
   } catch (error) {
     console.error('Error rendering sales report page:', error);
-    res.status(500).json({ message: 'Error rendering sales report page' });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error rendering sales report page' });
   }
 };
 
@@ -41,7 +42,7 @@ const generateSalesReport = async (req, res) => {
     } else {
       console.error('Report data is undefined');
     }
-    res.status(500).json({ message: 'Error generating sales report', error: error.message });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error generating sales report', error: error.message });
   }
 };
 

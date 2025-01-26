@@ -3,6 +3,7 @@ const Address = require('../models/addressModel');
 const Product = require('../models/productModel');
 const ProductOffer = require('../models/productOfferModel');
 const CategoryOffer = require('../models/categoryOfferModel');
+const StatusCodes = require('../public/javascript/statusCodes');
 const mongoose = require('mongoose');
 
 
@@ -72,18 +73,18 @@ const addToCart = async (req, res) => {
     }
 
     if (!mongoose.Types.ObjectId.isValid(productId)) {
-      return res.status(400).json({ success: false, message: 'Invalid product ID' });
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'Invalid product ID' });
     }
 
 
     const product = await Product.findById(productId);
     if (!product) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Product not found' });
     }
 
     // Check if there's enough stock
     if (!product.pricingAndAvailability || typeof product.pricingAndAvailability.stockAvailability !== 'number' || product.pricingAndAvailability.stockAvailability < quantity) {
-      return res.status(400).json({ success: false, message: 'Not enough stock available' });
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'Not enough stock available' });
     }
 
     let cart = await Cart.findOne({ user: userId });
@@ -100,12 +101,12 @@ const addToCart = async (req, res) => {
     if (cartItemIndex !== -1) {
       const newQuantity = cart.items[cartItemIndex].quantity + quantity;
       if (newQuantity > 5) {
-        return res.status(400).json({ success: false, message: 'Maximum quantity per item is 5' });
+        return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'Maximum quantity per item is 5' });
       }
       cart.items[cartItemIndex].quantity = newQuantity;
     } else {
       if (quantity > 5) {
-        return res.status(400).json({ success: false, message: 'Maximum quantity per item is 5' });
+        return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'Maximum quantity per item is 5' });
       }
       cart.items.push({ product: productId, quantity: quantity, price: price });
     }
@@ -114,7 +115,7 @@ const addToCart = async (req, res) => {
       await cart.save();
     } catch (saveError) {
       console.error('Error saving cart:', saveError);
-      return res.status(500).json({ success: false, message: 'Error saving cart' });
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Error saving cart' });
     }    
 
     // Populate the product details in the cart
@@ -142,7 +143,7 @@ const addToCart = async (req, res) => {
 
   } catch (error) {
     console.error('Error:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -155,26 +156,26 @@ const removeFromCart = async (req, res) => {
     const userId = req.session.user?._id || req.session.guestCartId;
 
     if (!mongoose.Types.ObjectId.isValid(productId)) {
-      return res.status(400).json({ success: false, message: 'Invalid product ID' });
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'Invalid product ID' });
     }
     
     const cart = await Cart.findOne({ user: userId });  
     
     if (!cart) {
-      return res.status(404).json({ success: false, message: 'Cart not found' });
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Cart not found' });
     }
 
     const result = await Cart.updateOne({ user: userId }, { $pull: { 'items': { 'product': new mongoose.Types.ObjectId(productId) } } });
     
 
     if (result.modifiedCount === 0) {
-      return res.status(404).json({ success: false, message: 'Product not found in cart' });
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Product not found in cart' });
     }
     
-    return res.status(200).json({ success: true, message: 'Product removed from cart successfully' });
+    return res.status(StatusCodes.OK).json({ success: true, message: 'Product removed from cart successfully' });
   } catch (error) {
     console.error('Error:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -243,7 +244,7 @@ const getCart = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in getCart:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -255,7 +256,7 @@ const updateCart = async (req, res) => {
 
     const cart = await Cart.findOne({ user: userId });
     if (!cart) {
-      return res.status(404).json({ success: false, message: 'Cart not found' });
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Cart not found' });
     }
 
     const itemIndex = cart.items.findIndex(item => item.product.toString() === productId);
@@ -263,7 +264,7 @@ const updateCart = async (req, res) => {
 
 
       if (quantity > 5) {
-        return res.status(400).json({ success: false, message: 'Quantity cannot exceed 5 for this item', quantity: cart.items[itemIndex].quantity });
+        return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'Quantity cannot exceed 5 for this item', quantity: cart.items[itemIndex].quantity });
       }
 
       const productWithOffers = await getProductWithOffers(productId);
@@ -272,22 +273,22 @@ const updateCart = async (req, res) => {
       cart.items[itemIndex].price = productWithOffers.discountedPrice;
 
       await cart.save();
-      return res.status(200).json({ success: true,
+      return res.status(StatusCodes.OK).json({ success: true,
         message: 'Product quantity updated successfully',
         updatedPrice: productWithOffers.discountedPrice,
         updatedTotal: productWithOffers.discountedPrice * quantity });
     } else {
       
       if (quantity > 5) {
-        return res.status(400).json({ success: false, message: 'Quantity cannot exceed 5 for this item', quantity: 0 });
+        return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'Quantity cannot exceed 5 for this item', quantity: 0 });
       }
       cart.items.push({ product: productId, quantity: 0 });
       await cart.save();
-      return res.status(200).json({ success: true, message: 'Product quantity updated successfully' });
+      return res.status(StatusCodes.OK).json({ success: true, message: 'Product quantity updated successfully' });
     }
   } catch (error) {
     console.error('Error:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error' });
   }
 }
 
@@ -306,15 +307,30 @@ const checkout = async (req, res) => {
       return res.render('users/checkout', { items: [], priceDetails: {} });
     }
 
-    const items = await Promise.all(cart.items.map(async (item) => {
+    let totalSavings = 0;
+
+    const items = await Promise.all(cart.items.map(async (item, index) => {
       const productWithOffers = await getProductWithOffers(item.product._id);
-      const price = productWithOffers.discountedPrice;
+      const getValidPrice = (price) => {
+        const parsedPrice = parseFloat(price);
+        return isNaN(parsedPrice) ? 0 : parsedPrice;
+      };
+      
+      const price = getValidPrice(productWithOffers.discountedPrice || productWithOffers.regularPrice);
+      const originalPrice = getValidPrice(productWithOffers.regularPrice);
       const total = price * item.quantity;
+      
+      // Calculate savings for this item
+      const itemSavings = Math.max(0, (originalPrice - price) * item.quantity);
+      
+      totalSavings += itemSavings;
+
       return {
         ...productWithOffers,
         quantity: item.quantity,
         total,
         addressId,
+        itemSavings,
       };
     }));
 
@@ -324,26 +340,30 @@ const checkout = async (req, res) => {
     const gstAmount = subtotal * gstRate;
     
     let discountAmount = 0;
-    if (req.session.appliedCoupon) {
-      discountAmount = req.session.appliedCoupon.discountAmount;
+    if (req.session.appliedCoupon && req.session.appliedCoupon.discountAmount) {
+      discountAmount = parseFloat(req.session.appliedCoupon.discountAmount);
+      totalSavings += discountAmount;
     }
 
-    const total = subtotal + gstAmount - discountAmount;
+    const total = subtotal + gstAmount - discountAmount + 25;
 
     const priceDetails = {
       subtotal: subtotal.toFixed(2),
       gst: gstAmount.toFixed(2),
       discount: discountAmount.toFixed(2),
       total: total.toFixed(2),
-      couponCode: req.session.appliedCoupon?.code || null
+      couponCode: req.session.appliedCoupon?.code || null,
+      totalSavings: totalSavings.toFixed(2),
+      shipping: 25.00.toFixed(2),
     };
 
     return res.render('users/checkout', { items, priceDetails, addressId });
   } catch (error) {
     console.error('Error in checkout:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error' });
   }
 };
+
 
 
 const getCartItems = async (req, res) => {
@@ -410,7 +430,7 @@ const getCartItems = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in getCartItems:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -424,5 +444,3 @@ module.exports = {
   checkout,
   getCartItems,
 };
-
-    
