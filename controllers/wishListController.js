@@ -1,7 +1,6 @@
 const WishList = require('../models/wishListModel');
 const Cart = require('../models/cartModel');
 const mongoose = require('mongoose');
-const mongoose = require('mongoose');
 const StatusCodes = require('../public/javascript/statusCodes');
 
 
@@ -69,11 +68,8 @@ const addToWishList = async (req, res) => {
 const removeFromWishList = async (req, res) => {
   try {
     const { productId } = req.body;
-<<<<<<< HEAD
+
     const userId = req.session?.user?._id;
-=======
-    const userId = req.session.user?._id;
->>>>>>> 8b8d0b1f4dbeb2cd05ef9b8baccfe3055e30f7ee
 
     const wishlist = await WishList.findOne({ userId });
     if (!wishlist) {
