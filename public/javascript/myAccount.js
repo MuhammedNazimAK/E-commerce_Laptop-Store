@@ -149,12 +149,11 @@ function cancelOrder(orderId) {
   });
 }
 
-<<<<<<< HEAD
 
 function returnOrder(orderId) {
   if (confirm('Are you sure you want to return this order?')) {
     axios.put(`/my-account/return-order/${orderId}`)
-=======
+
 function returnProduct(orderId, productId) {
   const orderDetailsModal = bootstrap.Modal.getInstance(document.getElementById('orderDetailsModal'));
   const confirmReturnModal = new bootstrap.Modal(document.getElementById('confirmReturnModal'));
@@ -165,7 +164,7 @@ function returnProduct(orderId, productId) {
   document.getElementById('confirmReturnBtn').onclick = function() {
     confirmReturnModal.hide();
     axios.put(`/my-account/return-product/${orderId}`, { productId })
->>>>>>> 8b8d0b1f4dbeb2cd05ef9b8baccfe3055e30f7ee
+
       .then(response => {
         if (response.data.success) {
           orderDetailsModal.hide();

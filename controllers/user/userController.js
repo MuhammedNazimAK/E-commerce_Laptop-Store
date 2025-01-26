@@ -14,11 +14,8 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 const { getCachedData } = require("../../utils/cache"); 
 const { v4: uuidv4 } = require('uuid');
-<<<<<<< HEAD
 const mongoose = require('mongoose');
-=======
 const StatusCodes = require("../../public/javascript/statusCodes");
->>>>>>> 8b8d0b1f4dbeb2cd05ef9b8baccfe3055e30f7ee
 require('dotenv').config();
 
 
