@@ -4,10 +4,12 @@
   const CategoryOffer = require('../models/categoryOfferModel');
   const StatusCodes = require('../public/javascript/statusCodes');
   const { validationResult } = require('express-validator');
-  const { uploadImages, cloudinary } = require("../config/cloudinary");
+  const { uploadImages } = require("../config/cloudinary");
   const { incrementProductView } = require("../utils/viewCounter");
   const { getCachedData } = require("../utils/cache");
   const mongoose = require("mongoose");
+
+  
 
   async function getProductWithOffers(productId) {
     const product = await Product.findById(productId).populate('category');
@@ -358,7 +360,7 @@
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Error updating product", error: error.message });
     }
   };
-  
+
 
   const deleteImage = async (req, res) => {
     try {
@@ -573,6 +575,7 @@
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).render('users/pageNotFound', { message: "Internal server error" });
       }
     },
+    
 
     createProductOffer: async (req, res) => {
       const errors = validationResult(req);
@@ -654,6 +657,7 @@
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Error error: error.message' });
       }
     },
+
 
     updateProductOffer: async (req, res) => {
       const errors = validationResult(req);
@@ -754,6 +758,7 @@
       }
     },
 
+
     deleteProductOffer: async (req, res) => {
       try {
         const offer = await ProductOffer.findByIdAndDelete(req.params.id);
@@ -766,6 +771,7 @@
       }
     },
 
+
     loadAddProductOfferPage: async (req, res) => {
       try {
         const products = await Product.find({});
@@ -775,6 +781,7 @@
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).render('users/pageNotFound', { message: "Internal server error" });
       }
     },
+
 
     loadProductOfferPage: async (req, res) => {
       try {
@@ -802,6 +809,7 @@
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "Internal server error" });
       }
     },
+
 
     loadEditProductOfferPage: async (req, res) => {
       try {
