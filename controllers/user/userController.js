@@ -14,7 +14,6 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 const { getCachedData } = require("../../utils/cache"); 
 const { v4: uuidv4 } = require('uuid');
-const mongoose = require('mongoose');
 const StatusCodes = require("../../public/javascript/statusCodes");
 require('dotenv').config();
 
@@ -82,19 +81,12 @@ const renderHomePage = async (req, res) => {
 
     let userId = req.session.user?._id;
 
-<<<<<<< HEAD
-    
-=======
->>>>>>> 8b8d0b1f4dbeb2cd05ef9b8baccfe3055e30f7ee
     if (!userId) {
       // If the user is not authenticated, create a guest cart
       userId = req.session.guestCartId || (req.session.guestCartId = new mongoose.Types.ObjectId());
     }
 
-<<<<<<< HEAD
-=======
     const result = await getCachedData('homePage', async () => {
->>>>>>> 8b8d0b1f4dbeb2cd05ef9b8baccfe3055e30f7ee
     const products = await Promise.all(
       (await Product.find().limit(16)).map(async (product) => {
         const productWithOffers = await getProductWithOffers(product._id);
